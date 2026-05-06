@@ -17,11 +17,24 @@ The target CMS should support:
 - page-owned authoring instead of forcing public content into catalog entities;
 - base and regional page variants where regional inheritance is intentional;
 - preview before publish;
-- snapshot-first public rendering;
+- snapshot-first public rendering through a Next.js frontend;
 - published route registry and route alias diagnostics;
 - operator-facing release readiness checks;
 - safe integration boundaries for ERP-owned read-only data;
 - no secrets, tokens, passwords, or private keys in git.
+
+## Service Shape
+
+The clean implementation is expected to be split into two application services:
+
+- a Next.js frontend for public rendering, preview rendering, and the admin/editorial shell;
+- a NestJS backend for authoring state, permissions, preview assembly, publish, snapshots, routes,
+  rollback, diagnostics, and integrations.
+
+The backend owns the CMS truth and the versioned published snapshot contract. The frontend renders public
+and preview pages from backend contracts and must not become a second source of publish logic.
+
+See [`docs/service-split-decision.md`](docs/service-split-decision.md).
 
 ## Starting Context
 
@@ -61,9 +74,9 @@ Created as the clean implementation project shell.
 At this point the repository contains documentation only:
 
 - this project goal and boundary document;
+- the initial frontend/backend service split decision;
 - a transferred current-state summary from `notstrapitest`;
 - local Codex rules for working in this repository.
 
 No runtime resources, secrets, deployment triggers, or production-like release environment are created by
 this initial setup.
-
