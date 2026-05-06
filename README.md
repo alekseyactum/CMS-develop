@@ -52,6 +52,14 @@ Each module or module slice should have an explicit transfer plan before code is
 
 See [`docs/development-sequencing-and-module-plan.md`](docs/development-sequencing-and-module-plan.md).
 
+## Release Contour
+
+The first production-oriented CMS runtime should be release-ready but closed to indexing until a separate
+explicit decision enables indexing. The expected future primary domain is `actum.ua`; the current live
+production site remains `actum.com.ua` until a controlled migration and redirect plan is approved.
+
+See [`docs/release-contour-requirements.md`](docs/release-contour-requirements.md).
+
 ## Starting Context
 
 The current source of implementation knowledge is the sibling project:
