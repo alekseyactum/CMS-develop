@@ -36,6 +36,14 @@ and preview pages from backend contracts and must not become a second source of 
 
 See [`docs/service-split-decision.md`](docs/service-split-decision.md).
 
+## Backend Implementation Direction
+
+The backend should not inherit the large prototype services as its target structure. The clean
+implementation should port proven behavior from `notstrapitest` through typed page contexts, versioned
+preview/snapshot contracts, focused domain services, and tests around the preserved edge cases.
+
+See [`docs/backend-implementation-requirements.md`](docs/backend-implementation-requirements.md).
+
 ## Starting Context
 
 The current source of implementation knowledge is the sibling project:
@@ -75,6 +83,7 @@ At this point the repository contains documentation only:
 
 - this project goal and boundary document;
 - the initial frontend/backend service split decision;
+- backend implementation requirements based on the reviewed `notstrapitest` refactoring assessments;
 - a transferred current-state summary from `notstrapitest`;
 - local Codex rules for working in this repository.
 
