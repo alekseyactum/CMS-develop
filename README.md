@@ -44,6 +44,14 @@ preview/snapshot contracts, focused domain services, and tests around the preser
 
 See [`docs/backend-implementation-requirements.md`](docs/backend-implementation-requirements.md).
 
+## Development Sequencing
+
+Implementation should proceed from small, low-risk, release-grade slices toward the complex CMS loop.
+Each module or module slice should have an explicit transfer plan before code is ported from
+`notstrapitest`.
+
+See [`docs/development-sequencing-and-module-plan.md`](docs/development-sequencing-and-module-plan.md).
+
 ## Starting Context
 
 The current source of implementation knowledge is the sibling project:
@@ -84,6 +92,7 @@ At this point the repository contains documentation only:
 - this project goal and boundary document;
 - the initial frontend/backend service split decision;
 - backend implementation requirements based on the reviewed `notstrapitest` refactoring assessments;
+- development sequencing and module transfer rules;
 - a transferred current-state summary from `notstrapitest`;
 - local Codex rules for working in this repository.
 
