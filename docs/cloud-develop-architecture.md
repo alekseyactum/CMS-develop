@@ -262,6 +262,14 @@ Inside the CMS:
 - `cms-back` validates CMS sessions or tokens for admin actions.
 - IAP identity may help establish access context, but it does not replace CMS roles.
 
+Open design note:
+
+- the browser must not call `cms-back-develop` directly;
+- `cms-front` must act as the server-side admin entrypoint for browser-originated admin requests;
+- implementation must still define the exact session flow between `cms-front` and `cms-back`;
+- the chosen flow must preserve both boundaries: Cloud Run service identity for service-to-service calls
+  and CMS user identity/roles for admin authorization.
+
 ## Health And Readiness
 
 Minimum endpoints:
@@ -317,4 +325,3 @@ This document does not approve:
 - enabling indexing;
 - creating Cloud Tasks, Scheduler, worker services, or extra databases;
 - creating or printing secret values.
-

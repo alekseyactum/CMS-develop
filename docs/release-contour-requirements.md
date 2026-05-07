@@ -782,6 +782,8 @@ The selected baseline is:
 - TypeORM `synchronize` is disabled in every shared or cloud environment;
 - database schema changes are made through explicit SQL migrations stored in the repository;
 - the migration runner records applied migrations in the database;
+- migrations must not auto-run during Cloud Run service startup;
+- cloud migrations must run manually or through an explicitly confirmed migration step;
 - migration filenames must be unique;
 - migration ordering must be monotonic and unambiguous;
 - the migration runner must fail on duplicate sequence numbers, duplicate filenames, or ordering
@@ -819,11 +821,14 @@ The selected baseline is:
 - preview payloads include `schemaVersion`;
 - page payloads are typed per page type;
 - section payloads are typed per section type;
+- `cms-back` publishes the API contract as OpenAPI;
+- `site-front` and `cms-front` use generated typed clients for backend APIs where practical;
 - backend and frontend must not exchange arbitrary unvalidated JSON for publishable pages;
 - DTO or schema validation is required at contract boundaries;
 - public API and admin/private API are separated;
 - changes to published/public payload shape are treated as contract changes;
-- incompatible contract changes must be documented and coordinated with frontend changes.
+- incompatible contract changes must update OpenAPI, payload schemas, and generated clients in the same
+  feature cycle where practical.
 
 The frontend should handle unsupported or invalid payload versions intentionally rather than rendering
 broken pages.

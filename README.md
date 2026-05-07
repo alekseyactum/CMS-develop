@@ -1,11 +1,18 @@
 # CMS
 
-Clean implementation repository for the Actum content platform.
+Clean implementation context repository for the Actum content platform.
 
 This repository starts from the validated lessons of `notstrapitest`, but it is not a blind copy of that
 prototype. `notstrapitest` was used as a working polygon for checking the CMS model without Strapi. `CMS`
-is the place where the finished implementation should be built deliberately, with production-oriented
+is the place where the finished implementation should be specified deliberately, with production-oriented
 project structure, documentation, and runtime discipline.
+
+`CMS-develop` is the umbrella/context repository. The deploy-bearing service code is expected to live in
+the canonical service repositories:
+
+- `re-actum/site-front`;
+- `re-actum/cms-front`;
+- `re-actum/cms-back`.
 
 ## Goal
 
@@ -101,7 +108,7 @@ Created as the clean implementation project shell.
 At this point the repository contains documentation only:
 
 - this project goal and boundary document;
-- the initial frontend/backend service split decision;
+- the service split decision;
 - the agreed develop cloud architecture;
 - backend implementation requirements based on the reviewed `notstrapitest` refactoring assessments;
 - development sequencing and module transfer rules;

@@ -123,7 +123,9 @@ Recommended first implementation direction:
 - define the clean repository structure;
 - move the proven domain model into explicit product and architecture docs;
 - decide which prototype code is worth porting and which parts should be rewritten;
-- design the production-grade published graph and cache/rebuild model;
+- design the snapshot-first published state, dependency tracking, stale diagnostics, and cache/rebuild
+  model for the first release;
+- reconsider a fuller published graph only later if snapshot-first plus dependency tracking proves
+  insufficient for real release requirements;
 - define the CMS runtime environments only after consulting `gcp-infra-playbook`;
 - keep `notstrapitest` available as a reference until CMS reaches feature parity for the validated loop.
-
