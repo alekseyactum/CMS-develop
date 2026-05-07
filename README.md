@@ -105,15 +105,21 @@ Manager, IAM, deployment pipelines, or runtime environment variables, first read
 
 Created as the clean implementation project shell.
 
-At this point the repository contains documentation only:
+The `CMS-develop` repository remains the umbrella/context repository. Minimal deployable service skeletons
+now live in the three canonical service repositories and the first `develop` Cloud Run contour has been
+created.
+
+This repository contains project documentation:
 
 - this project goal and boundary document;
 - the service split decision;
 - the agreed develop cloud architecture;
+- the actual develop runtime state;
 - backend implementation requirements based on the reviewed `notstrapitest` refactoring assessments;
 - development sequencing and module transfer rules;
 - a transferred current-state summary from `notstrapitest`;
 - local Codex rules for working in this repository.
 
-No runtime resources, secrets, deployment triggers, or production-like release environment are created by
-this initial setup.
+See [`docs/develop-runtime-state.md`](docs/develop-runtime-state.md) for the created Cloud Run services,
+service accounts, Cloud SQL database/auth boundary, Secret Manager names, media bucket, verification
+results, and pending Cloud Build trigger blocker.

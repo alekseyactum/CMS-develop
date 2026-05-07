@@ -2,8 +2,10 @@
 
 This document fixes the agreed develop cloud architecture for the clean CMS implementation.
 
-It is a design decision record, not proof that the resources already exist. Actual Google Cloud changes
-require `gcp-infra-playbook` preflight and a separate explicit confirmation.
+It started as a design decision record. The first minimal develop runtime was later created after
+`gcp-infra-playbook` preflight and explicit confirmation.
+
+Actual resource status is tracked in [`develop-runtime-state.md`](develop-runtime-state.md).
 
 ## Scope
 
@@ -84,21 +86,20 @@ CPU mode:
 Public and admin entrypoints:
 
 - `site-front-develop`: public web entrypoint, unauthenticated access allowed.
-- `cms-front-develop`: protected by Cloud Run IAP.
+- `cms-front-develop`: closed Cloud Run service prepared for a future load-balancer/IAP entrypoint.
 - `cms-back-develop`: not public for browser use, authentication required.
 
 Ingress and auth:
 
 - `site-front-develop`: ingress `all`, allow unauthenticated.
-- `cms-front-develop`: ingress `all`, protected by Cloud Run IAP.
-- `cms-back-develop`: ingress `all`, require authentication.
+- `cms-front-develop`: ingress `internal-and-cloud-load-balancing`, no unauthenticated access.
+- `cms-back-develop`: ingress `internal-and-cloud-load-balancing`, no unauthenticated access.
 
-The backend URL may technically exist, but callers without a valid identity token must receive `403`.
-Allowed callers are the frontend service accounts and developer accounts explicitly granted access by the
-project owner.
+The backend URL may technically exist, but direct browser-originated access is not an approved API path.
+Allowed backend callers are the frontend runtime service accounts explicitly granted `roles/run.invoker`.
 
-Admin user membership for IAP is intentionally not listed in this repository. Access is managed in GCP IAP
-policy by the owner.
+Admin user membership for the future IAP/load-balancer perimeter is intentionally not listed in this
+repository. Access is managed in GCP by the owner.
 
 ## Service Accounts
 
@@ -150,13 +151,15 @@ Database:
 
 - Cloud SQL instance: `develop-eu`
 - database: `site_develop`
-- service user: `cms_back_develop_service`
+- database authentication: Cloud SQL IAM DB authentication through the backend service account
+- IAM DB user: `cms-back-develop-runner`
 
 Only `cms-back-develop` connects to the database.
 
 Connection:
 
 - Use Cloud SQL connector/runtime integration.
+- Do not use a password-oriented database user for the CMS backend.
 - Do not create a separate VPC connector for the first develop contour.
 
 Backups:
@@ -179,13 +182,13 @@ Secret names:
 - `site-front-runtime-develop`
 - `cms-front-runtime-develop`
 - `cms-back-runtime-develop`
-- `cms-db-login-data-develop`
 - `cms-admin-auth-develop`
 
 Rules:
 
 - Non-secret settings go to Cloud Run environment variables.
 - Secret values go to Secret Manager.
+- Database connection identity is service-account based; do not store a CMS database password secret.
 - Repositories may contain `.env.example` only, without real values.
 - Secrets, tokens, passwords, private keys, and live credential values must not be written to git,
   markdown, logs, or chat.
@@ -201,8 +204,10 @@ If the bucket name is globally unavailable, choose a project-prefixed alternativ
 
 Storage model:
 
-- `public/`: public read for published site media.
+- `public/`: public read for published site media after a separate public media serving decision.
 - `drafts/`: private draft or service media.
+
+The first created develop bucket should stay private until the public media URL policy is implemented.
 
 Write model:
 
@@ -254,7 +259,8 @@ Indexing:
 
 ## CMS Admin Auth
 
-IAP protects the external entry to `cms-front-develop`.
+The intended external entry to `cms-front-develop` is a future load-balancer/IAP perimeter. Until that is
+created, `cms-front-develop` remains closed at Cloud Run ingress/auth level.
 
 Inside the CMS:
 
@@ -318,7 +324,6 @@ Content rollback:
 
 This document does not approve:
 
-- creating the listed GCP resources;
 - changing release or production-like runtime;
 - creating release Cloud Run services;
 - changing DNS or custom domains;
