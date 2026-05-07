@@ -51,9 +51,13 @@ Access state:
 
 - `site-front-develop`: ingress `all`, `allUsers` has `roles/run.invoker`.
 - `cms-front-develop`: ingress `internal-and-cloud-load-balancing`, no public invoker.
-- `cms-back-develop`: ingress `internal-and-cloud-load-balancing`, invoker allowed only for:
+- `cms-back-develop`: ingress `all`, no unauthenticated access, invoker allowed only for:
   - `site-front-develop-runner@composite-ally-360719.iam.gserviceaccount.com`
   - `cms-front-develop-runner@composite-ally-360719.iam.gserviceaccount.com`
+
+`cms-back-develop` uses ingress `all` intentionally in the first develop contour. Attempts to use
+`internal-and-cloud-load-balancing` blocked the simple Cloud Run service-to-service readiness check without
+an additional internal networking path. The backend remains closed by Cloud Run IAM.
 
 Backend runtime settings:
 
@@ -77,9 +81,10 @@ Runtime service accounts:
 
 Important IAM state:
 
-- Cloud Build legacy service account can deploy Cloud Run and push Artifact Registry images for these
-  services.
-- Cloud Build legacy service account can act as the three runtime service accounts.
+- `cms-develop-build-runner@composite-ally-360719.iam.gserviceaccount.com` is the user-managed Cloud Build
+  service account for CMS develop triggers.
+- `cms-develop-build-runner` can deploy Cloud Run and push Artifact Registry images for these services.
+- `cms-develop-build-runner` can act as the three runtime service accounts.
 - `cms-back-develop-runner` has `roles/cloudsql.client`.
 - `cms-back-develop-runner` has `roles/cloudsql.instanceUser`.
 - `cms-back-develop-runner` has bucket object admin on `gs://site-media-develop`.
@@ -110,9 +115,11 @@ Important correction:
 
 Open item:
 
-- Database schema and DB-level grants are not implemented yet. The current backend skeleton does not use
-  the database. The first backend database task must verify or establish required privileges through a
-  controlled migration/admin SQL path, without introducing a password-based CMS runtime credential.
+- Database schema and DB-level grants are not implemented yet.
+- The first backend foundation stage verifies Cloud SQL IAM instance login with `SELECT 1`, without using a
+  password and without selecting `site_develop`.
+- The next backend database task must establish required DB-level privileges through a controlled
+  migration/admin SQL path, without introducing a password-based CMS runtime credential.
 
 ## Secret Manager
 
@@ -176,12 +183,26 @@ Created develop triggers:
 
 Trigger service account:
 
-- `projects/composite-ally-360719/serviceAccounts/865011807785@cloudbuild.gserviceaccount.com`
+- `projects/composite-ally-360719/serviceAccounts/cms-develop-build-runner@composite-ally-360719.iam.gserviceaccount.com`
+
+Important correction:
+
+- Regional v2 triggers rejected the legacy Cloud Build service account as `build.service_account`.
+- A user-managed service account `cms-develop-build-runner` was created and assigned to the three CMS
+  develop triggers.
+- With a user-managed build service account, each `cloudbuild.yaml` uses `options.logging:
+  CLOUD_LOGGING_ONLY`.
+
+Trigger verification:
+
+- `cms-back-develop` trigger fired from normal pushes to `re-actum/cms-back:develop`.
+- Successful backend trigger build after first backend runtime foundation: `dd4b1a98-4bf6-463f-9368-773b2dae4d65`.
+- The backend deployment was performed by `cms-develop-build-runner`.
 
 Open item:
 
-- The next normal code push to each service repository should be watched once to confirm GitHub webhook
-  delivery and automatic deployment end to end.
+- The next normal code push to `site-front` and `cms-front` should be watched once after the logging option
+  fix to confirm automatic deployment end to end for those services.
 
 ## Playbook Sync
 
@@ -196,7 +217,12 @@ Verified externally:
 - `site-front-develop /health` returned `200` with `{"service":"site-front","status":"ok"}`.
 - `site-front-develop /robots.txt` returned `Disallow: /`.
 - Direct external unauthenticated access to `cms-front-develop /health` was blocked.
-- Direct external unauthenticated access to `cms-back-develop /api/health` was blocked.
+- Direct external unauthenticated access to `cms-back-develop /api/ready` returned `403`.
+- Temporary Cloud Run Job `cms-back-ready-check`, running as `site-front-develop-runner`, successfully
+  called `cms-back-develop /api/ready`.
+- `cms-back-develop /api/ready` returned `200` after the first backend foundation stage and verified Cloud
+  SQL IAM instance connectivity.
+- The temporary readiness-check job was deleted after verification.
 
 Local notes:
 

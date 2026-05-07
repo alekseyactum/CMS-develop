@@ -93,10 +93,15 @@ Ingress and auth:
 
 - `site-front-develop`: ingress `all`, allow unauthenticated.
 - `cms-front-develop`: ingress `internal-and-cloud-load-balancing`, no unauthenticated access.
-- `cms-back-develop`: ingress `internal-and-cloud-load-balancing`, no unauthenticated access.
+- `cms-back-develop`: ingress `all`, no unauthenticated access.
 
 The backend URL may technically exist, but direct browser-originated access is not an approved API path.
 Allowed backend callers are the frontend runtime service accounts explicitly granted `roles/run.invoker`.
+
+Do not tighten `cms-back-develop` to `internal-and-cloud-load-balancing` in the first develop contour
+unless a matching internal service-to-service network path is introduced. Plain Cloud Run to Cloud Run
+calls over the service URL need network reachability plus IAM. For this contour, IAM is the backend
+boundary.
 
 Admin user membership for the future IAP/load-balancer perimeter is intentionally not listed in this
 repository. Access is managed in GCP by the owner.
@@ -284,6 +289,8 @@ Minimum endpoints:
 - `/ready` additionally for `cms-back-develop`.
 
 Backend readiness should verify the critical runtime dependencies, including database connectivity.
+The first backend foundation stage verifies Cloud SQL IAM instance connectivity without a password. DB-level
+grants on `site_develop` and schema migrations are a separate explicit step.
 
 ## Logging
 
