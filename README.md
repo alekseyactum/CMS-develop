@@ -25,16 +25,19 @@ The target CMS should support:
 
 ## Service Shape
 
-The clean implementation is expected to be split into two application services:
+The clean implementation is expected to be split into three application services:
 
-- a Next.js frontend for public rendering, preview rendering, and the admin/editorial shell;
+- a Next.js `site-front` service for public site rendering;
+- a Next.js `cms-front` service for the admin/editorial shell;
 - a NestJS backend for authoring state, permissions, preview assembly, publish, snapshots, routes,
   rollback, diagnostics, and integrations.
 
-The backend owns the CMS truth and the versioned published snapshot contract. The frontend renders public
-and preview pages from backend contracts and must not become a second source of publish logic.
+The backend owns the CMS truth and the versioned published snapshot contract. The frontends render public,
+admin, and preview surfaces from backend contracts and must not become a second source of publish logic.
 
 See [`docs/service-split-decision.md`](docs/service-split-decision.md).
+See [`docs/cloud-develop-architecture.md`](docs/cloud-develop-architecture.md) for the agreed develop
+Cloud Run, Cloud SQL, Secret Manager, IAM, media, and deployment architecture.
 
 ## Backend Implementation Direction
 
@@ -99,6 +102,7 @@ At this point the repository contains documentation only:
 
 - this project goal and boundary document;
 - the initial frontend/backend service split decision;
+- the agreed develop cloud architecture;
 - backend implementation requirements based on the reviewed `notstrapitest` refactoring assessments;
 - development sequencing and module transfer rules;
 - a transferred current-state summary from `notstrapitest`;

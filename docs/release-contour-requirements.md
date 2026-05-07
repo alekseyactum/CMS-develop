@@ -45,7 +45,7 @@ explicit indexing decision is made.
 
 This means the implementation should be built as real release software, not as a throwaway demo:
 
-- stable Next.js frontend and NestJS backend service boundaries;
+- stable Next.js public frontend, Next.js CMS frontend, and NestJS backend service boundaries;
 - real public routing behavior;
 - production-grade SEO metadata generation;
 - sitemap and robots support;
@@ -706,7 +706,7 @@ service only because the system has a CMS publish/rebuild process.
 For the first release:
 
 - application code changes are deployed through git-based Cloud Build triggers;
-- Cloud Run is the runtime target for the frontend and backend services;
+- Cloud Run is the runtime target for the public frontend, CMS frontend, and backend services;
 - build, deploy, revision, and runtime diagnostics live primarily in Google Cloud tools;
 - manual Cloud Run changes are not the normal deployment path;
 - any actual Cloud Build trigger, Cloud Run service, load balancer, DNS, IAM, or secret change is governed

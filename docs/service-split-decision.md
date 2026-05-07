@@ -4,13 +4,14 @@ This document records the first real implementation boundary for the clean `CMS`
 
 ## Decision
 
-`CMS` will be implemented as two application services:
+`CMS` will be implemented as three application services:
 
-- frontend: Next.js;
-- backend: NestJS.
+- `site-front`: Next.js public site frontend;
+- `cms-front`: Next.js admin/editorial frontend;
+- `cms-back`: NestJS backend.
 
-The split is not cosmetic. It defines which service owns public rendering, which service owns content
-state, and how preview and publishing should work.
+The split is not cosmetic. It defines which service owns public rendering, which service owns the admin
+surface, which service owns content state, and how preview and publishing should work.
 
 ## Why This Split Fits The Product
 
@@ -23,7 +24,7 @@ Next.js fits the public and visual side of that product:
 - route-level rendering behavior;
 - metadata, canonical URLs, hreflang, sitemap, and robots integration;
 - visual preview using the same rendering components as the public site;
-- admin shell and custom editorial screens where this keeps the frontend cohesive.
+- admin shell and custom editorial screens in a separate CMS frontend.
 
 NestJS fits the source-of-truth and publishing side:
 
@@ -73,18 +74,23 @@ Example public surfaces to design:
 
 ## Frontend Responsibility
 
-The frontend should render public pages and editorial preview from backend contracts.
+The frontends should render public, admin, and editorial preview surfaces from backend contracts.
 
-Frontend-owned responsibilities:
+`site-front` responsibilities:
 
 - public route handling;
 - page rendering from published snapshot payloads;
-- preview rendering from backend preview payloads;
-- metadata rendering from snapshot/preview payloads;
-- admin shell and custom editor screens, if kept inside the same frontend service;
+- metadata rendering from published snapshot payloads;
 - frontend cache behavior and route revalidation.
 
-The frontend must not become a second source of CMS truth. It should not read authoring tables directly,
+`cms-front` responsibilities:
+
+- admin shell;
+- custom editor screens;
+- preview rendering from backend preview payloads;
+- admin workflow UX for authoring, publish, rollback, diagnostics, and readiness.
+
+The frontends must not become a second source of CMS truth. They should not read authoring tables directly,
 reconstruct publish rules, or decide what is publishable.
 
 ## Snapshot Contract
@@ -131,10 +137,10 @@ This preserves the proven `notstrapitest` loop while moving final HTML rendering
 
 The split introduces more runtime discipline:
 
-- two Docker images;
-- two Cloud Run services when deployed;
+- three Docker images;
+- three Cloud Run services when deployed;
 - separate env and secret injection surfaces;
-- explicit CORS or internal API access rules;
+- authenticated service-to-service API access rules;
 - separate health checks;
 - separate rollback paths;
 - documented deployment ordering when backend contracts change.
@@ -160,4 +166,3 @@ The recommended MVP remains narrow:
 - basic route diagnostics.
 
 Other page types and deeper workflows should be added after the first clean loop is working end to end.
-
