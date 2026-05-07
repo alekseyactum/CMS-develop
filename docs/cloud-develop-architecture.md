@@ -50,11 +50,11 @@ Develop branch convention:
 - future branch `release` is reserved for future release Cloud Run services and is not approved by this
   document.
 
-Develop Cloud Build triggers to create later:
+Develop Cloud Build triggers:
 
-- `site-front-develop-trigger` from `re-actum/site-front:develop` to `site-front-develop`
-- `cms-front-develop-trigger` from `re-actum/cms-front:develop` to `cms-front-develop`
-- `cms-back-develop-trigger` from `re-actum/cms-back:develop` to `cms-back-develop`
+- `cms-site-front-develop` from `re-actum/site-front:develop` to `site-front-develop`
+- `cms-front-develop` from `re-actum/cms-front:develop` to `cms-front-develop`
+- `cms-back-develop` from `re-actum/cms-back:develop` to `cms-back-develop`
 
 ## Cloud Run Services
 

@@ -121,5 +121,5 @@ This repository contains project documentation:
 - local Codex rules for working in this repository.
 
 See [`docs/develop-runtime-state.md`](docs/develop-runtime-state.md) for the created Cloud Run services,
-service accounts, Cloud SQL database/auth boundary, Secret Manager names, media bucket, verification
-results, and pending Cloud Build trigger blocker.
+service accounts, Cloud SQL database/auth boundary, Secret Manager names, media bucket, Cloud Build
+triggers, and verification results.

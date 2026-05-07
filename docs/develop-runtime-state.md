@@ -150,19 +150,38 @@ Final manual Cloud Build deploys with the committed `cloudbuild.yaml` shape succ
 - `cms-front-develop`: build `6c6e85f0-22aa-4e35-9c25-1fdc44208715`
 - `cms-back-develop`: build `839b28a1-da41-410e-af7b-97a6690e8ae1`
 
-Cloud Build trigger creation is pending.
+Cloud Build v2 repository mappings were created through connection `strapitest-github`:
 
-Reason:
+- `projects/composite-ally-360719/locations/europe-central2/connections/strapitest-github/repositories/site-front`
+- `projects/composite-ally-360719/locations/europe-central2/connections/strapitest-github/repositories/cms-front`
+- `projects/composite-ally-360719/locations/europe-central2/connections/strapitest-github/repositories/cms-back`
 
-- Cloud Build GitHub App installation `52444105` does not currently have access to the new repositories
-  `re-actum/site-front`, `re-actum/cms-front`, and `re-actum/cms-back`.
-- Repository mapping failed both through legacy trigger creation and the existing v2 connection
-  `strapitest-github`.
+Created develop triggers:
 
-Required next step:
+- `cms-site-front-develop`
+  - id: `ba99a59c-7258-4b63-be39-db4b630d59b4`
+  - repo: `re-actum/site-front`
+  - branch pattern: `develop$`
+  - build config: `cloudbuild.yaml`
+- `cms-front-develop`
+  - id: `097c4ead-3b3f-4bb1-a41f-61666a8922b8`
+  - repo: `re-actum/cms-front`
+  - branch pattern: `develop$`
+  - build config: `cloudbuild.yaml`
+- `cms-back-develop`
+  - id: `757154f2-e42e-48cc-8bab-2de92021dfbe`
+  - repo: `re-actum/cms-back`
+  - branch pattern: `develop$`
+  - build config: `cloudbuild.yaml`
 
-- Grant the Cloud Build GitHub App access to the three new repositories.
-- Then create `develop` triggers from each repo using `cloudbuild.yaml`.
+Trigger service account:
+
+- `projects/composite-ally-360719/serviceAccounts/865011807785@cloudbuild.gserviceaccount.com`
+
+Open item:
+
+- The next normal code push to each service repository should be watched once to confirm GitHub webhook
+  delivery and automatic deployment end to end.
 
 ## Playbook Sync
 
