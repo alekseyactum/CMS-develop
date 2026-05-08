@@ -189,6 +189,17 @@ Status as of 2026-05-08:
 - first migration `202605080001` was applied through the explicit Cloud Run migration job;
 - repeat migration execution completed with no pending migrations.
 
+The next foundation slice started with:
+
+- a minimal `node:test`-based unit test runner in `cms-back`;
+- a pure `routing` module with no database or Nest runtime dependency;
+- public route building for `uk`, `ru`, and `en`;
+- Ukrainian routes without locale prefix;
+- regional route shape `/{locale?}/{region?}/{page-path}` for the services tree;
+- regional support scoped to `services_root`, `practice_page`, `service_page`, and `problem_page`;
+- safeguards against locale-prefixed page paths, reserved region slugs, invalid path characters, and
+  regional routes on locale-only page types.
+
 After that, the next safe slice should be:
 
 `route builder -> regional token resolver -> JSON merge and section utilities`
