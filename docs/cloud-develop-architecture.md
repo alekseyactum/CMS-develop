@@ -178,7 +178,8 @@ Migrations:
 - Explicit migrations live in the `cms-back` repository.
 - Do not auto-run migrations on Cloud Run startup.
 - Develop migrations run manually or explicitly after confirmation.
-- Future option: Cloud Run Job or controlled Cloud Build migration step.
+- The develop contour uses Cloud Run Job `cms-back-migrate-develop` as the controlled migration runner.
+- The migration job uses the same service-account IAM database identity as `cms-back-develop`.
 
 ## Secret Manager
 
@@ -240,6 +241,9 @@ First develop contour:
 The code should still be structured so publish/rebuild handlers can later move into a worker without
 rewriting the domain logic.
 
+Operational Cloud Run Jobs are allowed for explicit operator actions such as schema migrations and protected
+smoke checks. They must not become scheduled background workers without a separate decision.
+
 ## Domains And Indexing
 
 Domains:
@@ -289,8 +293,11 @@ Minimum endpoints:
 - `/ready` additionally for `cms-back-develop`.
 
 Backend readiness should verify the critical runtime dependencies, including database connectivity.
-The first backend foundation stage verifies Cloud SQL IAM instance connectivity without a password. DB-level
-grants on `site_develop` and schema migrations are a separate explicit step.
+Backend readiness must not return infrastructure configuration such as Cloud SQL connection names, database
+names, IAM database users, bucket names, or secret references.
+
+After the first database foundation stage, backend readiness verifies Cloud SQL IAM access to `site_develop`
+without a password.
 
 ## Logging
 

@@ -181,6 +181,14 @@ testing style, and operational discipline.
 The migration runner should enforce unique, monotonically ordered migration filenames. Duplicate sequence
 numbers should be treated as an error in the clean project, even if the prototype tolerated them.
 
+Status as of 2026-05-08:
+
+- backend config, database module, health/readiness endpoints, and manual migration runner are implemented
+  in `cms-back`;
+- readiness checks `site_develop` through Cloud SQL IAM auth and does not return infrastructure details;
+- first migration `202605080001` was applied through the explicit Cloud Run migration job;
+- repeat migration execution completed with no pending migrations.
+
 After that, the next safe slice should be:
 
 `route builder -> regional token resolver -> JSON merge and section utilities`

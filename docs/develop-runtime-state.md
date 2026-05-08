@@ -2,7 +2,8 @@
 
 This document records the actual minimal develop runtime created for the clean CMS implementation.
 
-Date: 2026-05-07.
+Initial date: 2026-05-07.
+Latest update: 2026-05-08.
 
 GCP preflight was run from `gcp-infra-playbook` before reading or changing cloud state.
 
@@ -32,6 +33,10 @@ The first skeleton commits were pushed before cloud deployment:
 - `site-front`: `7147d4b Add develop Cloud Run skeleton`
 - `cms-front`: `9822dad Add develop Cloud Run skeleton`
 - `cms-back`: `d32e1ee Add develop Cloud Run skeleton`
+
+Latest backend foundation commit:
+
+- `cms-back`: `3acb281 Add manual database migrations`
 
 ## Cloud Run
 
@@ -113,13 +118,19 @@ Important correction:
 - After the service-account requirement was clarified, that built-in SQL user was deleted.
 - The password-oriented Secret Manager secret `cms-db-login-data-develop` was deleted.
 
-Open item:
+DB-level access:
 
-- Database schema and DB-level grants are not implemented yet.
-- The first backend foundation stage verifies Cloud SQL IAM instance login with `SELECT 1`, without using a
-  password and without selecting `site_develop`.
-- The next backend database task must establish required DB-level privileges through a controlled
-  migration/admin SQL path, without introducing a password-based CMS runtime credential.
+- `cms-back-develop-runner` has DB-level privileges on `site_develop` for normal application DML and
+  controlled schema migrations.
+- These grants were applied through a temporary built-in SQL user used only for the grant operation.
+- The temporary SQL user was deleted after the grants were applied.
+- No password-based CMS runtime credential or database secret was introduced.
+
+Schema state:
+
+- Migration tracking table: `schema_migrations`.
+- First migration applied: `202605080001 create cms_system_metadata table`.
+- First application table: `cms_system_metadata`.
 
 ## Secret Manager
 
@@ -197,12 +208,36 @@ Trigger verification:
 
 - `cms-back-develop` trigger fired from normal pushes to `re-actum/cms-back:develop`.
 - Successful backend trigger build after first backend runtime foundation: `dd4b1a98-4bf6-463f-9368-773b2dae4d65`.
+- Successful backend trigger build after manual migrations were added: build `3a410503-9feb-4248-bf44-a6130b899323`,
+  revision `cms-back-develop-00007-mnv`, commit `3acb28141631f5da70b4e03580da2c50b24babde`.
 - The backend deployment was performed by `cms-develop-build-runner`.
 
 Open item:
 
 - The next normal code push to `site-front` and `cms-front` should be watched once after the logging option
   fix to confirm automatic deployment end to end for those services.
+
+## Cloud Run Jobs
+
+Created develop operational jobs:
+
+- `cms-back-migrate-develop`
+  - purpose: explicit manual database migrations for `cms-back`;
+  - command: `npm run migrate`;
+  - service account: `cms-back-develop-runner@composite-ally-360719.iam.gserviceaccount.com`;
+  - Cloud SQL instance attached: `composite-ally-360719:europe-central2:develop-eu`.
+- `cms-back-ready-check`
+  - purpose: protected smoke check for `cms-back-develop /api/ready`;
+  - service account: `site-front-develop-runner@composite-ally-360719.iam.gserviceaccount.com`;
+  - uses an identity token from the Cloud Run metadata server and does not store credentials.
+
+These jobs are operational tools, not background workers. They do not run on a schedule.
+
+Migration verification:
+
+- `cms-back-migrate-develop-ln4zs` applied migration `202605080001`.
+- `cms-back-migrate-develop-vr8q8` completed with `No pending migrations`, proving repeat execution is
+  idempotent for the current migration set.
 
 ## Playbook Sync
 
@@ -218,14 +253,16 @@ Verified externally:
 - `site-front-develop /robots.txt` returned `Disallow: /`.
 - Direct external unauthenticated access to `cms-front-develop /health` was blocked.
 - Direct external unauthenticated access to `cms-back-develop /api/ready` returned `403`.
-- Temporary Cloud Run Job `cms-back-ready-check`, running as `site-front-develop-runner`, successfully
-  called `cms-back-develop /api/ready`.
-- `cms-back-develop /api/ready` returned `200` after the first backend foundation stage and verified Cloud
-  SQL IAM instance connectivity.
-- The temporary readiness-check job was deleted after verification.
+- Cloud Run Job `cms-back-ready-check`, running as `site-front-develop-runner`, successfully called
+  `cms-back-develop /api/ready`.
+- `cms-back-develop /api/ready` returned `200` and verified Cloud SQL IAM access to `site_develop`.
+- The readiness response contains service status, build metadata, and dependency status. It intentionally
+  does not return `CLOUD_SQL_CONNECTION_NAME`, `DB_NAME`, `DB_IAM_USER`, or `MEDIA_BUCKET`.
 
 Local notes:
 
 - `cms-back` local build passed before deployment.
+- `cms-back` local `typecheck` passed.
+- `cms-back` local `npm audit --omit=dev` reported `0 vulnerabilities`.
 - Local frontend builds were not completed because the workstation ran out of disk space during local
   dependency installation. GCP Cloud Build for both frontend services succeeded.
