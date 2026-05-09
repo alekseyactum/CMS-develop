@@ -141,6 +141,30 @@ contracts should account for:
 Use runtime validation for external-facing contracts where practical, for example with Zod schemas or an
 equivalent explicit validator.
 
+## Section Authoring And Publication Units
+
+The clean backend must model sections as independent authoring units, not only as anonymous JSON inside a
+page draft.
+
+Required direction:
+
+- each section has its own draft and published versions;
+- each section operation records actor and timestamp;
+- every section can be published independently from the editor's point of view;
+- section publication creates a new published section version;
+- section publication must not make the public frontend assemble a page from live section tables;
+- public runtime still reads a complete published page snapshot/public payload;
+- independent section publication creates a new page snapshot where only the changed section points to the
+  new section version and unchanged sections stay pinned to their previous section versions;
+- page-level validation runs before that new snapshot becomes current;
+- if critical page-level validation fails, the new section version remains available in authoring history
+  but must not activate a public current snapshot;
+- page rollback restores the exact historical set of section versions referenced by the selected snapshot;
+- regional inherit, override, and append behavior is section-level where the section schema allows it.
+
+This preserves editor flexibility without breaking snapshot-first public rendering, rollback, cache
+revalidation, route diagnostics, SEO validation, or release readiness.
+
 ## Porting Rules From notstrapitest
 
 When taking behavior from `notstrapitest`:
@@ -174,6 +198,11 @@ Required test types:
 - unit tests for pure rules such as JSON merge, section extraction, ordering, token resolution, and route
   building;
 - contract tests for preview and published snapshot payload shapes;
+- tests for independent section publication creating a complete page snapshot with pinned section
+  versions;
+- tests proving that failed page-level validation prevents public snapshot activation after a section
+  publish;
+- rollback tests proving that historical page snapshots restore their exact section version set;
 - integration tests for authoring get/save on the MVP page types;
 - integration tests for preview of the MVP page types;
 - publish and rollback tests around current snapshot behavior;
@@ -223,4 +252,3 @@ Any change that ports prototype behavior into `CMS` should answer these question
 - Which module owns the behavior in the new backend?
 - Is the frontend reading a stable backend contract rather than draft internals?
 - Does the change keep authoring, preview, publishing, and public runtime boundaries clear?
-

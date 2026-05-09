@@ -127,13 +127,14 @@ Recommended early sequence:
 3. Route builder and URL rules.
 4. Regional token resolver.
 5. JSON merge and section extraction utilities.
-6. Password hashing and authentication primitives.
-7. Snapshot and preview contract types with validation.
-8. Catalog read projections for the first MVP page types.
-9. `services_root` authoring and preview.
-10. `practice_page` authoring and preview.
-11. Publish current snapshot and public snapshot lookup.
-12. Next.js public render from the snapshot contract.
+6. Section schema, section versioning, and section-level publish rules.
+7. Password hashing and authentication primitives.
+8. Snapshot and preview contract types with validation.
+9. Catalog read projections for the first MVP page types.
+10. `services_root` authoring and preview.
+11. `practice_page` authoring and preview.
+12. Publish current snapshot and public snapshot lookup.
+13. Next.js public render from the snapshot contract.
 
 This sequence may change, but changes should be justified by risk, dependency order, and delivery value.
 
@@ -150,6 +151,7 @@ These modules are relatively self-contained and useful as early implementation s
 | Route builder | Start early | Pure logic, easy tests, important URL contract. |
 | Regional token resolver | Start early | Pure logic, low dependencies, used later by preview and publish. |
 | JSON merge and section extraction | Start early | Pure rules, important edge cases, easy tests. |
+| Section versioning and section publish rules | Do before page authoring | The editor can publish sections independently, but public runtime must remain snapshot-first. |
 | Password hashing | Good early slice | Small, self-contained, testable. |
 | Token/session auth | Do after auth decision | Prototype approach works, but the release project should decide whether to use a standard library. |
 | Runtime section cache | Later | Small, but its real contract depends on runtime rendering and publishing. |
@@ -205,6 +207,10 @@ After that, the next safe slice should be:
 `route builder -> regional token resolver -> JSON merge and section utilities`
 
 These modules are pure or nearly pure and will support the first CMS authoring and preview flow.
+
+Before implementing page authoring persistence, add a section model brief that defines section schemas,
+section draft/published versions, actor/date audit fields, section-level publish behavior, page snapshot
+pinning to exact section versions, and rollback to historical section version sets.
 
 ## Acceptance Gates
 

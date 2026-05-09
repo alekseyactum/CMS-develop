@@ -450,6 +450,44 @@ The implementation should still preserve useful source metadata inside snapshots
 A fuller published graph may be reconsidered later only if concrete release requirements prove that
 snapshot-first plus dependency tracking is insufficient.
 
+### Section-Level Authoring And Publication
+
+Sections are independent authoring units.
+
+Each page section must have its own draft and published versions. Every section operation must record the
+actor and timestamp, including at minimum:
+
+- create author and date;
+- update author and date;
+- publish author and date;
+- archive, disable, or rollback author and date when those operations exist.
+
+All sections can be published independently from the editor's point of view. A section publish operation
+creates a new published section version.
+
+The public frontend must not assemble pages from live section tables or from "latest published section"
+lookups. The public frontend receives only a complete published page snapshot/public payload.
+
+Independent section publication must therefore activate public content by creating a new complete page
+snapshot:
+
+- the changed section points to the newly published section version;
+- unchanged sections remain pinned to the exact section versions from the previous page snapshot;
+- page-level metadata, route, SEO, breadcrumbs, quality state, and render payload remain part of the
+  complete page snapshot;
+- page-level validation still runs before the new snapshot becomes current.
+
+If the resulting page does not pass critical page-level validation, the section may keep its new published
+version for authoring history, but the operation must not activate a new public current page snapshot.
+
+Page snapshots must reference the exact section versions used to render them. Rollback of a page must
+restore the page to a historical set of section versions, not rebuild the page from whatever section
+versions are latest at rollback time.
+
+Regional inheritance, override, and append behavior must work at section level where the section schema
+allows it. Section schemas must declare whether a section supports inherit, override, append, or a subset
+of those strategies for regional variants.
+
 ## Decision 10: Locale Publication Readiness
 
 All supported locales must be handled through the same publication readiness rule.
