@@ -196,6 +196,9 @@ The next foundation slice started with:
 - a minimal `node:test`-based unit test runner in `cms-back`;
 - a pure `routing` module with no database or Nest runtime dependency;
 - public route building for `uk`, `ru`, and `en`;
+- public route parsing for `/{locale?}/{region?}/{page-path}` candidates;
+- parser region detection through injected known canonical region slugs, not through hardcoded database
+  access;
 - Ukrainian routes without locale prefix;
 - regional route shape `/{locale?}/{region?}/{page-path}` for the services tree;
 - regional support scoped to `services_root`, `practice_page`, `service_page`, and `problem_page`;
@@ -204,7 +207,7 @@ The next foundation slice started with:
 
 After that, the next safe slice should be:
 
-`route builder -> regional token resolver -> JSON merge and section utilities`
+`routing foundation -> section model foundation -> JSON merge and section utilities`
 
 These modules are pure or nearly pure and will support the first CMS authoring and preview flow.
 

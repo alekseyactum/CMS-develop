@@ -96,6 +96,7 @@ Prefer small use-case handlers and domain services over one large service.
 Good candidates for isolated modules:
 
 - route building;
+- route parsing;
 - route lookup and alias diagnostics;
 - section extraction and ordering rules;
 - base/override JSON merge rules;
