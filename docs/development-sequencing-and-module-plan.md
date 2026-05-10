@@ -211,7 +211,8 @@ After that, the next safe slice should be:
 
 These modules are pure or nearly pure and will support the first CMS authoring and preview flow.
 
-Before implementing page authoring persistence, add a section model brief that defines section schemas,
+Before implementing page authoring persistence, follow the dedicated
+[`section-model-foundation.md`](section-model-foundation.md) brief. It defines section schemas,
 section draft/published versions, actor/date audit fields, section-level publish behavior, page snapshot
 pinning to exact section versions, rollback to historical section version sets, field-level composition
 policies, source-backed sections, parent/source lock policy, fixed/movable layout policy, and article/case
