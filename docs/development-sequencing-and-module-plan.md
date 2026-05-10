@@ -213,7 +213,9 @@ These modules are pure or nearly pure and will support the first CMS authoring a
 
 Before implementing page authoring persistence, add a section model brief that defines section schemas,
 section draft/published versions, actor/date audit fields, section-level publish behavior, page snapshot
-pinning to exact section versions, and rollback to historical section version sets.
+pinning to exact section versions, rollback to historical section version sets, field-level composition
+policies, source-backed sections, parent/source lock policy, fixed/movable layout policy, and article/case
+body insertion zones.
 
 ## Acceptance Gates
 

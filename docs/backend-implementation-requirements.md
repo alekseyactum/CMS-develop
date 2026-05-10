@@ -163,6 +163,18 @@ Required direction:
 - page rollback restores the exact historical set of section versions referenced by the selected snapshot;
 - regional inherit, override, and append behavior is section-level where the section schema allows it.
 
+Section schemas must also support:
+
+- field-level composition policy, so selected fields can inherit, override, or append independently where
+  needed;
+- source-backed sections, including the price-section use case where base service prices come from one
+  shared source and pages inherit, override allowed fields, or append allowed notes;
+- section-level and field-level lock policy, so parent or source sections can protect content from
+  override;
+- layout placement policy, distinguishing fixed sections from editor-movable sections;
+- layout slots or zones, including article/case pages where editor-added sections are allowed only between
+  fixed starting and fixed ending sections.
+
 This preserves editor flexibility without breaking snapshot-first public rendering, rollback, cache
 revalidation, route diagnostics, SEO validation, or release readiness.
 

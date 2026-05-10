@@ -488,6 +488,31 @@ Regional inheritance, override, and append behavior must work at section level w
 allows it. Section schemas must declare whether a section supports inherit, override, append, or a subset
 of those strategies for regional variants.
 
+Section composition must also support field-level policies. A section may inherit as a whole, but append or
+override may need to apply only to selected fields inside that section. For example, a section may inherit
+its title, override an introduction, and append additional regional items to a list field. The section
+schema must therefore declare field composition policies where whole-section policy is not precise enough.
+
+Some sections may be source-backed rather than purely page-owned. The first known case is a price section:
+base service prices should come from one shared source so core service prices can be changed in one place.
+Pages that show that price section may inherit the shared source, override allowed presentation fields, or
+append contextual notes where the section schema and source policy allow it. The first release does not
+need to implement the full price catalog before the section model exists, but the section model must not
+make source-backed sections impossible.
+
+Parent or source sections may protect themselves from override. Lock policy can apply at section level or,
+where needed, at field level. A regional or child section must not override protected parent/source fields;
+it may only append or override fields explicitly allowed by the schema and the parent/source lock policy.
+
+Section layout must distinguish movable and fixed sections. Some sections can be reordered by editors,
+while others are fixed by page type or layout slot. The page snapshot must preserve the section order and
+layout slot used for rendering.
+
+Article pages and case pages need an insertion-zone model. They may have fixed starting sections and fixed
+ending sections, while allowing editors to add and reorder content sections only inside the body zone
+between those fixed boundaries. The model should support this shape without making all page types use the
+same flexible section layout.
+
 ## Decision 10: Locale Publication Readiness
 
 All supported locales must be handled through the same publication readiness rule.
