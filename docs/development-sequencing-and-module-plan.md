@@ -218,6 +218,15 @@ pinning to exact section versions, rollback to historical section version sets, 
 policies, source-backed sections, parent/source lock policy, fixed/movable layout policy, and article/case
 body insertion zones.
 
+Status as of 2026-05-10:
+
+- `section model foundation` is implemented in `cms-back/src/sections` as a pure module;
+- the implemented slice covers policy validation and snapshot/layout rules only;
+- database tables, authoring controllers, section draft storage, published page snapshot persistence, and
+  full page schemas remain out of scope for this slice;
+- the next practical code slice can be JSON merge/section utilities or the first persistence design for
+  section instances and versions.
+
 ## Acceptance Gates
 
 Each completed slice should pass these gates:

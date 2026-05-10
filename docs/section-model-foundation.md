@@ -221,6 +221,19 @@ src/sections/section-snapshot-rules.spec.ts
 
 The first code slice should not use the database.
 
+Status as of 2026-05-10:
+
+- `cms-back/src/sections` is implemented as a pure TypeScript module with no Nest, database, or Cloud
+  runtime dependency;
+- section schema policy validates section-level and field-level `inherit`, `override`, and `append`
+  composition rules;
+- parent/source lock policy rejects forbidden section and field operations explicitly;
+- page snapshot rules can pin a newly published section version into an existing snapshot while keeping
+  unchanged section refs stable;
+- rollback restores exact historical section refs;
+- layout policy distinguishes fixed zones from editor-managed body zones;
+- unit tests cover the first section policy and snapshot behavior.
+
 Recommended tests:
 
 - validate allowed section and field composition strategies;
