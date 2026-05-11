@@ -227,6 +227,18 @@ Status as of 2026-05-10:
 - the next practical code slice can be JSON merge/section utilities or the first persistence design for
   section instances and versions.
 
+Status as of 2026-05-11:
+
+- the section requirements were refined before further code changes;
+- ownership now separates `page_owned`, `global_owned`, and `external_source_backed`;
+- persisted overlay section versions are intentionally out of first-release scope;
+- composition is stored in current page-section binding state, not as full rules inside public snapshots;
+- published snapshots should store resolved public output plus minimal section/version refs;
+- page type structure is defined by Nest page schemas, with concrete section lists specified per page type
+  before implementation;
+- the next code step should align `cms-back/src/sections` with the refined markdown before adding
+  persistence.
+
 ## Acceptance Gates
 
 Each completed slice should pass these gates:

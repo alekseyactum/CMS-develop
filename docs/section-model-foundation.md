@@ -7,10 +7,11 @@ before page authoring persistence, preview assembly, publish flow, and database 
 
 ## Purpose
 
-Sections are independent authoring units, but public rendering remains snapshot-first.
+Sections are first-class authoring units, but public rendering remains snapshot-first.
 
-Editors should be able to edit and publish individual sections. The public frontend must still receive a
-complete published page snapshot that pins every rendered section to an exact section version.
+Section schemas decide whether a section publishes independently or together with its page. The public
+frontend must still receive a complete published page snapshot with resolved payload, not live authoring
+tables.
 
 This model exists to avoid two bad outcomes:
 
@@ -44,8 +45,8 @@ not the content of one concrete section.
 
 `SectionInstance`
 
-A concrete section attached to a page or supplied through a shared/source-backed model. It has a stable
-section identity used by authoring, snapshots, diagnostics, and rollback.
+A concrete section attached to a page, owned globally inside CMS, or backed by an external source. It has
+a stable section identity used by authoring, snapshots, diagnostics, and rollback.
 
 `SectionVersion`
 
@@ -58,24 +59,31 @@ A reference to one exact section version.
 
 `PageSnapshotSectionRef`
 
-The section reference stored inside a page snapshot. It must include the section identity, section type,
-version reference, and layout position used by that snapshot.
+The minimal section reference stored inside a page snapshot. It should identify which concrete published
+section version contributed to the resolved public output, but it should not carry full composition rules.
 
 ## Ownership
 
-The first release model must support at least two ownership modes.
+The first release model must support three ownership scopes.
 
 `page_owned`
 
 The section belongs to one page. Most editorial sections start here.
 
-`source_backed`
+`global_owned`
 
-The section is backed by a shared source owned outside the page section itself. The first known case is a
-price section where base service prices should be changed in one place and reused across service pages.
+The section exists as a standalone CMS-owned global section and may be inherited or referenced by many
+pages. Examples include footer, header/navigation, and shared price sections when prices are managed
+inside CMS.
 
-The section model must not require the full price catalog to exist immediately, but it must leave a clean
-place for source-backed references and source lock policy.
+`external_source_backed`
+
+The section is backed by a source outside normal CMS section ownership. Future examples include ERP,
+service catalog, or an external price source. The first release should leave a clear boundary for this,
+but it does not need to implement full external integration.
+
+Ownership does not decide override or append by itself. Footer and price may both be `global_owned`, but
+footer can be inherit-only while price can allow override or append according to section schema.
 
 ## Versions And Audit
 
@@ -91,6 +99,29 @@ Required operation metadata:
 Draft and published section versions must be distinguishable. A section version can be valid authoring
 history even when it does not activate a new public page snapshot.
 
+## Page Schema Ownership
+
+Canonical page structure belongs to Nest backend page schemas, not to editable database configuration.
+
+The database stores concrete section instances, section versions, page-section bindings, resolved
+published snapshots, and content. It should not be the canonical source for which required sections make
+up a page type.
+
+Each page type schema should define:
+
+- required and optional section slots;
+- section order for required slots;
+- whether a section slot is visual content or metadata;
+- allowed ownership scopes;
+- publish mode;
+- composition policy;
+- visibility/disable policy;
+- validation rules;
+- allowed dynamic body section types where applicable.
+
+Concrete section lists should be specified before implementing each page type. The general model should
+not attempt to define every page type section list up front.
+
 ## Composition Strategies
 
 The model must support these composition strategies:
@@ -101,42 +132,74 @@ The model must support these composition strategies:
 
 Strategies may apply at section level or field level.
 
-Whole-section strategy is not always precise enough. A section may inherit its title, override an intro
-field, and append items to a list field. Therefore `SectionDefinition` must allow field-level composition
-policy where needed.
+The model supports both whole-section composition and field-level composition. Whole-section override
+makes the page section self-contained. Field-level composition allows one section to inherit some fields,
+override other fields, and append to allowed list-like fields.
+
+For the first release, composition allowance is defined by section/page schema. Do not add a separate
+instance-level lock policy unless a later requirement proves it is needed. If footer must never be
+overridden, its schema should make it inherit-only.
 
 Append must be explicit. A field cannot be appended only because it happens to be an array or rich-text
 field. The section schema must allow append for that field.
 
-## Source-Backed Price Sections
+Append is allowed only for list fields and rich-text block arrays in the first release. Plain strings,
+numbers, prices, and arbitrary objects should use inherit or override, not append.
 
-Price sections must support one shared source for base service prices.
+Composition settings are stored in current authoring page-section binding state. They are not stored in
+the public snapshot as full composition rules, and they are not owned by the global section version
+itself.
+
+No separate composition-history model is required for the first release. General actor/date operation
+audit remains required.
+
+## Global And Price Sections
+
+Price sections must support a shared source for base service prices.
 
 The intended model:
 
-- a base service price is maintained once in a shared source;
+- a base service price is maintained once in a global CMS section or future external source;
 - non-regional service pages inherit or reference that price section/source by default;
-- pages may override only fields allowed by schema and source lock policy;
+- pages may override only fields allowed by schema;
 - pages may append contextual notes where allowed;
 - regional variants may inherit, override allowed fields, or append allowed regional context.
 
-The first section foundation code should model this as policy and references only. It should not implement
-the full price catalog.
+If a page or region uses whole-section override, it is treated as self-contained for that section and
+global section updates do not automatically change it. With field-level composition, rebuild behavior is
+field-aware:
 
-## Lock Policy
+- inherited fields may update from the new global/base version;
+- appended fields may rebuild from the new global/base value plus the local append value according to
+  policy;
+- overridden fields keep the local value.
 
-Parent or source sections may protect themselves from override.
+Footer is also a global section example, but unlike price it should normally be inherit-only and not
+overridable by pages.
 
-Locks may apply at:
+The first release should not implement the full price catalog or ERP integration.
 
-- section level;
-- field level.
+## No Persisted Overlay Versions
 
-A child or regional section must not override a locked parent/source field. It may only override or append
-fields allowed by both the section schema and the parent/source lock policy.
+The first release must not introduce persisted overlay section versions.
 
-Lock policy should produce explicit validation errors. It should not silently ignore forbidden child
-content.
+Inheritance, override, and append are authoring/publish-time rules. On publish, backend resolves the
+final section content and writes the resolved output into the page snapshot payload.
+
+This avoids a first-release model like:
+
+```text
+base section version + overlay version(s) -> separate persisted resolved section version
+```
+
+Instead, use:
+
+```text
+authoring binding composition + section versions -> resolved page snapshot payload
+```
+
+Snapshot diagnostics may keep minimal section/version refs where useful, but frontend rendering must not
+depend on inheritance lineage.
 
 ## Layout Policy
 
@@ -152,9 +215,17 @@ Some sections can be reordered. Some cannot be moved outside their slot. Some ca
 
 Layout policy belongs to the page/section schema layer, not to frontend rendering guesses.
 
-## Article And Case Insertion Zones
+Required section order is defined by backend page schema and is not editor-reorderable by default.
 
-Article pages and case pages need a constrained flexible layout.
+## Blog-Like Dynamic Body Pages
+
+Blog-like pages need a constrained flexible layout.
+
+The first blog-like group includes:
+
+- `article_page`;
+- `case_page`;
+- media/publications page.
 
 Expected shape:
 
@@ -163,47 +234,129 @@ Expected shape:
 - fixed end sections.
 
 Editors may add and reorder allowed content sections inside the body zone. They must not insert sections
-before fixed start sections or after fixed end sections unless a later page schema explicitly allows it.
+before fixed start sections or after fixed end sections in the first release.
 
-The model should support article/case insertion zones without forcing every page type into the same
-flexible layout.
+Dynamic body sections are governed by page body-zone validation. The schema should define allowed dynamic
+section types and minimum/required body content rules, for example at least one meaningful content block.
+
+Editor-inserted dynamic sections are movable only inside the editable body zone.
+
+## Metadata Sections
+
+SEO is a first-class section for authoring, versioning, validation, publish, snapshot, and rollback.
+
+SEO should not be treated as a visual body block. The backend schema can distinguish section kind, for
+example content versus metadata, while the frontend decides how to process `seo` in the final payload.
 
 ## Section Publish Activation
 
-All sections can be published independently from the editor's point of view.
+Section publish mode is defined by schema:
 
-A section publish operation creates a new section version. Public activation still happens through a new
-complete page snapshot:
+- `independent`: section can publish its own new published section version;
+- `with_page`: draft changes are published together with page publish.
 
-- the changed section points to the new section version;
-- unchanged sections stay pinned to the exact versions from the previous current page snapshot;
+Even an independent section publish does not change the public site directly. Public activation always
+happens through a new complete page snapshot:
+
+- changed `with_page` sections are validated and published during page publish;
+- independent sections used by publish-resolution must already have a published version;
+- unchanged sections stay pinned to the versions selected by publish-resolution;
 - layout refs are preserved unless the operation explicitly changes allowed layout state;
 - page-level validation runs before the new page snapshot becomes current.
 
 If page-level validation fails, the new section version remains available in authoring history, but a new
 public current page snapshot must not be activated.
 
+Required independent sections must have a published version before any page depending on them can be
+published. Enabled optional independent sections must also resolve to a published version. Missing
+published versions are publish/readiness errors.
+
+Page publish automatically publishes changed `with_page` draft sections before building the new page
+snapshot. Enabled optional `with_page` sections must pass section validation; backend must not silently
+disable invalid enabled sections.
+
+## Preview And Publish Resolution
+
+CMS supports two preview modes and one strict publish mode.
+
+`published-preview`
+
+Resolves from currently published section versions. It is used to review the state that can be safely
+published from already-published dependencies.
+
+`draft-preview`
+
+Resolves from latest draft section versions where available, including draft independent sections. It is
+used for authoring review.
+
+`publish-resolution`
+
+The real page publish path:
+
+- changed `with_page` sections are validated and converted from draft to published versions;
+- independent sections are resolved only from current published versions;
+- required and enabled optional sections are validated;
+- resolved public payload is built;
+- a new page snapshot is created and activated as current.
+
+Publish must not accidentally include draft independent sections.
+
+## Global Section Rebuild Policy
+
+Publishing a `global_owned` section creates a new global section version. Public pages move to that
+version only through affected page snapshot rebuilds.
+
+Global section activation is policy-driven:
+
+- global section publish itself is immediate as authoring history;
+- public page activation happens through affected page snapshot rebuild;
+- rebuild may be automatic, manually approved, or scheduled/batched depending on section policy;
+- large affected sets must be processed in batches with diagnostics;
+- failed page rebuilds must not block already valid rebuilt pages unless policy requires all-or-nothing.
+
+All-or-nothing behavior is also policy-driven. The default should be partial success with diagnostics,
+while high-risk sections may require all-or-nothing or manual approval.
+
+Affected pages are determined primarily from current published state/bindings and checked against page
+schema for readiness diagnostics.
+
+## Visibility And Deletion
+
+Section lifecycle and page binding visibility are separate concepts.
+
+Section lifecycle:
+
+- draft;
+- published;
+- archived.
+
+Page binding visibility:
+
+- enabled;
+- disabled.
+
+Disabled means the section binding is not active for that page. Disabled bindings are excluded from
+published page snapshots: they do not appear in public payload or section refs.
+
+Whether a section can be disabled is defined by schema through `canDisable`. Required sections normally
+use `canDisable=false`, while optional sections may be disabled when schema allows it.
+
+Physical deletion is allowed only for draft-only sections that never reached published history or page
+snapshot history. Published/history sections must be archived or removed from the current draft/binding,
+not physically deleted.
+
 ## Rollback
 
-Rollback must restore the exact historical section version set referenced by a previous page snapshot.
-
-Rollback must not rebuild a page from latest section versions.
-
-For example, if a historical snapshot referenced:
+Published snapshot rollback restores public output only:
 
 ```text
-hero -> v1
-faq -> v4
-price -> v2
+current public snapshot -> selected historical snapshot
 ```
 
-rollback must restore those exact references, not:
+It must not mutate current draft, page-section bindings, composition settings, or authoring state.
 
-```text
-hero -> latest
-faq -> latest
-price -> latest
-```
+Authoring rollback is a separate feature and can be implemented later. The first release must support
+public rollback through historical published snapshots.
 
 ## Initial Code Scope
 
@@ -221,30 +374,47 @@ src/sections/section-snapshot-rules.spec.ts
 
 The first code slice should not use the database.
 
-Status as of 2026-05-10:
+Initial code status as of 2026-05-10, before the 2026-05-11 requirement refinement:
 
 - `cms-back/src/sections` is implemented as a pure TypeScript module with no Nest, database, or Cloud
   runtime dependency;
 - section schema policy validates section-level and field-level `inherit`, `override`, and `append`
   composition rules;
-- parent/source lock policy rejects forbidden section and field operations explicitly;
+- parent/source lock policy rejects forbidden section and field operations explicitly in the initial code,
+  but the refined first-release requirement moves this decision into schema policy;
 - page snapshot rules can pin a newly published section version into an existing snapshot while keeping
   unchanged section refs stable;
-- rollback restores exact historical section refs;
+- rollback restores exact historical section refs in the initial code, while the refined requirement
+  treats public snapshot rollback as resolved-output rollback;
 - layout policy distinguishes fixed zones from editor-managed body zones;
 - unit tests cover the first section policy and snapshot behavior.
+
+Requirements update as of 2026-05-11:
+
+- section ownership is refined to `page_owned`, `global_owned`, and `external_source_backed`;
+- persisted overlay section versions are removed from first-release scope;
+- published snapshots should prioritize resolved public payload plus minimal section/version refs, not
+  full composition lineage;
+- page structures are code-defined in Nest page schemas;
+- preview and publish resolution are separate modes;
+- schema decides section publish mode, disable rules, layout behavior, and composition policy.
+
+The existing `cms-back/src/sections` foundation must be aligned with these refined requirements in a
+separate code step.
 
 Recommended tests:
 
 - validate allowed section and field composition strategies;
 - reject append where schema does not allow append;
-- reject override against section-level or field-level lock policy;
+- reject override where schema does not allow override;
 - apply one section publication to a previous snapshot ref set while preserving unchanged refs;
 - reject duplicate section ids inside a snapshot ref set;
 - preserve section order where the operation does not change layout;
 - reject moving fixed sections;
 - allow body-zone insertion for article/case-style page layouts;
-- restore historical section refs on rollback.
+- verify publish-resolution does not include draft independent sections;
+- verify disabled bindings are excluded from published snapshot output;
+- restore historical public snapshot output on rollback.
 
 ## Later Persistence Implications
 
@@ -255,9 +425,10 @@ Likely future areas:
 - section definitions or schema registry;
 - section instances;
 - section versions;
-- page snapshot section refs;
-- source-backed section references;
-- source/parent lock metadata;
+- page-section binding state;
+- published page snapshots with resolved payloads and minimal refs;
+- global section references;
+- external source boundaries;
 - page layout slots/zones;
 - audit metadata for section operations.
 
