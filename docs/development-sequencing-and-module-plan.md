@@ -242,6 +242,15 @@ Status as of 2026-05-11:
 - the next code step should align `cms-back/src/sections` with the refined markdown before adding
   persistence.
 
+Status as of 2026-05-12:
+
+- `cms-back/src/sections` now includes a pure content resolution layer;
+- resolution supports whole-section and field-level `inherit`, `override`, and `append`;
+- resolution validates strategy allowance through section schema before composing content;
+- append is implemented only for arrays, matching list/rich-text block policy;
+- persistence is still the next major backend step: section tables, version tables, bindings, and stored
+  page snapshots are not implemented yet.
+
 ## Acceptance Gates
 
 Each completed slice should pass these gates:

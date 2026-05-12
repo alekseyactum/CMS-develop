@@ -179,6 +179,8 @@ Section schemas must also support:
 
 - field-level composition policy, so selected fields can inherit, override, or append independently where
   needed;
+- deterministic content resolution, so schema plus composition plus source/local content produces the
+  resolved JSON section content that will later be stored in the page snapshot payload;
 - global-owned and external-source-backed sections, including the price-section use case where base
   service prices come from one shared source and pages inherit, override allowed fields, or append allowed
   notes;

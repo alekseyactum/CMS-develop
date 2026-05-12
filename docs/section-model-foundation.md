@@ -222,6 +222,30 @@ authoring binding composition + section versions -> resolved page snapshot paylo
 Snapshot diagnostics may keep minimal section/version refs where useful, but frontend rendering must not
 depend on inheritance lineage.
 
+## Content Resolution Rules
+
+The first implementation layer resolves content as a pure deterministic operation:
+
+```text
+section schema + composition state + source/base content + local content -> resolved section content
+```
+
+Resolution must support:
+
+- whole-section `inherit`, `override`, and `append`;
+- field-level `inherit`, `override`, and `append` inside object sections;
+- schema validation before applying a strategy;
+- append only for list-like and rich-text block array content;
+- clear errors when required source/local content is missing or when append receives non-array content.
+
+Field-level resolution uses the section-level strategy as the default for fields that do not have an
+explicit field strategy. For example, a section can inherit all base fields by default, override `title`,
+and append `items`.
+
+Resolution must clone returned JSON values and must not mutate source/base or local authoring data. It is
+not persistence by itself; persistence will later store section versions, bindings, and final resolved
+page snapshot payloads.
+
 ## Draft Dependency And Staleness
 
 Inherited and append-based authoring can create draft dependencies between parent/source/base sections and
