@@ -462,8 +462,10 @@ actor and timestamp, including at minimum:
 - publish author and date;
 - archive, disable, or rollback author and date when those operations exist.
 
-All sections can be published independently from the editor's point of view. A section publish operation
-creates a new published section version.
+Section publication does not use one universal flow. Section publish mode is schema-defined:
+
+- `independent` sections can publish their own new published section versions;
+- `with_page` sections receive new published versions only as part of successful page publish.
 
 The public frontend must not assemble pages from live section tables or from "latest published section"
 lookups. The public frontend receives only a complete published page snapshot/public payload.
@@ -477,8 +479,13 @@ snapshot:
   complete page snapshot;
 - page-level validation still runs before the new snapshot becomes current.
 
-If the resulting page does not pass critical page-level validation, the section may keep its new published
-version for authoring history, but the operation must not activate a new public current page snapshot.
+For `with_page` sections, successful page publish must commit the new section published versions and the
+new current page snapshot atomically. If section validation or critical page-level validation fails, the
+attempt must not persist new `with_page` published section versions and must not activate a new public
+current page snapshot.
+
+For `independent` section publication, the published section version may remain in authoring history even
+when a later affected-page rebuild fails, but the invalid rebuilt page snapshot must not become current.
 
 Page snapshots must reference the exact section versions used to render them. Rollback of a page must
 restore the page to a historical set of section versions, not rebuild the page from whatever section

@@ -151,15 +151,21 @@ Required direction:
 
 - each section has its own draft and published versions;
 - each section operation records actor and timestamp;
-- every section can be published independently from the editor's point of view;
-- section publication creates a new published section version;
+- section publish mode is schema-defined: `independent` or `with_page`;
+- independent section publication creates a new published section version;
+- changed `with_page` draft sections are published only as part of successful page publish;
 - section publication must not make the public frontend assemble a page from live section tables;
 - public runtime still reads a complete published page snapshot/public payload;
+- successful page publish commits new `with_page` published section versions and the new page snapshot
+  atomically;
 - independent section publication creates a new page snapshot where only the changed section points to the
   new section version and unchanged sections stay pinned to their previous section versions;
-- page-level validation runs before that new snapshot becomes current;
-- if critical page-level validation fails, the new section version remains available in authoring history
-  but must not activate a public current snapshot;
+- page-level validation runs before a new page snapshot becomes current;
+- if critical page-level validation fails during `with_page` page publish, the attempt must not persist
+  new `with_page` published section versions or activate a new public current snapshot;
+- if critical page-level validation fails after an independent section publish triggers affected page
+  snapshot rebuild, the already published independent section version remains in authoring history but the
+  invalid rebuilt page snapshot must not become current;
 - page rollback restores the exact historical set of section versions referenced by the selected snapshot;
 - regional inherit, override, and append behavior is section-level where the section schema allows it.
 

@@ -258,22 +258,31 @@ Section publish mode is defined by schema:
 Even an independent section publish does not change the public site directly. Public activation always
 happens through a new complete page snapshot:
 
-- changed `with_page` sections are validated and published during page publish;
+- changed `with_page` sections are validated during page publish and prepared for publication;
+- new published versions for changed `with_page` sections and the new current page snapshot must be
+  committed atomically;
 - independent sections used by publish-resolution must already have a published version;
 - unchanged sections stay pinned to the versions selected by publish-resolution;
 - layout refs are preserved unless the operation explicitly changes allowed layout state;
 - page-level validation runs before the new page snapshot becomes current.
 
-If page-level validation fails, the new section version remains available in authoring history, but a new
-public current page snapshot must not be activated.
+If a `with_page` page publish fails section validation or page-level validation, the failed attempt must
+not persist new published versions for the affected `with_page` sections and must not activate a new
+public current page snapshot.
+
+Independent section publication remains a separate flow. It may create a new published section version
+before affected page snapshots rebuild. If a later affected-page rebuild fails, the independent section
+version remains published in authoring history, but invalid page snapshots must not be activated.
 
 Required independent sections must have a published version before any page depending on them can be
 published. Enabled optional independent sections must also resolve to a published version. Missing
 published versions are publish/readiness errors.
 
-Page publish automatically publishes changed `with_page` draft sections before building the new page
+Page publish prepares changed `with_page` draft sections for publication while building the new page
 snapshot. Enabled optional `with_page` sections must pass section validation; backend must not silently
 disable invalid enabled sections.
+Failed page publish attempts should be retained as diagnostics or audit history, not as partial published
+state for `with_page` sections.
 
 ## Preview And Publish Resolution
 
@@ -293,11 +302,12 @@ used for authoring review.
 
 The real page publish path:
 
-- changed `with_page` sections are validated and converted from draft to published versions;
+- changed `with_page` sections are validated and prepared for conversion from draft to published versions;
 - independent sections are resolved only from current published versions;
 - required and enabled optional sections are validated;
 - resolved public payload is built;
-- a new page snapshot is created and activated as current.
+- if validation succeeds, changed `with_page` sections are committed as new published versions and a new
+  page snapshot is created and activated as current in one atomic operation.
 
 Publish must not accidentally include draft independent sections.
 
