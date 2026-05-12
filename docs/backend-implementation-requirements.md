@@ -183,6 +183,8 @@ Section schemas must also support:
   resolved JSON section content that will later be stored in the page snapshot payload;
 - first persistence tables for pages, sections, section versions, page-section bindings, binding
   dependencies, page snapshots, snapshot section refs, and current snapshot pointers;
+- a repository/service layer over those tables that handles SQL reads/writes and transaction boundaries
+  without absorbing publish decisions, page-schema rules, or content resolution logic;
 - global-owned and external-source-backed sections, including the price-section use case where base
   service prices come from one shared source and pages inherit, override allowed fields, or append allowed
   notes;

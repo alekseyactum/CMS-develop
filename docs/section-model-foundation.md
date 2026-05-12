@@ -145,6 +145,26 @@ Initial persistence tables:
 This structure supports the first release rule: schemas live in Nest code; content, versions, bindings,
 dependencies, and snapshots live in the database.
 
+## First Persistence Service
+
+The first repository/service layer over these tables is `SectionsPersistenceService`.
+
+It owns database reads and writes for:
+
+- creating page records;
+- creating section identities;
+- creating section versions with transaction-safe next version numbers;
+- creating or updating page-section bindings;
+- replacing binding dependency rows;
+- reading page-section bindings for preview/publish flows;
+- creating page snapshots and snapshot section refs in one transaction;
+- setting and reading the current page snapshot pointer.
+
+This service must stay below publish/business rules. It does not decide whether a page is publishable,
+whether append is allowed, how content is resolved, or which slots a page type requires. Those decisions
+remain in section/page schema rules and publish services. The persistence service only writes and reads
+factual state.
+
 ## Composition Strategies
 
 The model must support these composition strategies:

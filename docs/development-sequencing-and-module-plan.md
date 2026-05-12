@@ -251,7 +251,9 @@ Status as of 2026-05-12:
 - the first persistence migration defines database tables for pages, sections, section versions,
   page-section bindings, binding dependencies, page snapshots, snapshot section refs, and current snapshot
   pointers;
-- repository/services for writing and reading those tables are the next backend slice.
+- `cms-back/src/sections-persistence` adds the first repository/service layer for writing and reading those
+  tables without taking over publish decisions or page-schema rules;
+- publish service orchestration and public/admin controllers remain future slices.
 
 ## Acceptance Gates
 
