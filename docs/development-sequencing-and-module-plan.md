@@ -215,8 +215,8 @@ Before implementing page authoring persistence, follow the dedicated
 [`section-model-foundation.md`](section-model-foundation.md) brief. It defines section schemas,
 section draft/published versions, actor/date audit fields, section-level publish behavior, page snapshot
 pinning to exact section versions, rollback to historical section version sets, field-level composition
-policies, source-backed sections, parent/source lock policy, fixed/movable layout policy, and article/case
-body insertion zones.
+policies, global-owned and external-source-backed sections, schema-defined composition restrictions,
+fixed/movable layout policy, and article/case body insertion zones.
 
 Status as of 2026-05-10:
 

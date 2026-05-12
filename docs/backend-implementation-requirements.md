@@ -167,7 +167,8 @@ Required direction:
   snapshot rebuild, the already published independent section version remains in authoring history but the
   invalid rebuilt page snapshot must not become current;
 - page rollback restores the exact historical set of section versions referenced by the selected snapshot;
-- regional inherit, override, and append behavior is section-level where the section schema allows it.
+- regional inherit, override, and append behavior is section-level or field-level where the section schema
+  allows it;
 - draft dependency tracking and stale-state diagnostics must cover inherited/regional authoring;
 - upstream draft changes must not automatically persist derived child draft versions or child page draft
   copies;
@@ -178,10 +179,11 @@ Section schemas must also support:
 
 - field-level composition policy, so selected fields can inherit, override, or append independently where
   needed;
-- source-backed sections, including the price-section use case where base service prices come from one
-  shared source and pages inherit, override allowed fields, or append allowed notes;
-- section-level and field-level lock policy, so parent or source sections can protect content from
-  override;
+- global-owned and external-source-backed sections, including the price-section use case where base
+  service prices come from one shared source and pages inherit, override allowed fields, or append allowed
+  notes;
+- schema-defined inherit/override/append restrictions, so protected sections such as footer can remain
+  inherit-only without a separate first-release parent/source lock policy;
 - dependency metadata or equivalent diagnostics that show when inherited drafts require revalidation;
 - layout placement policy, distinguishing fixed sections from editor-movable sections;
 - layout slots or zones, including article/case pages where editor-added sections are allowed only between

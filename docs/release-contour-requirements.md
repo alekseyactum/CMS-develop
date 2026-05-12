@@ -509,16 +509,17 @@ override may need to apply only to selected fields inside that section. For exam
 its title, override an introduction, and append additional regional items to a list field. The section
 schema must therefore declare field composition policies where whole-section policy is not precise enough.
 
-Some sections may be source-backed rather than purely page-owned. The first known case is a price section:
-base service prices should come from one shared source so core service prices can be changed in one place.
-Pages that show that price section may inherit the shared source, override allowed presentation fields, or
-append contextual notes where the section schema and source policy allow it. The first release does not
-need to implement the full price catalog before the section model exists, but the section model must not
-make source-backed sections impossible.
+Some sections may be global-owned or external-source-backed rather than purely page-owned. The first known
+case is a price section: base service prices should come from one shared source so core service prices can
+be changed in one place. Pages that show that price section may inherit the shared source, override
+allowed presentation fields, or append contextual notes where the section schema allows it. The first
+release does not need to implement the full price catalog before the section model exists, but the section
+model must not make global-owned or external-source-backed sections impossible.
 
-Parent or source sections may protect themselves from override. Lock policy can apply at section level or,
-where needed, at field level. A regional or child section must not override protected parent/source fields;
-it may only append or override fields explicitly allowed by the schema and the parent/source lock policy.
+For the first release, inherit/override/append protection is schema-defined. A protected global section
+such as footer should be modeled as inherit-only in schema rather than through a separate parent/source
+lock policy. A regional or child section may only append or override fields explicitly allowed by the
+section/page schema.
 
 Section layout must distinguish movable and fixed sections. Some sections can be reordered by editors,
 while others are fixed by page type or layout slot. The page snapshot must preserve the section order and
