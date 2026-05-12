@@ -142,6 +142,26 @@ contracts should account for:
 Use runtime validation for external-facing contracts where practical, for example with Zod schemas or an
 equivalent explicit validator.
 
+The first public payload assembler is a pure backend contract layer. It receives an already selected page
+schema, exact published section-version payloads, and resolved runtime/read-model payloads, then returns
+the complete public object intended for the Next.js frontend. It must not read draft authoring tables,
+decide publishability, or fetch runtime directories by itself.
+
+The first assembled payload shape includes:
+
+- `schemaVersion`;
+- `pageType`;
+- `locale`;
+- `route` and `canonicalRoute`;
+- `seo`;
+- `breadcrumbs`;
+- ordered visual `sections`;
+- `publishedAt`;
+- source diagnostics that distinguish section-version content from runtime/read-model content.
+
+Metadata sections such as `seo` are exposed through top-level metadata, not rendered as body sections.
+Visual sections are ordered by backend page schema layout.
+
 ## Section Authoring And Publication Units
 
 The clean backend must model sections as independent authoring units, not only as anonymous JSON inside a
@@ -199,6 +219,11 @@ Section schemas must also support:
 - layout placement policy, distinguishing fixed sections from editor-movable sections;
 - layout slots or zones, including article/case pages where editor-added sections are allowed only between
   fixed starting and fixed ending sections.
+
+The first concrete page schema registry must be code-defined in Nest, not editable database configuration.
+Initial page types are `lawyers_page`, `lawyer_page`, and `contacts_page`. They are localized but not
+regional in the first iteration, use required global-owned header/footer slots, required page-owned SEO,
+and runtime/reference slots for lawyers listing/filter, lawyer profile, and contacts map data.
 
 This preserves editor flexibility without breaking snapshot-first public rendering, rollback, cache
 revalidation, route diagnostics, SEO validation, or release readiness.

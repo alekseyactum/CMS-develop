@@ -124,6 +124,65 @@ Each page type schema should define:
 Concrete section lists should be specified before implementing each page type. The general model should
 not attempt to define every page type section list up front.
 
+## Initial Page Schema Registry
+
+The first page schema registry slice is code-defined in `cms-back`, not stored in database tables.
+
+Initial fixed page schemas:
+
+- `lawyers_page`: `/lawyers`;
+- `lawyer_page`: `/lawyers/:lawyerSlug`;
+- `contacts_page`: `/contacts`.
+
+All three page types are localized for `uk`, `ru`, and `en`, but they are not regional in this first
+iteration. Ukrainian routes have no locale prefix; `ru` and `en` use locale prefixes through the routing
+module.
+
+Shared required slots for all three schemas:
+
+- `site_header`: global-owned, independent, inherit-only, fixed at the start of the page;
+- `seo`: page-owned metadata section, published with the page;
+- `site_footer`: global-owned, independent, inherit-only, fixed at the end of the page.
+
+Page-specific content/runtime slots:
+
+- `lawyers_page` has `lawyers_header`, `lawyers_filter`, and `lawyers_listing`;
+- `lawyer_page` has `lawyer_profile`;
+- `contacts_page` has `contacts_header` and `contacts_map`.
+
+`lawyers_filter`, `lawyers_listing`, `lawyer_profile`, and `contacts_map` are runtime/reference slots.
+They are part of the page schema, but their data comes from CMS public read models or directories, not
+from normal editable `section_versions`. A page snapshot should store the slot/source reference and the
+backend should resolve the allowed public read model data while building the public payload.
+
+For this first iteration, these three page schemas have fixed structure. Editors cannot add arbitrary
+dynamic body sections to them. Dynamic editor-managed body sections remain reserved for blog-like pages
+such as articles, cases, and media/publications pages.
+
+## First Public Payload Assembly
+
+The first public payload assembler is a pure function over prepared inputs:
+
+```text
+page schema + published section payloads + runtime/read-model payloads -> public page payload
+```
+
+It does not fetch from the database, does not read draft state, does not decide whether a page can be
+published, and does not resolve runtime directories by itself.
+
+The assembler validates that required schema slots are present before a public payload is produced.
+Section-backed slots must be passed with exact published section version refs. Runtime/reference slots
+must be passed as resolved public read-model payloads.
+
+The resulting public payload separates:
+
+- top-level `seo` metadata;
+- ordered visual `sections`;
+- source diagnostics for section-version versus runtime/read-model content.
+
+This keeps the frontend contract simple: Next.js receives one complete public payload and does not need
+to understand draft tables, authoring composition, or publish-readiness rules.
+
 ## First Persistence Tables
 
 The first database layer stores factual authoring and published state only. It must not move canonical

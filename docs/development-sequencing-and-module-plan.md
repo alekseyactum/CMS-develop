@@ -253,6 +253,16 @@ Status as of 2026-05-12:
   pointers;
 - `cms-back/src/sections-persistence` adds the first repository/service layer for writing and reading those
   tables without taking over publish decisions or page-schema rules;
+- `cms-back/src/page-schemas` adds the first code-defined page schema registry for `lawyers_page`,
+  `lawyer_page`, and `contacts_page`;
+- the first registry slice keeps these three page types fixed, locale-only, and non-regional;
+- shared header/footer are modeled as required global-owned inherit-only slots, SEO as a required
+  page-owned metadata slot, and list/profile/map data as runtime/reference slots resolved from CMS public
+  read models;
+- `cms-back/src/page-payloads` adds the first pure public payload assembler;
+- the assembler validates required schema slots and required fields for section-backed slots, separates
+  top-level SEO from visual sections, preserves schema-defined section order, and marks whether each
+  visual section came from a published section version or a runtime/read-model source;
 - publish service orchestration and public/admin controllers remain future slices.
 
 ## Acceptance Gates
