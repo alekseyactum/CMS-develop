@@ -201,6 +201,34 @@ authoring binding composition + section versions -> resolved page snapshot paylo
 Snapshot diagnostics may keep minimal section/version refs where useful, but frontend rendering must not
 depend on inheritance lineage.
 
+## Draft Dependency And Staleness
+
+Inherited and append-based authoring creates draft dependencies between parent/source/base sections and
+child or regional page bindings.
+
+If a parent/source/base draft changes:
+
+- CMS must not automatically persist new child draft section versions;
+- CMS must not automatically persist new child page draft versions;
+- dependent child bindings and pages must be marked `draft_stale` or an equivalent authoring status;
+- public current page snapshots must remain unchanged.
+
+Draft dependency metadata should record which upstream draft version a dependent binding/page was last
+reviewed or composed against.
+
+Draft preview must resolve from the latest upstream draft versions plus the child/regional override and
+append state. The composed draft result may be recalculated on demand or in background authoring flows,
+but it must not become a second persisted source of truth that competes with the child/local authoring
+state.
+
+If a child page uses whole-section override, that section is self-contained for draft dependency purposes
+and upstream draft changes must not mark it stale for inherited content. Field-level composition may use
+field-aware stale behavior where only inherited/appended fields depend on the upstream draft.
+
+Editor diagnostics and publish-readiness checks must expose upstream draft changes clearly. A dependent page
+with unresolved upstream draft changes must be revalidated through preview/review before it is treated as
+ready for publish.
+
 ## Layout Policy
 
 Page snapshots must preserve section order and layout placement.
@@ -417,12 +445,15 @@ Recommended tests:
 - validate allowed section and field composition strategies;
 - reject append where schema does not allow append;
 - reject override where schema does not allow override;
+- mark dependent bindings/pages stale on upstream draft change without materializing child draft versions;
+- resolve draft preview from latest upstream draft plus local override/append state;
 - apply one section publication to a previous snapshot ref set while preserving unchanged refs;
 - reject duplicate section ids inside a snapshot ref set;
 - preserve section order where the operation does not change layout;
 - reject moving fixed sections;
 - allow body-zone insertion for article/case-style page layouts;
 - verify publish-resolution does not include draft independent sections;
+- preserve public current snapshot when only upstream draft state changes;
 - verify disabled bindings are excluded from published snapshot output;
 - restore historical public snapshot output on rollback.
 
@@ -436,6 +467,7 @@ Likely future areas:
 - section instances;
 - section versions;
 - page-section binding state;
+- draft dependency and staleness metadata;
 - published page snapshots with resolved payloads and minimal refs;
 - global section references;
 - external source boundaries;

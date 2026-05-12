@@ -295,6 +295,15 @@ Append rules must be deterministic:
 - release readiness checks must report invalid append usage;
 - append must not bypass locale, SEO, quality, or route validation.
 
+Draft dependency handling must also be explicit:
+
+- changing a base/parent/source draft must not automatically create persisted child draft copies;
+- dependent regional variants and inherited pages must be marked stale for authoring/review until
+  revalidated;
+- draft preview must recompose the result from the latest upstream drafts plus local override/append
+  content;
+- public snapshots must remain unchanged until normal publish or rebuild activates a new valid snapshot.
+
 Append should be used to add meaningful regional context, not to create accidental duplicate pages. If a
 regional page only repeats the base content without useful regional content, it should remain inherited or
 unpublished according to that page type's quality policy.

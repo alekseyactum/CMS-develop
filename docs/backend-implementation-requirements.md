@@ -168,6 +168,11 @@ Required direction:
   invalid rebuilt page snapshot must not become current;
 - page rollback restores the exact historical set of section versions referenced by the selected snapshot;
 - regional inherit, override, and append behavior is section-level where the section schema allows it.
+- draft dependency tracking and stale-state diagnostics must cover inherited/regional authoring;
+- upstream draft changes must not automatically persist derived child draft versions or child page draft
+  copies;
+- preview must recompose inherited draft results from the latest upstream drafts plus local child
+  override/append state.
 
 Section schemas must also support:
 
@@ -177,6 +182,7 @@ Section schemas must also support:
   shared source and pages inherit, override allowed fields, or append allowed notes;
 - section-level and field-level lock policy, so parent or source sections can protect content from
   override;
+- dependency metadata or equivalent diagnostics that show when inherited drafts require revalidation;
 - layout placement policy, distinguishing fixed sections from editor-movable sections;
 - layout slots or zones, including article/case pages where editor-added sections are allowed only between
   fixed starting and fixed ending sections.
