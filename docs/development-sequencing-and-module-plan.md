@@ -248,8 +248,10 @@ Status as of 2026-05-12:
 - resolution supports whole-section and field-level `inherit`, `override`, and `append`;
 - resolution validates strategy allowance through section schema before composing content;
 - append is implemented only for arrays, matching list/rich-text block policy;
-- persistence is still the next major backend step: section tables, version tables, bindings, and stored
-  page snapshots are not implemented yet.
+- the first persistence migration defines database tables for pages, sections, section versions,
+  page-section bindings, binding dependencies, page snapshots, snapshot section refs, and current snapshot
+  pointers;
+- repository/services for writing and reading those tables are the next backend slice.
 
 ## Acceptance Gates
 

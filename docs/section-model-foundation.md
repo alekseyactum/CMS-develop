@@ -124,6 +124,27 @@ Each page type schema should define:
 Concrete section lists should be specified before implementing each page type. The general model should
 not attempt to define every page type section list up front.
 
+## First Persistence Tables
+
+The first database layer stores factual authoring and published state only. It must not move canonical
+page schemas or section schemas into editable database configuration.
+
+Initial persistence tables:
+
+- `cms_pages`: page variants by page type, locale, optional region, route path, and public path;
+- `cms_sections`: stable section identities, ownership scope, kind, owner page, and optional external
+  source key;
+- `cms_section_versions`: draft/published/archived section content versions with actor/date metadata;
+- `cms_page_section_bindings`: current authoring connection between a page slot and source/local section
+  state, composition, visibility, draft status, and layout;
+- `cms_page_section_binding_dependencies`: upstream section draft dependencies used for stale diagnostics;
+- `cms_page_snapshots`: durable resolved public page payloads;
+- `cms_page_snapshot_section_refs`: exact section versions that contributed to a page snapshot;
+- `cms_page_current_snapshots`: explicit current public snapshot pointer per page.
+
+This structure supports the first release rule: schemas live in Nest code; content, versions, bindings,
+dependencies, and snapshots live in the database.
+
 ## Composition Strategies
 
 The model must support these composition strategies:

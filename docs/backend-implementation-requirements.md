@@ -181,6 +181,8 @@ Section schemas must also support:
   needed;
 - deterministic content resolution, so schema plus composition plus source/local content produces the
   resolved JSON section content that will later be stored in the page snapshot payload;
+- first persistence tables for pages, sections, section versions, page-section bindings, binding
+  dependencies, page snapshots, snapshot section refs, and current snapshot pointers;
 - global-owned and external-source-backed sections, including the price-section use case where base
   service prices come from one shared source and pages inherit, override allowed fields, or append allowed
   notes;
