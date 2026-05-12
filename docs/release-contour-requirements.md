@@ -516,6 +516,16 @@ allowed presentation fields, or append contextual notes where the section schema
 release does not need to implement the full price catalog before the section model exists, but the section
 model must not make global-owned or external-source-backed sections impossible.
 
+Global-owned sections must still support different behavior policies. Shared fixed globals such as footer
+and main navigation/menu should be one global section/version inherited by all pages, not separate
+page-local versions. Draft changes to those sections do not require manual `draft_stale` review on every
+page; after a new global version is published, affected page snapshots must be rebuilt so their snapshot
+refs point to that concrete shared version.
+
+Shared price-like sections are different: inherited or appended page/regional content may require manual
+review when the base draft changes. For those sections, dependent bindings may become `draft_stale` until
+the editor reviews preview output and the page is publish-ready again.
+
 For the first release, inherit/override/append protection is schema-defined. A protected global section
 such as footer should be modeled as inherit-only in schema rather than through a separate parent/source
 lock policy. A regional or child section may only append or override fields explicitly allowed by the

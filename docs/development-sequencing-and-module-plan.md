@@ -216,7 +216,8 @@ Before implementing page authoring persistence, follow the dedicated
 section draft/published versions, actor/date audit fields, section-level publish behavior, page snapshot
 pinning to exact section versions, rollback to historical section version sets, field-level composition
 policies, global-owned and external-source-backed sections, schema-defined composition restrictions,
-fixed/movable layout policy, and article/case body insertion zones.
+dependent draft policy, global publish propagation policy, fixed/movable layout policy, and article/case
+body insertion zones.
 
 Status as of 2026-05-10:
 
@@ -231,6 +232,8 @@ Status as of 2026-05-11:
 
 - the section requirements were refined before further code changes;
 - ownership now separates `page_owned`, `global_owned`, and `external_source_backed`;
+- global-owned sections now distinguish shared fixed globals such as footer/menu from price-like
+  inherited sections by schema policy rather than by another ownership scope;
 - persisted overlay section versions are intentionally out of first-release scope;
 - composition is stored in current page-section binding state, not as full rules inside public snapshots;
 - published snapshots should store resolved public output plus minimal section/version refs;

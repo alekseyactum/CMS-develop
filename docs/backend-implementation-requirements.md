@@ -182,8 +182,13 @@ Section schemas must also support:
 - global-owned and external-source-backed sections, including the price-section use case where base
   service prices come from one shared source and pages inherit, override allowed fields, or append allowed
   notes;
+- shared fixed global sections such as footer/menu, where all pages inherit one published global section
+  version and a publish event triggers affected page snapshot rebuilds instead of page-local section
+  versions;
 - schema-defined inherit/override/append restrictions, so protected sections such as footer can remain
   inherit-only without a separate first-release parent/source lock policy;
+- dependent draft policy, so price-like inherited/appended sections can require `draft_stale` review while
+  footer/menu-like shared globals do not require page-by-page draft stale review;
 - dependency metadata or equivalent diagnostics that show when inherited drafts require revalidation;
 - layout placement policy, distinguishing fixed sections from editor-movable sections;
 - layout slots or zones, including article/case pages where editor-added sections are allowed only between

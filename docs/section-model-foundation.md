@@ -114,6 +114,8 @@ Each page type schema should define:
 - whether a section slot is visual content or metadata;
 - allowed ownership scopes;
 - publish mode;
+- dependent draft policy;
+- publish propagation policy;
 - composition policy;
 - visibility/disable policy;
 - validation rules;
@@ -155,7 +157,25 @@ audit remains required.
 
 ## Global And Price Sections
 
-Price sections must support a shared source for base service prices.
+Global sections must be separated by behavior, not by a new ownership scope. `global_owned` covers both
+shared fixed sections and shared editable/base sections, while section schema defines how dependent pages
+react to draft and published changes.
+
+Shared fixed global sections, such as footer and main navigation/menu, should normally use:
+
+- `global_owned`;
+- `independent` publish mode;
+- inherit-only composition;
+- no page-local section versions;
+- no page-level draft stale review for ordinary global draft changes;
+- affected page snapshot rebuild after a new global version is published.
+
+All pages may reference the same published footer/menu section version in their snapshots. When footer or
+menu is published, public pages should move to the new version through affected snapshot rebuilds, not by
+creating separate footer/menu versions per page and not by reading live global tables at render time.
+
+Price sections must support a shared source for base service prices, but unlike footer/menu they may
+require page or regional editorial review when inherited or appended draft data changes.
 
 The intended model:
 
@@ -174,8 +194,9 @@ field-aware:
   policy;
 - overridden fields keep the local value.
 
-Footer is also a global section example, but unlike price it should normally be inherit-only and not
-overridable by pages.
+Footer and menu are global section examples with a different policy from price: they should normally be
+inherit-only, not overridable by pages, and published as one shared version that triggers affected snapshot
+rebuilds.
 
 The first release should not implement the full price catalog or ERP integration.
 
@@ -203,14 +224,23 @@ depend on inheritance lineage.
 
 ## Draft Dependency And Staleness
 
-Inherited and append-based authoring creates draft dependencies between parent/source/base sections and
-child or regional page bindings.
+Inherited and append-based authoring can create draft dependencies between parent/source/base sections and
+child or regional page bindings. Whether upstream draft changes mark dependents stale is section-schema
+policy, not ownership alone.
+
+Two first-release policies are required:
+
+- `mark_stale`: upstream draft changes mark dependent inherit/append bindings as `draft_stale` until the
+  page or regional authoring state is reviewed;
+- `none`: upstream draft changes do not create page-level stale review, used for shared fixed globals such
+  as footer/menu where pages always inherit one shared published section.
 
 If a parent/source/base draft changes:
 
 - CMS must not automatically persist new child draft section versions;
 - CMS must not automatically persist new child page draft versions;
-- dependent child bindings and pages must be marked `draft_stale` or an equivalent authoring status;
+- dependent child bindings and pages must be marked `draft_stale` or an equivalent authoring status when
+  the section schema uses the `mark_stale` policy;
 - public current page snapshots must remain unchanged.
 
 Draft dependency metadata should record which upstream draft version a dependent binding/page was last
@@ -351,6 +381,11 @@ Global section activation is policy-driven:
 - rebuild may be automatic, manually approved, or scheduled/batched depending on section policy;
 - large affected sets must be processed in batches with diagnostics;
 - failed page rebuilds must not block already valid rebuilt pages unless policy requires all-or-nothing.
+
+Shared fixed global sections such as footer/menu should default to affected snapshot rebuild without
+page-by-page manual draft review. Shared price-like sections may still require draft-stale review before
+affected page snapshots are considered ready, because local override/append content can depend on changed
+base values.
 
 All-or-nothing behavior is also policy-driven. The default should be partial success with diagnostics,
 while high-risk sections may require all-or-nothing or manual approval.
