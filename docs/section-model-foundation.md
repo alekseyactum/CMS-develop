@@ -191,9 +191,12 @@ page schemas or section schemas into editable database configuration.
 Initial persistence tables:
 
 - `cms_pages`: page variants by page type, locale, optional region, route path, and public path;
-- `cms_sections`: stable section identities, ownership scope, kind, owner page, and optional external
-  source key;
+- `cms_sections`: stable section identities, locale, ownership scope, kind, owner page, and optional
+  external source key;
 - `cms_section_versions`: draft/published/archived section content versions with actor/date metadata;
+- `cms_section_current_versions`: explicit current published and latest draft pointers for all sections;
+- `cms_section_validation_runs`: archive of section version validation attempts;
+- `cms_section_version_validation_state`: current validation state per section version and check type;
 - `cms_page_section_bindings`: current authoring connection between a page slot and source/local section
   state, composition, visibility, draft status, and layout;
 - `cms_page_section_binding_dependencies`: upstream section draft dependencies used for stale diagnostics;
@@ -213,6 +216,8 @@ It owns database reads and writes for:
 - creating page records;
 - creating section identities;
 - creating section versions with transaction-safe next version numbers;
+- setting and reading current section version pointers;
+- writing section validation runs and current validation state;
 - creating or updating page-section bindings;
 - replacing binding dependency rows;
 - reading page-section bindings for preview/publish flows;
@@ -261,6 +266,20 @@ Global sections must be separated by behavior, not by a new ownership scope. `gl
 shared fixed sections and shared editable/base sections, while section schema defines how dependent pages
 react to draft and published changes.
 
+Global sections are localized as separate section records. Do not store all languages inside one large
+multilingual `content_json`.
+
+Example:
+
+```text
+site_footer uk -> one global section
+site_footer ru -> one global section
+site_footer en -> one global section
+```
+
+The `cms_sections` table must therefore store an explicit `locale`. For `page_owned` sections, this locale
+matches the owner page locale. For `global_owned` sections, locale belongs directly to the section itself.
+
 Shared fixed global sections, such as footer and main navigation/menu, should normally use:
 
 - `global_owned`;
@@ -270,12 +289,59 @@ Shared fixed global sections, such as footer and main navigation/menu, should no
 - no page-level draft stale review for ordinary global draft changes;
 - affected page snapshot rebuild after a new global version is published.
 
-All pages may reference the same published footer/menu section version in their snapshots. When footer or
-menu is published, public pages should move to the new version through affected snapshot rebuilds, not by
-creating separate footer/menu versions per page and not by reading live global tables at render time.
+All pages for the same locale may reference the same published footer/menu section version in their
+snapshots. When footer or menu is published, public pages should move to the new version through affected
+snapshot rebuilds, not by creating separate footer/menu versions per page and not by reading live global
+tables at render time.
+
+Saving a draft of a shared fixed global section must not change public pages, current page snapshots, or
+page authoring state. Footer/menu draft changes must not mark dependent pages `draft_stale`; affected
+pages can be calculated for diagnostics or preview, but ordinary page editors should not see thousands of
+pages as dirty just because global navigation has an unpublished draft.
+
+Publishing shared fixed global sections uses a patch-based snapshot rebuild, not full recomposition from
+authoring state:
+
+```text
+current public page snapshot + new footer/menu payload/ref -> new public page snapshot
+```
+
+The rebuild must preserve all other section refs and payloads from the current public snapshot. Draft
+versions of page-owned sections must not be read or included. Runtime/read-model sections should not make
+footer/menu patch rebuild fail because the page is not rebuilt from scratch.
+
+Footer/menu rebuild policy is best-effort:
+
+- the new footer/menu version may become the current published section version after section validation
+  passes;
+- affected pages that rebuild successfully switch to new page snapshots;
+- affected pages that fail for technical reasons go to diagnostics/retry;
+- one failed page must not block already valid rebuilt pages.
+
+Expected footer/menu patch rebuild failures are technical or state-integrity failures, for example:
+
+- missing current page snapshot;
+- missing expected footer/menu ref in current snapshot;
+- missing published section version payload;
+- database/transaction error;
+- concurrent rebuild or publish conflict;
+- timeout.
+
+Footer/menu rollback is implemented as a new draft/publish flow, not by moving the current pointer back to
+an old published version. If the current footer is `v3` and the editor chooses to roll back to old `v1`,
+the system creates a new draft `v4` with content copied from `v1`. If `v4` passes current validation, it
+is published and affected snapshots rebuild normally. If it fails validation, `v4` remains the latest
+draft with validation diagnostics so an editor can fix it.
+
+To support this audit trail, section versions should record their source where applicable, for example:
+
+```text
+source_section_version_id
+change_reason: manual_edit | rollback
+```
 
 Price sections must support a shared source for base service prices, but unlike footer/menu they may
-require page or regional editorial review when inherited or appended draft data changes.
+require composition instead of a simple payload replacement when inherited or appended content is used.
 
 The intended model:
 
@@ -298,7 +364,177 @@ Footer and menu are global section examples with a different policy from price: 
 inherit-only, not overridable by pages, and published as one shared version that triggers affected snapshot
 rebuilds.
 
+Global price sections use automatic affected snapshot rebuild for dependent pages that still depend on
+the global source.
+
+When a global price section is published:
+
+- enabled page bindings using whole-section `inherit` must rebuild the price block from the new published
+  global price;
+- enabled page bindings using whole-section `append` must rebuild the price block from the new published
+  global price plus the current published local append content;
+- field-level composition must rebuild when at least one field uses `inherit` or `append`;
+- whole-section `override` is self-contained and must not be changed by the global price publish;
+- disabled optional price bindings must not be changed.
+
+The rebuild is not a full page republish from draft authoring state. It must preserve the current public
+snapshot and replace only the resolved price block plus the relevant price section refs. Draft versions of
+other page sections must not be read or included.
+
+Unlike footer/menu, price rebuild may require content recomposition and validation:
+
+```text
+new global published price + current published local append/override delta -> resolved price payload
+```
+
+If a dependent page's recomposed price payload fails validation, the global price version may still remain
+published, valid affected pages may still switch to new snapshots, and the failed page should go to
+diagnostics/retry or manual repair. This is still a best-effort affected snapshot rebuild, but with
+price-specific recomposition rather than footer/menu-style direct replacement.
+
+Saving a new global price draft does not change public snapshots. It may mark dependent enabled bindings
+as stale for authoring diagnostics when they use `inherit`, `append`, or field-level inherited/appended
+fields. Whole-section overrides and disabled optional bindings are not stale because they do not depend on
+the global price payload.
+
 The first release should not implement the full price catalog or ERP integration.
+
+## Current Section Versions
+
+The current section version pointer model applies to all sections, not only global sections.
+
+`cms_section_versions` stores the version archive. Draft and published versions live in the same table and
+are distinguished by lifecycle state:
+
+```text
+lifecycle_state: draft | published | archived
+```
+
+`cms_section_current_versions` stores the current pointers:
+
+```text
+section_id
+current_published_version_id
+latest_draft_version_id
+published_activated_by
+published_activated_at
+draft_updated_by
+draft_updated_at
+```
+
+This table answers “what is current for this section?” It does not replace snapshot refs.
+
+`cms_page_snapshot_section_refs` answers a different question: “which exact section version contributed
+to this historical page snapshot?”
+
+Page rollback changes the current page snapshot pointer only. It must not mutate current section pointers.
+
+## Section Validation State
+
+Invalid save draft attempts do not need to be persisted in the first release. If draft save validation
+fails, normal section version tables remain unchanged and the UI can show the immediate validation error.
+
+Publish validation is different because the draft already exists and the editor needs durable diagnostics
+for the failed publish attempt.
+
+Section publish validation should be stored in two places:
+
+`cms_section_validation_runs`
+
+Archive of validation attempts:
+
+```text
+validation_run_id
+section_version_id
+check_type: publish_validation
+status: passed | failed
+errors_json
+checked_by
+checked_at
+request_id
+```
+
+`cms_section_version_validation_state`
+
+Current validation state for one section version and check type:
+
+```text
+section_version_id
+check_type
+status
+latest_validation_run_id
+error_count
+checked_at
+```
+
+The UI should read current validation state for the editor-facing status and may read validation runs for
+history.
+
+Even if a draft passed validation when it was saved, publish must validate the draft again. Schema rules,
+media references, required fields, or related constraints may have changed between save and publish.
+
+If publish validation fails:
+
+- the draft remains a draft;
+- no new published version is created;
+- current published section pointer does not change;
+- affected page snapshot rebuild does not start;
+- validation run and validation state record the current reasons.
+
+If publish validation passes:
+
+- validation run and state record success;
+- a published section version is created from the draft content;
+- `cms_section_current_versions.current_published_version_id` is updated;
+- affected page snapshot rebuild starts according to section policy.
+
+## Page-Owned Parent Inheritance
+
+Publishing a page-owned parent section must not automatically publish inherited child or regional pages.
+
+Example:
+
+```text
+base service page section published
+regional page inherits/appends that section
+```
+
+The base page publish updates only the base page snapshot and the base page-owned section versions that
+publish with that page. Inherited child or regional pages remain on their current public snapshots until a
+separate explicit action updates them.
+
+Dependent child/regional bindings should still record that a newer parent published version is available
+when they use `inherit`, `append`, or field-level inherited/appended fields. Whole-section overrides and
+disabled optional bindings are not affected.
+
+The first release should expose this as an explicit CMS action, for example:
+
+```text
+Republish regional pages
+```
+
+This action is controlled and visible to the editor/operator. It should:
+
+- show affected regional pages before execution;
+- skip whole-section overrides and disabled optional bindings;
+- use current published parent section versions;
+- use current published local append/override deltas where needed;
+- not read unrelated draft sections from regional pages;
+- create new page snapshots for selected affected pages;
+- switch current snapshots only for successful pages;
+- write diagnostics/retry state for failed pages.
+
+This keeps page-owned inheritance predictable. Normal parent page publish does not hide a cascade of
+regional public updates, while editors still have an explicit batch operation when they want to apply the
+new parent content to regional pages.
+
+Useful authoring status concepts for this flow:
+
+```text
+has_local_draft_changes
+has_unapplied_parent_published_changes
+last_regional_republish_status
+```
 
 ## No Persisted Overlay Versions
 

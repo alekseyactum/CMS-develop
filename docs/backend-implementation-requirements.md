@@ -203,6 +203,10 @@ Section schemas must also support:
   resolved JSON section content that will later be stored in the page snapshot payload;
 - first persistence tables for pages, sections, section versions, page-section bindings, binding
   dependencies, page snapshots, snapshot section refs, and current snapshot pointers;
+- explicit section locale, so global footer/menu sections are separate per locale instead of one
+  multilingual JSON blob;
+- current section version pointers for all sections, covering current published and latest draft versions;
+- section validation diagnostics split into validation run history and current validation state;
 - a repository/service layer over those tables that handles SQL reads/writes and transaction boundaries
   without absorbing publish decisions, page-schema rules, or content resolution logic;
 - global-owned and external-source-backed sections, including the price-section use case where base
@@ -211,6 +215,20 @@ Section schemas must also support:
 - shared fixed global sections such as footer/menu, where all pages inherit one published global section
   version and a publish event triggers affected page snapshot rebuilds instead of page-local section
   versions;
+- patch-based affected snapshot rebuild for shared fixed footer/menu sections, preserving other current
+  published section payloads and refs without reading page drafts or runtime read models;
+- best-effort footer/menu rebuild with diagnostics/retry for failed pages, not all-or-nothing blocking;
+- footer/menu rollback through a new draft copied from the old published version, followed by current
+  publish validation, not by moving the current published pointer back to the old version;
+- automatic affected snapshot rebuild for global price publish when pages use enabled inherit, append, or
+  field-level inherited/appended price composition;
+- price publish rebuild must preserve the current page snapshot and recompute only the price block from
+  the new global published price plus current published local append/override deltas;
+- whole-section price overrides and disabled optional price bindings must not be changed by global price
+  publish;
+- page-owned parent section publish must not automatically publish inherited child/regional pages;
+- inherited child/regional pages should expose unapplied parent published changes and be updated through
+  an explicit CMS action such as `Republish regional pages`;
 - schema-defined inherit/override/append restrictions, so protected sections such as footer can remain
   inherit-only without a separate first-release parent/source lock policy;
 - dependent draft policy, so price-like inherited/appended sections can require `draft_stale` review while
