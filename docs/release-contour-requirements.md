@@ -295,6 +295,24 @@ Append rules must be deterministic:
 - release readiness checks must report invalid append usage;
 - append must not bypass locale, SEO, quality, or route validation.
 
+For price sections in the services tree, regional pages inherit from the current published price result of
+the matching base non-regional page, not directly from the global price source. The global price source is
+the upper shared source for base pages. The base page price result is the parent layer for regional pages.
+
+This applies to both price values and CMS-authored price text/notes.
+
+The expected chain is:
+
+```text
+global price source/section
+  -> base non-regional page price section
+      -> regional page price section
+```
+
+If a base page publishes changed price content, dependent regional pages that inherit or append from that
+price section become stale / need regional republish. They must not be automatically published. Whole
+regional override remains self-contained and is not changed by base price publication.
+
 Draft dependency handling must also be explicit:
 
 - changing a base/parent/source draft must not automatically create persisted child draft copies;
@@ -574,35 +592,79 @@ variant only when it is actually ready.
 
 ## Decision 11: ERP And Directory Data Boundary
 
-The first production release should use a hybrid directory-data model.
+The first production release should use ERP-imported reference data stored inside the CMS database.
 
-Critical directories may be created and maintained in CMS for the first release, but the data model must
-already include explicit boundaries for future ERP integration.
+These records may be called runtime/read-model data in product discussion, but the implementation must
+keep the boundary explicit:
 
-The CMS model must support:
+- `reference-data`: ERP-imported source objects stored in the CMS database;
+- `runtime-resolvers`: backend logic that builds public read-model payloads from CMS database state.
 
-- stable internal IDs;
-- optional external ERP IDs;
-- source ownership metadata;
-- clear separation between ERP-owned fields and CMS-owned fields;
-- diagnostics for records that are missing expected external IDs;
-- future idempotent import from ERP without rewriting the page model.
+The first release scope includes:
 
-ERP-owned fields should be treated as read-only from the CMS perspective once ERP integration is active.
+- practices;
+- services;
+- problems;
+- lawyers;
+- offices;
+- regions;
+- reviews;
+- lawyer qualifications;
+- region qualifications.
 
-CMS-owned fields may include:
+ERP is the source of truth for object identity and public eligibility. The CMS is the source of truth for
+CMS-owned public enrichment such as public slugs, localized display fields, media, sort order, validation,
+preview, publish, snapshots, and diagnostics.
 
-- public slugs;
-- page-owned route metadata;
-- SEO fields;
-- authoring sections;
-- page visibility and publish state;
-- CMS-specific ordering or editorial display settings;
-- regional override and append content where the page type supports it.
+The only ERP visibility flag used by CMS public logic is:
+
+```text
+show_on_site
+```
+
+Other ERP fields such as `active` and `send_to_site` remain ERP-internal unless a later explicit decision
+changes this rule.
+
+ERP-owned source fields are read-only from the CMS admin perspective. CMS must not edit source fields,
+delete ERP-imported objects, or manually change the ERP-owned `show_on_site` value.
+
+ERP pushes changes into CMS one object at a time through private service-to-service endpoints. These
+endpoints must be protected by IAM/service-account identity between backend services, not by a public API
+or CMS admin screen.
+
+Each ERP-imported object must have a stable internal CMS id plus an `external_id` from ERP. Do not use ERP
+ids as primary CMS ids. Source uniqueness is enforced inside each typed reference table by:
+
+```text
+source + external_id
+```
+
+The first release uses typed `cms_ref_*` tables and typed translation tables, not one universal reference
+JSON table. The detailed table and field contract is documented in
+[`reference-data-and-runtime-model.md`](reference-data-and-runtime-model.md).
+
+Public slugs are CMS-owned, shared across locales, and unique within object type. ERP source slug changes
+must not automatically change public URLs. When CMS changes a public slug/public route, redirects from
+old public URLs to new public URLs must be created for all affected locale routes.
+
+If ERP stops sending an object, CMS does not auto-delete it and does not auto-disable it. The last known
+`show_on_site` value remains authoritative until ERP sends a new value.
+
+If ERP updates a reference object, CMS updates the typed source table and marks as stale only pages whose
+current published snapshots explicitly reference that object. The current published snapshot is not
+replaced automatically. Republish after ERP/source changes is manual in the first release.
+
+Published snapshots must store the complete public payload plus dependency refs for reference objects that
+were actually used in the payload. This keeps frontend rendering snapshot-first while still allowing CMS
+to identify stale pages after ERP/source changes.
+
+CMS validation remains responsible for checking whether a concrete section/page has all required data for
+its locale and schema. `show_on_site=true` allows an object to be used; it does not guarantee that a page
+using the object can be published.
 
 For the first release, the project must not implement ERP write-back unless a later explicit decision
 approves it. Writing CMS edits back into ERP is a separate, higher-risk integration and should not be
-introduced as an accidental side effect of directory management.
+introduced as an accidental side effect of reference-data management.
 
 If ERP is unavailable after integration is introduced, the public site must continue to render from the
 last valid published state. ERP availability must not be required for ordinary public page rendering.
@@ -736,6 +798,22 @@ For runtime sections:
 - the section must define cache, fallback, and failure behavior;
 - if runtime data is unavailable, the frontend must follow the section policy instead of improvising;
 - runtime sections must be included in readiness and diagnostics where they affect release quality.
+
+Many public blocks are not purely runtime. A block may combine CMS-authored fields with data resolved from
+reference/read-model tables. The first release should model these as composite sections:
+
+- one logical page section/block in the page schema;
+- a CMS-authored part for titles, labels, settings, intro text, and editor-owned content;
+- a runtime/read-model part resolved by backend from CMS database reference data;
+- one preview/public payload contract for the frontend.
+
+Use pure runtime slots only when a block has no meaningful CMS-authored content. Do not split one visible
+frontend block into unrelated CMS and runtime sibling sections unless the page schema intentionally exposes
+two separate blocks.
+
+Global price-like sections are not automatically runtime sections. A price section managed in CMS is a
+`global_owned` section. A future ERP-backed price source should use an explicit external-source boundary,
+not an ad hoc runtime resolver hidden inside the frontend.
 
 The final section structure from `notstrapitest` is not automatically frozen into the production release.
 Before implementing each page type, the project must define a page/section specification.
@@ -1106,6 +1184,11 @@ Generated list rules:
 Runtime read models are allowed for generated sections such as lawyers or offices, but only through the
 controlled public-contract approach described in the frontend rendering boundary.
 
+When generated/runtime payloads are included in a published snapshot, the snapshot must also retain
+dependency refs for the reference objects actually used in that payload. These refs allow CMS to mark
+published pages stale when ERP/source data changes without making the public frontend resolve live
+directories at render time.
+
 ## Decision 25: Initial Content Strategy
 
 Production content migration is not decided yet.
@@ -1346,7 +1429,9 @@ The initial implementation order is:
 1. Project skeleton: NestJS app, config validation, and health endpoint.
 2. Database module and strict SQL migration runner.
 3. Auth, secure sessions, RBAC, and bootstrap admin flow.
-4. Core dictionaries and reference data: locales, regions, page types, and media metadata basics.
+4. Core dictionaries and reference-data foundation: locales, page types, media metadata basics, and the
+   typed `cms_ref_*` model for ERP-imported practices, services, problems, lawyers, offices, regions,
+   reviews, and qualifications.
 5. Route builder, route registry, and aliases.
 6. Page type specification template.
 7. First vertical page slice: `services_root` or `practice_page`.

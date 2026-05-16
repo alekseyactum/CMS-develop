@@ -53,6 +53,8 @@ implementation should port proven behavior from `notstrapitest` through typed pa
 preview/snapshot contracts, focused domain services, and tests around the preserved edge cases.
 
 See [`docs/backend-implementation-requirements.md`](docs/backend-implementation-requirements.md).
+See [`docs/reference-data-and-runtime-model.md`](docs/reference-data-and-runtime-model.md) for the agreed
+ERP-imported reference data and runtime/read-model boundary.
 
 ## Development Sequencing
 

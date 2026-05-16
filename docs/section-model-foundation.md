@@ -159,6 +159,28 @@ For this first iteration, these three page schemas have fixed structure. Editors
 dynamic body sections to them. Dynamic editor-managed body sections remain reserved for blog-like pages
 such as articles, cases, and media/publications pages.
 
+## Composite CMS And Runtime Sections
+
+Not every block that uses runtime/read-model data should be modeled as a pure runtime section.
+
+Many public blocks have two parts:
+
+- CMS-authored fields, such as title, intro text, labels, display settings, and editor-owned copy;
+- backend-resolved read-model data, such as lawyers, offices, reviews, practices, services, or regions.
+
+The first-release model should represent these as composite sections when they appear as one visible block
+on the page. A composite section has one page-schema slot and one frontend payload contract, but the
+backend understands that its payload is assembled from both CMS-owned content and resolved reference data.
+
+Use a pure runtime/reference slot only when the block has no meaningful CMS-authored content.
+
+The public frontend still receives a complete resolved payload. It must not call ERP, read authoring
+tables, or decide which reference objects are eligible.
+
+Published snapshots for composite/runtime sections should include dependency refs for reference objects
+that were actually used in the payload. These refs are diagnostics and stale-detection metadata; frontend
+rendering should depend on the resolved public payload itself.
+
 ## First Public Payload Assembly
 
 The first public payload assembler is a pure function over prepared inputs:
@@ -351,6 +373,39 @@ The intended model:
 - pages may append contextual notes where allowed;
 - regional variants may inherit, override allowed fields, or append allowed regional context.
 
+Regional price sections must not inherit directly from the global price source when a base
+non-regional page exists for the same practice/service. The intended chain is:
+
+```text
+global price source/section
+  -> base non-regional page price section
+      -> regional page price section
+```
+
+This applies to both price values and CMS-authored price text/notes. The base non-regional page is the
+parent content layer for regional variants, while the global price source remains the upper shared source
+for base pages.
+
+Regional price resolution uses the current published base page price result as its parent input, never an
+unpublished base draft.
+
+If the base non-regional price section uses inherit/append/field-level inherited fields from the global
+price source, the base page can be affected by global price publication according to the global price
+rebuild policy. Regional pages then become dependent on the resulting base page price section, not on the
+global price source directly.
+
+If the base page publishes a changed price section, dependent regional pages that inherit or append from
+it must be marked as having unapplied parent published changes. They must not be automatically published.
+Editors should update them through the explicit regional republish flow.
+
+Regional whole-section override makes the regional price section self-contained for that slot. In that
+case, later base price changes do not change the regional price block automatically and should not mark it
+stale for inherited price content.
+
+Regional append adds regional content on top of the resolved published base price result. Field-level
+composition follows the same rule: inherited fields come from the base page price result, appended fields
+append to the base page value, and overridden fields keep the regional value.
+
 If a page or region uses whole-section override, it is treated as self-contained for that section and
 global section updates do not automatically change it. With field-level composition, rebuild behavior is
 field-aware:
@@ -447,8 +502,8 @@ Archive of validation attempts:
 validation_run_id
 section_version_id
 check_type: publish_validation
-status: passed | failed
-errors_json
+status: passed | passed_with_warnings | failed
+issues_json
 checked_by
 checked_at
 request_id
@@ -463,12 +518,27 @@ section_version_id
 check_type
 status
 latest_validation_run_id
+critical_count
+warning_count
 error_count
 checked_at
 ```
 
 The UI should read current validation state for the editor-facing status and may read validation runs for
 history.
+
+Validation issues must carry severity:
+
+```text
+severity: critical | warning
+```
+
+Critical issues block publish or publish-preview for the affected section/page. Warnings do not block
+draft save or publication, but they must be returned to the UI and included in readiness diagnostics where
+they matter.
+
+Warnings are expected to be mostly field/object-specific, for example recommended text length, optional
+metadata quality, weak media metadata, or non-critical content quality concerns.
 
 Even if a draft passed validation when it was saved, publish must validate the draft again. Schema rules,
 media references, required fields, or related constraints may have changed between save and publish.
@@ -704,7 +774,7 @@ state for `with_page` sections.
 
 ## Preview And Publish Resolution
 
-CMS supports two preview modes and one strict publish mode.
+CMS supports editor preview modes and one strict publish mode.
 
 `published-preview`
 
@@ -715,6 +785,11 @@ published from already-published dependencies.
 
 Resolves from latest draft section versions where available, including draft independent sections. It is
 used for authoring review.
+
+`publish-preview`
+
+Runs the strict publish-resolution checks without activating a snapshot. It should show the editor what
+would be published and return the same critical blockers/warnings that the real publish path would use.
 
 `publish-resolution`
 
@@ -728,6 +803,10 @@ The real page publish path:
   page snapshot is created and activated as current in one atomic operation.
 
 Publish must not accidentally include draft independent sections.
+
+Draft preview may return an incomplete payload together with diagnostics so editors can work with
+unfinished content. Publish preview and publish are strict: critical issues block activation, while
+warnings remain visible but non-blocking.
 
 ## Global Section Rebuild Policy
 

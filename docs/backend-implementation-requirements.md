@@ -147,6 +147,10 @@ schema, exact published section-version payloads, and resolved runtime/read-mode
 the complete public object intended for the Next.js frontend. It must not read draft authoring tables,
 decide publishability, or fetch runtime directories by itself.
 
+Runtime/read-model payloads are resolved from CMS database reference-data tables, not from live frontend
+calls to ERP. The implementation should keep `reference-data` storage separate from `runtime-resolvers`
+that project those records into public page payloads.
+
 The first assembled payload shape includes:
 
 - `schemaVersion`;
@@ -157,10 +161,15 @@ The first assembled payload shape includes:
 - `breadcrumbs`;
 - ordered visual `sections`;
 - `publishedAt`;
-- source diagnostics that distinguish section-version content from runtime/read-model content.
+- source diagnostics that distinguish section-version content from runtime/read-model content;
+- dependency refs for ERP/CMS reference objects that were actually used in runtime/read-model payloads.
 
 Metadata sections such as `seo` are exposed through top-level metadata, not rendered as body sections.
 Visual sections are ordered by backend page schema layout.
+
+When a visible block combines CMS-authored content with runtime/read-model data, model it as one composite
+section/slot in the page schema instead of two unrelated sibling sections. The backend assembles the
+single public payload; the frontend renders the resolved contract.
 
 ## Section Authoring And Publication Units
 
@@ -207,11 +216,16 @@ Section schemas must also support:
   multilingual JSON blob;
 - current section version pointers for all sections, covering current published and latest draft versions;
 - section validation diagnostics split into validation run history and current validation state;
+- validation issue severity split into `critical` and `warning`, where critical issues block publish and
+  warnings remain visible but non-blocking;
 - a repository/service layer over those tables that handles SQL reads/writes and transaction boundaries
   without absorbing publish decisions, page-schema rules, or content resolution logic;
 - global-owned and external-source-backed sections, including the price-section use case where base
   service prices come from one shared source and pages inherit, override allowed fields, or append allowed
   notes;
+- price-section inheritance chain where regional service-tree pages inherit price values and price text
+  from the current published base non-regional page price result, while base pages inherit from the shared
+  global price source;
 - shared fixed global sections such as footer/menu, where all pages inherit one published global section
   version and a publish event triggers affected page snapshot rebuilds instead of page-local section
   versions;
