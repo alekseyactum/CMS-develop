@@ -676,6 +676,24 @@ If a parent/source/base draft changes:
 Draft dependency metadata should record which upstream draft version a dependent binding/page was last
 reviewed or composed against.
 
+Implementation note: `cms-back` now treats both saving a new upstream draft and creating a rollback draft
+as upstream draft changes. The lifecycle flow finds dependent page-section bindings registered with the
+`mark_stale` dependency policy, applies field-aware inherit/append staleness rules, updates their
+`draft_stale` status and dependency refs, and returns the affected bindings to the admin API. It does not
+materialize child draft versions and it does not change published page snapshots.
+
+Independent section publication is also wired to an affected snapshot planning step. When a section is
+published with `publishPropagationPolicy = rebuild_affected_snapshots`, `cms-back` finds direct and
+source-dependent page bindings, applies the same direct/inherit/append impact rules, and returns affected
+pages/bindings with recommended action `rebuild_snapshot`.
+
+The implementation now also attempts the rebuild workflow for affected pages. For each affected page it
+loads the current public snapshot, patches the changed section payload/ref, creates a new page snapshot,
+switches `cms_page_current_snapshots`, and records the applied published section version on the binding or
+source dependency. Existing page-owned drafts are not read or changed. Rebuild is partial-success: a page
+without a current snapshot, broken payload state, or another technical failure is returned as
+`skipped`/`failed` diagnostics while other valid pages can still move to rebuilt snapshots.
+
 Draft preview must resolve from the latest upstream draft versions plus the child/regional override and
 append state. The composed draft result may be recalculated on demand or in background authoring flows,
 but it must not become a second persisted source of truth that competes with the child/local authoring
@@ -911,8 +929,11 @@ Requirements update as of 2026-05-11:
 - preview and publish resolution are separate modes;
 - schema decides section publish mode, disable rules, layout behavior, and composition policy.
 
-The existing `cms-back/src/sections` foundation must be aligned with these refined requirements in a
-separate code step.
+The existing `cms-back/src/sections` foundation already covers the pure rules for composition,
+staleness, snapshot refs and layout. The lifecycle/persistence layer now also wires upstream draft
+propagation for `saveDraft` and section rollback drafts, plus affected snapshot planning for independent
+section publish. Automatic affected snapshot rebuild is now implemented for affected current public
+snapshots and returns per-page rebuild diagnostics.
 
 Recommended tests:
 
