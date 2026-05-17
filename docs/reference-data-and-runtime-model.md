@@ -49,8 +49,38 @@ ERP -> CMS reference-data endpoints must be private service-to-service endpoints
 - shared API keys and IP allowlists are not the primary security mechanism;
 - CMS admin does not imitate ERP source updates in production.
 
-Concrete endpoint URLs and DTO class names are decided when the API is implemented. The requirement at
-this stage is the boundary: closed service-to-service upsert into typed reference tables.
+The current implemented integration shape is:
+
+```http
+POST /internal/migrations/cms.reference-data/run
+```
+
+ERP backend sends only the sync intent:
+
+```json
+{
+  "mode": "upsert",
+  "objectType": "practice",
+  "externalIds": [15, 18, 21]
+}
+```
+
+Then `data-inside-migrator` reads the ERP source database, normalizes the payload and calls protected
+`cms-back` internal endpoints:
+
+```text
+/api/internal/erp/reference/practices/upsert
+/api/internal/erp/reference/services/upsert
+/api/internal/erp/reference/problems/upsert
+/api/internal/erp/reference/regions/upsert
+/api/internal/erp/reference/offices/upsert
+/api/internal/erp/reference/lawyers/upsert
+/api/internal/erp/reference/reviews/upsert
+/api/internal/erp/reference/lawyer-qualifications/upsert
+/api/internal/erp/reference/region-qualifications/upsert
+```
+
+ERP must not call `cms-back` directly for this flow.
 
 ## Storage Rules
 
@@ -107,6 +137,43 @@ in the database.
 
 Draft preview may expose incomplete data with diagnostics. Publish preview and publish must use strict
 publish validation.
+
+## CMS Admin Reference API
+
+CMS frontend works with reference data through admin endpoints, not through ERP upsert endpoints:
+
+```text
+GET   /api/admin/reference/{resource}
+GET   /api/admin/reference/{resource}/{id}
+PATCH /api/admin/reference/{resource}/{id}
+PUT   /api/admin/reference/{resource}/{id}/translations/{locale}
+```
+
+Supported resources:
+
+```text
+practices
+services
+problems
+regions
+offices
+lawyers
+reviews
+lawyer-qualifications
+region-qualifications
+```
+
+The response must preserve ownership separation:
+
+- `sourceFields`: ERP-owned read-only source fields;
+- `cmsFields`: CMS-owned editable fields such as public slugs, media ids and sort order;
+- `relationFields`: external and resolved relation ids;
+- `translations`: CMS-owned localized fields for `uk`, `ru`, `en`;
+- `diagnostics`: current validation hints for the CMS frontend.
+
+PATCH can edit only CMS-owned fields for that resource. Translation PUT can edit only the localized fields
+defined for that resource. Qualification resources are read-only in CMS because relation and score values
+remain ERP-owned.
 
 ## Public Slugs And Redirects
 
