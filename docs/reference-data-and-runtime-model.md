@@ -33,6 +33,21 @@ The only ERP visibility field used by CMS public logic is:
 show_on_site
 ```
 
+Services also have two ERP-owned classification flags:
+
+```text
+service_cond
+legal_cond
+```
+
+`service_cond` means the service may appear in the public services list/tree.
+`legal_cond` means the service may appear in the future legal classifier tree.
+These flags are independent:
+
+- search/seizure may be a criminal-law service but not a legal classifier item;
+- drug lawyer may be a legal classifier item but not a sellable service;
+- alimony lawyer may be both.
+
 Other ERP fields such as `active` and `send_to_site` remain ERP-internal unless a later explicit
 integration decision changes this rule.
 
@@ -308,6 +323,8 @@ shortname
 slug
 color
 show_on_site
+service_cond
+legal_cond
 ```
 
 CMS-owned base fields:
@@ -324,6 +341,24 @@ locale
 public_name
 menu_title
 ```
+
+`service_cond` and `legal_cond` are not editable in CMS. They are read-only ERP source flags. Runtime
+resolvers must use them when building normal service pages/lists and the future legal classifier.
+
+Recommended ERP DB rollout defaults:
+
+```sql
+ALTER TABLE `actumdata`.`services`
+  ADD COLUMN `service_cond` TINYINT(1) NOT NULL DEFAULT 1 AFTER `show_on_site`,
+  ADD COLUMN `legal_cond` TINYINT(1) NOT NULL DEFAULT 0 AFTER `service_cond`;
+```
+
+After adding the fields, ERP must explicitly mark exceptions:
+
+- `service_cond = 1`, `legal_cond = 0`: service only;
+- `service_cond = 0`, `legal_cond = 1`: legal classifier only;
+- `service_cond = 1`, `legal_cond = 1`: both;
+- `service_cond = 0`, `legal_cond = 0`: neither public service list nor legal classifier.
 
 ### Problems
 
