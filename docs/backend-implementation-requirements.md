@@ -338,6 +338,12 @@ Additional page types should be added after the first clean loop is working end 
 
 `authoring -> preview -> publish -> current snapshot -> Next.js public render`
 
+Implementation note, 2026-05-17: `cms-back` now contains the first public snapshot lookup endpoint,
+`GET /api/public/pages/by-route?route=/contacts`. It reads only `cms_page_current_snapshots` and
+`cms_page_snapshots` by the normalized public route and returns public snapshot metadata plus the stored
+public payload for Next.js rendering. It intentionally does not read draft section versions or authoring
+tables.
+
 ## Review Gate
 
 Any change that ports prototype behavior into `CMS` should answer these questions:
