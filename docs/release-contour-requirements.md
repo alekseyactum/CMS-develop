@@ -643,6 +643,11 @@ The first release uses typed `cms_ref_*` tables and typed translation tables, no
 JSON table. The detailed table and field contract is documented in
 [`reference-data-and-runtime-model.md`](reference-data-and-runtime-model.md).
 
+For translatable reference objects, CMS must create missing `uk`, `ru`, and `en` translation skeleton rows
+on first insert and must repeat the same idempotent check on admin detail read. ERP and
+`data-inside-migrator` do not own localized CMS fields, and skeleton creation must never overwrite existing
+editor-entered translations.
+
 Public slugs are CMS-owned, shared across locales, and unique within object type. ERP source slug changes
 must not automatically change public URLs. When CMS changes a public slug/public route, redirects from
 old public URLs to new public URLs must be created for all affected locale routes.

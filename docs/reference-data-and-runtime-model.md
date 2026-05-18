@@ -123,6 +123,37 @@ If ERP stops sending an object, CMS does not auto-delete it and does not auto-di
 The first release stores only the current normalized source state. It does not store raw payloads and does
 not keep a full source-change history inside CMS. ERP remains the source history for ERP-owned fields.
 
+## Translation Skeletons
+
+ERP and `data-inside-migrator` do not create CMS-owned localized fields.
+
+For every translatable reference object, `cms-back` must guarantee that admin detail responses contain
+translation rows for all supported locales:
+
+```text
+uk
+ru
+en
+```
+
+This guarantee is enforced from two sides:
+
+- on first insert of a translatable ERP object, CMS creates missing translation skeleton rows;
+- on admin detail read, CMS checks the translation rows again and creates any missing locale rows before
+  returning the object to the CMS frontend.
+
+The operation is idempotent. Existing translation rows are never overwritten by ERP upsert, skeleton
+creation, or admin detail read.
+
+Initial skeleton values:
+
+- for `uk`, CMS may copy safe source text such as `source_name`, `source_shortname`, `source_address`, or
+  original review text into the matching localized field;
+- for `ru` and `en`, localized CMS-owned fields start empty;
+- editors then fill or correct localized fields through the CMS admin translation API.
+
+Qualification tables do not have translation skeletons.
+
 ## Validation Boundary
 
 `show_on_site=true` means the object may be used on the public site.
