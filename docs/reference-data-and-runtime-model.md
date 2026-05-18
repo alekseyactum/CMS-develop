@@ -189,11 +189,19 @@ publish validation.
 CMS frontend works with reference data through admin endpoints, not through ERP upsert endpoints:
 
 ```text
+GET   /api/admin/reference/meta
 GET   /api/admin/reference/{resource}
 GET   /api/admin/reference/{resource}/{id}
 PATCH /api/admin/reference/{resource}/{id}
 PUT   /api/admin/reference/{resource}/{id}/translations/{locale}
 ```
+
+`GET /api/admin/reference/meta` is the backend-owned contract for the CMS frontend. It returns supported
+resources, locales, list filters, editable CMS fields, required fields, localized fields, and whether the
+resource has `show_on_site`.
+
+The CMS frontend should not hardcode the editable/required/reference field shape when the backend can
+provide it from the same configuration used by validation and persistence.
 
 Supported resources:
 

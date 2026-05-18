@@ -643,6 +643,10 @@ The first release uses typed `cms_ref_*` tables and typed translation tables, no
 JSON table. The detailed table and field contract is documented in
 [`reference-data-and-runtime-model.md`](reference-data-and-runtime-model.md).
 
+The CMS admin frontend must read the backend-owned reference metadata contract instead of duplicating the
+resource field rules locally. The contract must describe supported resources, locales, list filters,
+editable fields, required fields, translation fields, and `show_on_site` availability.
+
 For translatable reference objects, CMS must create missing `uk`, `ru`, and `en` translation skeleton rows
 on first insert and must repeat the same idempotent check on admin detail read. ERP and
 `data-inside-migrator` do not own localized CMS fields, and skeleton creation must never overwrite existing
