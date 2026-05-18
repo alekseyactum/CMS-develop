@@ -344,6 +344,13 @@ Implementation note, 2026-05-17: `cms-back` now contains the first public snapsh
 public payload for Next.js rendering. It intentionally does not read draft section versions or authoring
 tables.
 
+Implementation note, 2026-05-18: `cms-back` now contains the first admin page-authoring slice:
+`POST /api/admin/pages/bootstrap`, `GET /api/admin/pages/{pageId}/authoring`, and
+`POST /api/admin/pages/{pageId}/sections/{slotKey}/draft`. The backend can create a page from the registered
+page schema, connect page-owned sections and shared global sections, expose current authoring state, and save
+drafts for page-owned sections. Runtime slots remain read-model slots and are not persisted as page-section
+bindings.
+
 ## Review Gate
 
 Any change that ports prototype behavior into `CMS` should answer these questions:
