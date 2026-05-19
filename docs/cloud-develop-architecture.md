@@ -178,8 +178,11 @@ Migrations:
 - Explicit migrations live in the `cms-back` repository.
 - Do not auto-run migrations on Cloud Run startup.
 - Develop migrations run manually or explicitly after confirmation.
-- The develop contour uses Cloud Run Job `cms-back-migrate-develop` as the controlled migration runner.
+- The develop contour uses Cloud Run Job `cms-back-develop-migrate` as the controlled migration runner.
 - The migration job uses the same service-account IAM database identity as `cms-back-develop`.
+- The `cms-back-develop` Cloud Build flow should keep this job on the same backend image tag as the
+  deployed service. Updating the job image is part of deploy hygiene; executing migrations remains a
+  separate explicit action.
 
 ## Secret Manager
 

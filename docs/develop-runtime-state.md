@@ -248,6 +248,10 @@ Migration verification:
 - Operational follow-up: keep the develop migration job image aligned with the latest backend image before
   executing newly added migrations, or update the Cloud Build flow so the job image is refreshed together
   with the service deploy.
+- `2026-05-19`: `cms-back/cloudbuild.yaml` was updated so successful `cms-back-develop` builds also run
+  `gcloud run jobs update cms-back-develop-migrate --image=<same backend image tag>`. This keeps the
+  migration job code/image aligned with the deployed backend while preserving explicit/manual migration
+  execution.
 
 ## Playbook Sync
 
