@@ -10,6 +10,7 @@ request/response shapes, especially for authoring state, preview, publish, and r
 ```text
 GET  /api/admin/page-schemas
 GET  /api/admin/page-schemas/{pageType}
+GET  /api/admin/pages
 POST /api/admin/pages/bootstrap
 GET  /api/admin/pages/{pageId}/authoring
 POST /api/admin/pages/{pageId}/sections/{slotKey}/draft
@@ -23,12 +24,13 @@ All write operations may send `x-cms-actor` until real CMS auth/session audit is
 ## Basic Flow
 
 1. Load page schemas/meta.
-2. Bootstrap or open a page.
-3. Render `authoring.page`, editable `authoring.sections`, and read-only `authoring.runtimeSlots`.
-4. Save drafts only through `POST /sections/{slotKey}/draft`.
-5. Build preview through `POST /preview`.
-6. Publish through `POST /publish`.
-7. Rollback through `POST /rollback` when needed.
+2. Load the pages catalog.
+3. Bootstrap or open a page.
+4. Render `authoring.page`, editable `authoring.sections`, and read-only `authoring.runtimeSlots`.
+5. Save drafts only through `POST /sections/{slotKey}/draft`.
+6. Build preview through `POST /preview`.
+7. Publish through `POST /publish`.
+8. Rollback through `POST /rollback` when needed.
 
 The frontend must not reconstruct publish rules. Backend decides what can be saved, previewed, published,
 or rolled back.
@@ -56,6 +58,36 @@ This is the UI metadata source for page authoring. It returns:
 
 The frontend should use this endpoint to build page creation forms and section editors. Do not hardcode
 the available page types, slots, route params, or field lists in the frontend.
+
+## Pages Catalog
+
+Use:
+
+```text
+GET /api/admin/pages
+```
+
+Optional query params:
+
+- `pageType`;
+- `locale`;
+- `status`;
+- `q`;
+- `limit`;
+- `offset`.
+
+This endpoint is the source for the CMS screen "Pages". It returns one row per page with:
+
+- page identity and route: `pageId`, `pageType`, `locale`, `regionSlug`, `pagePath`, `publicPath`;
+- raw page `status`;
+- derived `publishState`: `not_published`, `published`, `draft_changed`, `requires_review`;
+- current published snapshot summary, if it exists;
+- section summary: total bindings, draft bindings, stale bindings, missing published bindings;
+- `createdAt` and `updatedAt`.
+
+Use `publishState` for badges in the page list. Use `sectionSummary.staleBindings > 0` to show that the
+page requires review before publish. The catalog does not replace `GET /api/admin/pages/{pageId}/authoring`;
+it only helps the frontend choose which page to open.
 
 ## Authoring State
 
