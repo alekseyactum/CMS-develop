@@ -97,6 +97,13 @@ Then `data-inside-migrator` reads the ERP source database, normalizes the payloa
 
 ERP must not call `cms-back` directly for this flow.
 
+The migrator response is considered successful only when the result body has `status="ok"`.
+If at least one requested object was not migrated, the migrator must return a non-2xx HTTP status with
+the full result payload. ERP callers must check both HTTP status and the returned per-item statuses.
+
+This prevents false-positive cases where ERP receives an HTTP 200 even though an object such as an office
+was skipped or failed during CMS import.
+
 ## Storage Rules
 
 Each ERP-imported object has:
@@ -127,7 +134,7 @@ not keep a full source-change history inside CMS. ERP remains the source history
 
 ERP and `data-inside-migrator` do not create CMS-owned localized fields.
 
-For every translatable reference object, `cms-back` must guarantee that admin detail responses contain
+For every translatable reference object, `cms-back` must guarantee that admin list and detail responses contain
 translation rows for all supported locales:
 
 ```text
@@ -139,7 +146,7 @@ en
 This guarantee is enforced from two sides:
 
 - on first insert of a translatable ERP object, CMS creates missing translation skeleton rows;
-- on admin detail read, CMS checks the translation rows again and creates any missing locale rows before
+- on admin list/detail read, CMS checks the translation rows again and creates any missing locale rows before
   returning the object to the CMS frontend.
 
 The operation is idempotent. Existing translation rows are never overwritten by ERP upsert, skeleton
@@ -223,8 +230,26 @@ The response must preserve ownership separation:
 - `cmsFields`: CMS-owned editable fields such as public slugs, media ids and sort order;
 - `relationFields`: external and resolved relation ids;
 - `translations`: CMS-owned localized fields for `uk`, `ru`, `en`;
+- `relations`: readable linked objects for single-object relations such as lawyer region/office;
+- `children`: readable dependent object lists for parent dictionaries;
 - `diagnostics`: current validation hints for the CMS frontend.
 - `cmsUpdatedBy` / `cmsUpdatedAt`: the last CMS user edit for normal reference resources.
+
+`children` is intentionally separate from `relations`.
+
+`relations` answers "which single object is this record linked to?".
+Example: a lawyer has one resolved region and one resolved office.
+
+`children` answers "which dependent records belong under this object?".
+The first supported dependency lists are:
+
+```text
+practices.children.services
+services.children.problems
+```
+
+The dependency lists must include enough read-only source/CMS/translation data for the CMS frontend to
+display practice -> services and service -> problems trees without additional requests for every child.
 
 PATCH can edit only CMS-owned fields for that resource. Translation PUT can edit only the localized fields
 defined for that resource. Qualification resources are read-only in CMS because relation and score values

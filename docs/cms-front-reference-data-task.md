@@ -96,6 +96,7 @@ Each row should show:
 - main CMS-owned fields such as `publicSlug`, `sortOrder`, or `photoMediaId` when present;
 - relation hints from `relationFields`;
 - readable relation objects from `relations` when present;
+- readable child lists from `children` when present;
 - diagnostics summary with warning/error count;
 - last CMS editor when the backend returns `cmsUpdatedBy`;
 - link/button to open the object detail.
@@ -111,14 +112,15 @@ When the editor opens one object, call:
 GET /api/admin/reference/{resource}/{id}
 ```
 
-This detail read is important because backend guarantees missing translation skeleton rows here. The
-frontend should use the detail response as the source for the edit form.
+List and detail reads are important because backend guarantees missing translation skeleton rows there.
+The frontend should use backend responses as the source for the edit form and diagnostics.
 
 The detail screen should have clear groups:
 
 - ERP source fields: read-only;
 - relation fields: read-only, but visible for diagnostics;
 - readable relation objects: read-only helper data for display/select labels;
+- readable child lists: read-only helper data for dependency displays;
 - CMS base fields: editable only when meta marks them editable;
 - translations: one tab or segment per locale;
 - diagnostics: visible near the top and near affected fields where practical.
@@ -168,6 +170,60 @@ objects in `relations`:
 
 Use `relations.region` and `relations.office` to show human-readable region/office labels without extra
 requests. Keep `relationFields` as the technical IDs/diagnostic source.
+
+For dependency displays, backend returns `children`.
+
+Practices can include their services:
+
+```json
+{
+  "children": {
+    "services": [
+      {
+        "resource": "services",
+        "id": "9b1598ad-889a-4f82-9392-cf2bc757fb24",
+        "externalId": "15",
+        "displayTitle": "Legal consultation",
+        "sourceFields": {
+          "showOnSite": true,
+          "serviceCond": true,
+          "legalCond": false
+        },
+        "cmsFields": {
+          "publicSlug": "legal-consultation",
+          "sortOrder": 10
+        },
+        "translations": {
+          "uk": {
+            "publicName": "Юридична консультація",
+            "menuTitle": "Консультація"
+          }
+        }
+      }
+    ]
+  }
+}
+```
+
+Services can include their problems:
+
+```json
+{
+  "children": {
+    "problems": [
+      {
+        "resource": "problems",
+        "id": "7aebafaf-13ce-4038-b14a-fc5b4dbf0ba3",
+        "externalId": "31",
+        "displayTitle": "Court dispute"
+      }
+    ]
+  }
+}
+```
+
+These child lists are read-only in this API. They are for showing the hierarchy and dependencies in the
+CMS frontend. Editing a child object still happens through its own resource detail endpoint.
 
 ## Save Rules
 
