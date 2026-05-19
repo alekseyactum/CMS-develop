@@ -25,6 +25,10 @@ PATCH /api/admin/reference/{resource}/{id}
 PUT   /api/admin/reference/{resource}/{id}/translations/{locale}
 ```
 
+The same contract is also described in the backend Swagger/OpenAPI metadata. For reference-data screens,
+prefer the OpenAPI response examples for `meta`, `lawyers`, `regions`, and `services` over copying examples
+from chat messages.
+
 The frontend should first call:
 
 ```text
