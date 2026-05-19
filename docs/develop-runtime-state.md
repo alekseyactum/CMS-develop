@@ -238,6 +238,16 @@ Migration verification:
 - `cms-back-migrate-develop-ln4zs` applied migration `202605080001`.
 - `cms-back-migrate-develop-vr8q8` completed with `No pending migrations`, proving repeat execution is
   idempotent for the current migration set.
+- `2026-05-19`: backend build `d8599179-24bb-4d81-a34e-ff002fb78901`, revision
+  `cms-back-develop-00033-bs5`, commit `502c617401535ecb0ef364739d881857849d4e6c` deployed reference CMS
+  editor audit fields and regional `prepositionalName`.
+- The first migration execution `cms-back-develop-migrate-kxmk8` completed successfully but used an old
+  migration job image, so it did not contain migration `202605190001`.
+- The migration job image was manually updated to the same image tag as `cms-back-develop-00033-bs5`, then
+  execution `cms-back-develop-migrate-nqpsh` completed successfully and applied the schema change.
+- Operational follow-up: keep the develop migration job image aligned with the latest backend image before
+  executing newly added migrations, or update the Cloud Build flow so the job image is refreshed together
+  with the service deploy.
 
 ## Playbook Sync
 
