@@ -91,6 +91,7 @@ Each row should show:
 - `showOnSite` if present;
 - main CMS-owned fields such as `publicSlug`, `sortOrder`, or `photoMediaId` when present;
 - relation hints from `relationFields`;
+- readable relation objects from `relations` when present;
 - diagnostics summary with warning/error count;
 - last CMS editor when the backend returns `cmsUpdatedBy`;
 - link/button to open the object detail.
@@ -113,12 +114,56 @@ The detail screen should have clear groups:
 
 - ERP source fields: read-only;
 - relation fields: read-only, but visible for diagnostics;
+- readable relation objects: read-only helper data for display/select labels;
 - CMS base fields: editable only when meta marks them editable;
 - translations: one tab or segment per locale;
 - diagnostics: visible near the top and near affected fields where practical.
 - last CMS editor/date: show `cmsUpdatedBy` / `cmsUpdatedAt` for normal dictionary resources when present.
 
 Do not expose source fields, relation fields, `showOnSite`, or qualification scores as editable controls.
+
+For `lawyers`, backend keeps raw relation IDs in `relationFields` and additionally returns readable linked
+objects in `relations`:
+
+```json
+{
+  "relationFields": {
+    "regionExternalId": "74",
+    "officeExternalId": "30",
+    "regionId": "8d860f99-8e92-4a9b-a82b-20f06bc6ff9b",
+    "officeId": "7f0a1760-2335-447f-9644-f4f970e0bd0a"
+  },
+  "relations": {
+    "region": {
+      "resource": "regions",
+      "id": "8d860f99-8e92-4a9b-a82b-20f06bc6ff9b",
+      "externalId": "74",
+      "displayTitle": "Київ",
+      "translations": {
+        "uk": {
+          "publicName": "Київ",
+          "menuTitle": "Київ",
+          "prepositionalName": "Києві"
+        }
+      }
+    },
+    "office": {
+      "resource": "offices",
+      "id": "7f0a1760-2335-447f-9644-f4f970e0bd0a",
+      "externalId": "30",
+      "displayTitle": "Київ, вул. Хрещатик",
+      "translations": {
+        "uk": {
+          "address": "Київ, вул. Хрещатик"
+        }
+      }
+    }
+  }
+}
+```
+
+Use `relations.region` and `relations.office` to show human-readable region/office labels without extra
+requests. Keep `relationFields` as the technical IDs/diagnostic source.
 
 ## Save Rules
 
