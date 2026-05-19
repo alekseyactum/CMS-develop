@@ -8,6 +8,8 @@ request/response shapes, especially for authoring state, preview, publish, and r
 ## Endpoints
 
 ```text
+GET  /api/admin/page-schemas
+GET  /api/admin/page-schemas/{pageType}
 POST /api/admin/pages/bootstrap
 GET  /api/admin/pages/{pageId}/authoring
 POST /api/admin/pages/{pageId}/sections/{slotKey}/draft
@@ -20,15 +22,40 @@ All write operations may send `x-cms-actor` until real CMS auth/session audit is
 
 ## Basic Flow
 
-1. Bootstrap or open a page.
-2. Render `authoring.page`, editable `authoring.sections`, and read-only `authoring.runtimeSlots`.
-3. Save drafts only through `POST /sections/{slotKey}/draft`.
-4. Build preview through `POST /preview`.
-5. Publish through `POST /publish`.
-6. Rollback through `POST /rollback` when needed.
+1. Load page schemas/meta.
+2. Bootstrap or open a page.
+3. Render `authoring.page`, editable `authoring.sections`, and read-only `authoring.runtimeSlots`.
+4. Save drafts only through `POST /sections/{slotKey}/draft`.
+5. Build preview through `POST /preview`.
+6. Publish through `POST /publish`.
+7. Rollback through `POST /rollback` when needed.
 
 The frontend must not reconstruct publish rules. Backend decides what can be saved, previewed, published,
 or rolled back.
+
+## Page Schemas
+
+Use:
+
+```text
+GET /api/admin/page-schemas
+GET /api/admin/page-schemas/{pageType}
+```
+
+This is the UI metadata source for page authoring. It returns:
+
+- registered `pageTypes`;
+- supported `locales`;
+- route template and route params;
+- whether regional routes are supported;
+- whether the body allows editor-added sections;
+- fixed section slots;
+- runtime slots;
+- section fields and required/optional state;
+- section ownership/publish/composition rules needed to decide which controls to show.
+
+The frontend should use this endpoint to build page creation forms and section editors. Do not hardcode
+the available page types, slots, route params, or field lists in the frontend.
 
 ## Authoring State
 
