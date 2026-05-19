@@ -260,6 +260,12 @@ and runtime/reference slots for lawyers listing/filter, lawyer profile, and cont
 This preserves editor flexibility without breaking snapshot-first public rendering, rollback, cache
 revalidation, route diagnostics, SEO validation, or release readiness.
 
+When backend changes the current published page snapshot pointer, the publish/rebuild/rollback workflow
+must also initiate public frontend revalidation for the affected Next.js routes or tags. If an HTML CDN is
+introduced later, the same snapshot activation event must initiate CDN purge/revalidation for the affected
+HTML cache entries. Failed revalidation must be recorded as an operational signal; it must not be hidden
+as a successful publish-side effect.
+
 ## Porting Rules From notstrapitest
 
 When taking behavior from `notstrapitest`:

@@ -647,10 +647,18 @@ The CMS admin frontend must read the backend-owned reference metadata contract i
 resource field rules locally. The contract must describe supported resources, locales, list filters,
 editable fields, required fields, translation fields, and `show_on_site` availability.
 
+Normal reference resources, except lawyer and region qualification resources, must expose the last CMS
+editor separately from ERP/source sync metadata. This should be stored as CMS-specific audit metadata
+such as `cms_updated_by` / `cms_updated_at`, because generic source update fields may be changed by
+`data-inside-migrator`.
+
 For translatable reference objects, CMS must create missing `uk`, `ru`, and `en` translation skeleton rows
 on first insert and must repeat the same idempotent check on admin detail read. ERP and
 `data-inside-migrator` do not own localized CMS fields, and skeleton creation must never overwrite existing
 editor-entered translations.
+
+Region translations must include a localized prepositional-name field for regional text composition.
+This field is CMS-owned and edited per locale.
 
 Public slugs are CMS-owned, shared across locales, and unique within object type. ERP source slug changes
 must not automatically change public URLs. When CMS changes a public slug/public route, redirects from
@@ -1305,6 +1313,17 @@ rollback actions.
 
 The selected baseline is Next.js cache/revalidation by affected routes or tags.
 
+Whenever backend activates a new current page snapshot, including normal page publish, rollback, or an
+affected-page rebuild after a global section/reference change, backend must trigger revalidation for the
+affected public route set in the Next.js site frontend. Merely exposing the affected routes is not enough
+for the release flow; it is useful for diagnostics, but the backend-owned publish flow must initiate the
+revalidation attempt.
+
+If the project later adds a CDN layer that caches rendered HTML, the same snapshot activation event must
+also trigger CDN purge/revalidation for the affected HTML routes or cache tags. CDN cache must never keep
+serving a route after the CMS has successfully activated a newer current snapshot without at least a
+visible failed-revalidation signal.
+
 The backend publish and rollback flows must be able to expose which public surfaces were affected by a
 content change, for example:
 
@@ -1323,6 +1342,7 @@ truth boundary:
 - stale cache must be diagnosable;
 - failed revalidation should create a visible warning or operational signal;
 - rollback must trigger the same kind of affected-route revalidation as publish;
+- affected snapshot rebuild must trigger the same kind of affected-route revalidation as direct page publish;
 - sitemap, robots, route registry, and redirect behavior must have explicit cache policies.
 
 The exact Next.js implementation details may be decided during frontend implementation, but the backend

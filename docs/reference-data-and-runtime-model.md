@@ -198,7 +198,7 @@ PUT   /api/admin/reference/{resource}/{id}/translations/{locale}
 
 `GET /api/admin/reference/meta` is the backend-owned contract for the CMS frontend. It returns supported
 resources, locales, list filters, editable CMS fields, required fields, localized fields, and whether the
-resource has `show_on_site`.
+resource has `show_on_site` and CMS editor audit tracking.
 
 The CMS frontend should not hardcode the editable/required/reference field shape when the backend can
 provide it from the same configuration used by validation and persistence.
@@ -224,10 +224,15 @@ The response must preserve ownership separation:
 - `relationFields`: external and resolved relation ids;
 - `translations`: CMS-owned localized fields for `uk`, `ru`, `en`;
 - `diagnostics`: current validation hints for the CMS frontend.
+- `cmsUpdatedBy` / `cmsUpdatedAt`: the last CMS user edit for normal reference resources.
 
 PATCH can edit only CMS-owned fields for that resource. Translation PUT can edit only the localized fields
 defined for that resource. Qualification resources are read-only in CMS because relation and score values
 remain ERP-owned.
+
+Normal dictionary resources must track the last CMS editor separately from ERP/source sync metadata.
+The implementation should use a CMS-specific audit field such as `cms_updated_by`, not the generic
+source/update marker that may be touched by `data-inside-migrator`.
 
 ## Public Slugs And Redirects
 
@@ -458,7 +463,11 @@ Translations:
 locale
 public_name
 menu_title
+prepositional_name
 ```
+
+`prepositional_name` stores the localized regional name in prepositional form. It is CMS-owned and must be
+edited per locale.
 
 ### Offices
 
