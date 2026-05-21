@@ -370,6 +370,15 @@ workbench matrix and returns draft/published content, schema metadata, diagnosti
 action flags. The workbench matrix remains summary-only; full section content belongs to the section editor
 payload.
 
+Implementation note, 2026-05-21: `cms-back` now contains page-scoped section editor action endpoints:
+`POST /api/admin/pages/{pageId}/sections/{slotKey}/editor/draft`,
+`POST /api/admin/pages/{pageId}/sections/{slotKey}/editor/validate`, and
+`POST /api/admin/pages/{pageId}/sections/{slotKey}/editor/publish`. The CMS frontend can now operate by
+`pageId + slotKey`; backend decides whether the slot is page-owned or independent/global, applies the
+registered Nest page schema, and returns the reloaded editor payload. Independent/global editor payloads now
+resolve `latest_draft_version_id` and `current_published_version_id` from `cms_section_current_versions`, so
+shared sections edited outside a page binding still appear correctly in the page editor.
+
 ## Review Gate
 
 Any change that ports prototype behavior into `CMS` should answer these questions:

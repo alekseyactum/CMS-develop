@@ -16,6 +16,9 @@ GET  /api/admin/pages
 POST /api/admin/pages/bootstrap
 GET  /api/admin/pages/{pageId}/authoring
 GET  /api/admin/pages/{pageId}/sections/{slotKey}/editor
+POST /api/admin/pages/{pageId}/sections/{slotKey}/editor/draft
+POST /api/admin/pages/{pageId}/sections/{slotKey}/editor/validate
+POST /api/admin/pages/{pageId}/sections/{slotKey}/editor/publish
 POST /api/admin/pages/{pageId}/sections/{slotKey}/draft
 POST /api/admin/pages/{pageId}/preview
 POST /api/admin/pages/{pageId}/publish
@@ -31,10 +34,11 @@ All write operations may send `x-cms-actor` until real CMS auth/session audit is
 3. Open a page type workbench matrix.
 4. Bootstrap or open a concrete page from the selected row.
 5. Render `authoring.page`, editable `authoring.sections`, and read-only `authoring.runtimeSlots`.
-6. Save drafts only through `POST /sections/{slotKey}/draft`.
-7. Build preview through `POST /preview`.
-8. Publish through `POST /publish`.
-9. Rollback through `POST /rollback` when needed.
+6. Open a concrete section through `GET /sections/{slotKey}/editor`.
+7. Save/validate/publish that section through the page-scoped editor action endpoints.
+8. Build preview through `POST /preview`.
+9. Publish a page through `POST /publish`.
+10. Rollback through `POST /rollback` when needed.
 
 The frontend must not reconstruct publish rules. Backend decides what can be saved, previewed, published,
 or rolled back.
@@ -188,21 +192,23 @@ Important boundaries:
 - Section editor is the place where full section content appears.
 - Runtime slots must not call this endpoint; they are read-model blocks and should stay read-only in this
   slice.
-- `actions.canSavePageDraft` means use
-  `POST /api/admin/pages/{pageId}/sections/{slotKey}/draft`.
-- `actions.canSaveIndependentDraft` means the section is an independent/global section. Use the existing
-  section lifecycle API (`POST /api/admin/sections/{sectionId}/drafts`) with the schema fields from the
-  editor payload.
+- `actions.canSavePageDraft` means the backend can save this slot as a page-owned draft.
+- `actions.canSaveIndependentDraft` means the backend can save this slot as an independent/global section
+  draft.
+- The frontend should use the page-scoped editor action endpoints below for both cases. The frontend does
+  not need to decide which low-level section lifecycle endpoint is correct.
 
-## Save Draft
+## Section Editor Actions
 
-Use:
+Use these endpoints from the section edit screen:
 
 ```text
-POST /api/admin/pages/{pageId}/sections/{slotKey}/draft
+POST /api/admin/pages/{pageId}/sections/{slotKey}/editor/draft
+POST /api/admin/pages/{pageId}/sections/{slotKey}/editor/validate
+POST /api/admin/pages/{pageId}/sections/{slotKey}/editor/publish
 ```
 
-Request body:
+Draft request body:
 
 ```json
 {
@@ -212,8 +218,35 @@ Request body:
 }
 ```
 
-The backend returns the updated section state. Use that returned section as the current UI state for that
-slot.
+The backend decides whether this is a `with_page` page-owned section or an `independent` global section.
+The response returns operation metadata plus a reloaded `editor` payload. Use `response.editor` as the new
+current section state in the UI.
+
+Validate request body:
+
+```json
+{
+  "sectionVersionId": "optional-draft-version-id",
+  "recordDiagnostics": true
+}
+```
+
+If `sectionVersionId` is omitted, the backend validates the current draft visible in the editor payload.
+The response returns `ok`, `errors`, `validationRunId`, and a reloaded `editor` payload.
+
+Publish request body:
+
+```json
+{
+  "sectionVersionId": "optional-draft-version-id"
+}
+```
+
+This endpoint is only for independent sections such as shared/global sections. Page-owned sections are
+published with the page through `POST /api/admin/pages/{pageId}/publish`.
+
+The older `POST /api/admin/pages/{pageId}/sections/{slotKey}/draft` endpoint still exists for the first
+page-owned slice, but new CMS page editor UI should prefer the `/editor/draft` endpoint.
 
 ## Preview
 
