@@ -237,7 +237,7 @@ First develop contour:
 
 - no separate worker service;
 - no Cloud Tasks;
-- no Cloud Scheduler.
+- no Cloud Scheduler for `cms-back` publish/rebuild flows.
 
 `cms-back-develop` runs publish and rebuild jobs from admin/internal flows.
 
@@ -246,6 +246,11 @@ rewriting the domain logic.
 
 Operational Cloud Run Jobs are allowed for explicit operator actions such as schema migrations and protected
 smoke checks. They must not become scheduled background workers without a separate decision.
+
+Exception already approved for the reference-data integration contour:
+`data-inside-migrator-develop-scheduled-run-5m` calls `data-inside-migrator-develop` every 5 minutes, and
+the migrator itself runs `cms-reference-qualifications-full-sync` only in the Kyiv night window. This is not
+a `cms-back` worker; it is the reconciliation control for ERP qualification/link tables.
 
 ## Domains And Indexing
 

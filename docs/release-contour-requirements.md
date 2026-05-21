@@ -638,6 +638,12 @@ scheduled task is `cms-reference-qualifications-full-sync`, which runs in the 02
 when explicitly forced by an operator. The task compares complete ERP snapshots for lawyer and region
 qualifications with CMS state and deactivates missing qualification rows instead of deleting them.
 
+Current develop implementation uses Cloud Scheduler job
+`data-inside-migrator-develop-scheduled-run-5m` with OIDC service account
+`data-migrator-dev-scheduler@composite-ally-360719.iam.gserviceaccount.com`. It points to develop only.
+Release must get its own scheduler/identity or an explicitly switched target when the release migrator and
+release CMS backend are ready.
+
 Explicit ERP delete events are also required for qualification/link tables. ERP sends `mode="delete"` to
 `data-inside-migrator` for `lawyerQualification` or `regionQualification` rows, and CMS marks the matching
 qualification row inactive. The scheduled full sync is a guaranteed reconciliation control if an event was

@@ -165,6 +165,16 @@ This task reads complete ERP snapshots for lawyer and region qualifications, sen
 full-sync endpoints, and deactivates CMS qualification rows that are no longer present in the ERP snapshot.
 It does not delete rows.
 
+Develop runtime state:
+
+- Cloud Scheduler job: `data-inside-migrator-develop-scheduled-run-5m`;
+- schedule: `*/5 * * * *`, `Europe/Kiev`;
+- target: `POST /internal/scheduled/run` on `data-inside-migrator-develop`;
+- OIDC service account: `data-migrator-dev-scheduler@composite-ally-360719.iam.gserviceaccount.com`;
+- request body: `{"task":"cms-reference-qualifications-full-sync"}`;
+- the job currently points to develop and must be switched/recreated for release only after the release
+  migrator and release CMS backend are ready.
+
 ## Storage Rules
 
 Each ERP-imported object has:
