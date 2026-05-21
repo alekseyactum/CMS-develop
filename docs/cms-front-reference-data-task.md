@@ -414,6 +414,15 @@ The backend owns and returns:
 - `translationsMeta`;
 - audit fields.
 
+The `objectKey` is environment-neutral inside the selected bucket, for example:
+
+```text
+media/lawyer_photo/2026/05/{mediaId}/original.webp
+```
+
+Develop/release separation is done by `MEDIA_BUCKET`, not by adding `develop/` or `release/` prefixes to
+the object key.
+
 Complete the upload after the object exists in storage:
 
 ```http

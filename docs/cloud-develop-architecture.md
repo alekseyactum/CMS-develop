@@ -213,8 +213,11 @@ If the bucket name is globally unavailable, choose a project-prefixed alternativ
 
 Storage model:
 
-- `public/`: public read for published site media after a separate public media serving decision.
-- `drafts/`: private draft or service media.
+- environment isolation is done by bucket, not by `develop/` or `release/` prefixes inside one bucket;
+- develop uses `site-media-develop`;
+- future release must use a separate release bucket, for example `site-media-release`;
+- object keys use the neutral backend-generated prefix
+  `media/{usageType}/{year}/{month}/{mediaId}/{filename}`.
 
 The first created develop bucket should stay private until the public media URL policy is implemented.
 

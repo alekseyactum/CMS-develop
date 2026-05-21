@@ -808,6 +808,14 @@ The backend should store the private object key separately from a stable serving
 `/media/{mediaId}/original.webp`. A frontend or media-serving layer can later resolve that path to the
 private object while keeping published payloads stable.
 
+Develop and release media must be separated by bucket, not by folders inside one shared bucket. For
+example, develop uses `site-media-develop`, and future release should use a separate bucket such as
+`site-media-release`. Object keys should keep the same neutral shape in every environment:
+
+```text
+media/{usageType}/{year}/{month}/{mediaId}/{filename}
+```
+
 Media deletion must be safe:
 
 - a file used by a current published snapshot must not be physically deleted;

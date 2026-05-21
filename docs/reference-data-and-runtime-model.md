@@ -753,6 +753,14 @@ the backend-created record and must not bypass `cms-back` ownership of media ide
 The bucket may remain private. Public rendering must use the stable serving path or a later media-serving
 layer, not a raw public Cloud Storage URL.
 
+Environment isolation is done with separate buckets, not with `develop/` and `release/` folders inside one
+bucket. Develop uses `MEDIA_BUCKET=site-media-develop`; future release must use its own bucket such as
+`site-media-release`. Object keys stay neutral:
+
+```text
+media/{usageType}/{year}/{month}/{mediaId}/{filename}
+```
+
 Media records include:
 
 - stable `media_id`;
