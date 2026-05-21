@@ -53,9 +53,18 @@ integration decision changes this rule.
 
 ## Upsert Direction And Access
 
-ERP pushes changes to CMS one object at a time.
+ERP pushes normal changes to CMS one object at a time.
 
-The first release does not require full batch sync as the primary integration path.
+The first release uses three synchronization modes:
+
+- event upsert: ERP notifies `data-inside-migrator` about concrete changed objects;
+- event delete: ERP notifies `data-inside-migrator` that a concrete qualification relation was removed;
+- scheduled reconciliation: Google Scheduler calls `data-inside-migrator` regularly, and the migrator
+  decides which internal maintenance task is due.
+
+Event upsert remains the primary path for normal reference objects. Scheduled reconciliation is required
+for qualification/link tables because they can disappear from ERP without a reliable single-row "delete"
+event, but it is a safety net, not a replacement for delete events.
 
 ERP -> CMS reference-data endpoints must be private service-to-service endpoints:
 
@@ -80,6 +89,30 @@ ERP backend sends only the sync intent:
 }
 ```
 
+For deleted qualification relations, ERP sends:
+
+```json
+{
+  "mode": "delete",
+  "objectType": "lawyerQualification",
+  "externalIds": [1001]
+}
+```
+
+or:
+
+```json
+{
+  "mode": "delete",
+  "objectType": "regionQualification",
+  "externalIds": [2001]
+}
+```
+
+`delete` is supported only for qualification relation objects. Normal dictionaries are not deleted from
+CMS by event; ERP must send a normal `upsert` with `show_on_site=false` when a normal object should no
+longer be public.
+
 Then `data-inside-migrator` reads the ERP source database, normalizes the payload and calls protected
 `cms-back` internal endpoints:
 
@@ -93,6 +126,10 @@ Then `data-inside-migrator` reads the ERP source database, normalizes the payloa
 /api/internal/erp/reference/reviews/upsert
 /api/internal/erp/reference/lawyer-qualifications/upsert
 /api/internal/erp/reference/region-qualifications/upsert
+/api/internal/erp/reference/lawyer-qualifications/deactivate
+/api/internal/erp/reference/region-qualifications/deactivate
+/api/internal/erp/reference/lawyer-qualifications/full-sync
+/api/internal/erp/reference/region-qualifications/full-sync
 ```
 
 ERP must not call `cms-back` directly for this flow.
@@ -103,6 +140,30 @@ the full result payload. ERP callers must check both HTTP status and the returne
 
 This prevents false-positive cases where ERP receives an HTTP 200 even though an object such as an office
 was skipped or failed during CMS import.
+
+The scheduled entrypoint is separate from ERP event upserts:
+
+```http
+POST /internal/scheduled/run
+```
+
+Initial scheduler behavior:
+
+- Google Scheduler may call this endpoint every 5 minutes;
+- the migrator checks current `Europe/Kiev` time;
+- the first scheduled task runs only inside the 02:00-02:04 Kyiv window;
+- all other calls are ignored with `status="ignored"`;
+- manual/operator calls may use `force=true` for the same task.
+
+Initial scheduled task:
+
+```text
+cms-reference-qualifications-full-sync
+```
+
+This task reads complete ERP snapshots for lawyer and region qualifications, sends them to `cms-back`
+full-sync endpoints, and deactivates CMS qualification rows that are no longer present in the ERP snapshot.
+It does not delete rows.
 
 ## Storage Rules
 
@@ -124,8 +185,18 @@ source + external_id
 
 inside each typed reference table.
 
-If ERP stops sending an object, CMS does not auto-delete it and does not auto-disable it. The last known
-`show_on_site` value remains authoritative until ERP sends a new value.
+For normal reference objects, if ERP stops sending an object, CMS does not auto-delete it and does not
+auto-disable it. The last known `show_on_site` value remains authoritative until ERP sends a new value.
+
+Qualification rows are the exception because they are relation facts, not dictionaries. Full-sync
+reconciliation and explicit ERP delete events may mark a qualification row as inactive:
+
+```text
+is_active = false
+removed_from_source_at = full sync timestamp
+```
+
+The historical row remains in CMS for diagnostics and audit-like visibility.
 
 The first release stores only the current normalized source state. It does not store raw payloads and does
 not keep a full source-change history inside CMS. ERP remains the source history for ERP-owned fields.
@@ -602,8 +673,12 @@ service_external_id
 score
 ```
 
-There is no `show_on_site` for a qualification row. Public use depends on the related objects and the
-score policy.
+There is no `show_on_site` for a qualification row. Public use depends on:
+
+- `is_active = true`;
+- required related objects being present/resolved;
+- related objects being eligible for the public site;
+- the score policy.
 
 Score policy:
 
@@ -617,32 +692,21 @@ score > 1 -> may be used for selection/ranking
 
 Region qualifications are also ranking/availability signals, not dictionaries.
 
-They do not include a lawyer and they do not include problems in the first release.
+They do not include a lawyer, service, problem, or score in the first release. They are facts that a
+region has a competency for a practice.
 
 ERP/source fields:
 
 ```text
 external_id
 region_external_id
-practice_external_id nullable
-service_external_id nullable
-score
+practice_external_id
+is_active
+removed_from_source_at
 ```
 
-Supported levels:
-
-```text
-region + practice + score
-region + service + score
-```
-
-Score policy:
-
-```text
-score = null -> do not use
-score <= 1 -> do not use
-score > 1 -> may be used for selection/ranking
-```
+There is no `show_on_site` for a region qualification row. Public use depends on `is_active = true` and
+on the referenced region/practice being present, resolved, and public-eligible.
 
 ## First Implementation Order
 

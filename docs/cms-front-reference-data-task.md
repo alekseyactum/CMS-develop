@@ -69,6 +69,8 @@ region-qualifications
 ```
 
 Qualification resources are read-only in CMS. They are ranking signals, not normal dictionaries.
+Backend may return qualification sync-state fields such as `isActive` and `removedFromSourceAt`.
+Show them as read-only status data when present; do not expose them as editable controls.
 
 ## Required Screens
 
@@ -126,7 +128,8 @@ The detail screen should have clear groups:
 - diagnostics: visible near the top and near affected fields where practical.
 - last CMS editor/date: show `cmsUpdatedBy` / `cmsUpdatedAt` for normal dictionary resources when present.
 
-Do not expose source fields, relation fields, `showOnSite`, or qualification scores as editable controls.
+Do not expose source fields, relation fields, `showOnSite`, qualification scores, or qualification
+sync-state fields as editable controls.
 
 For `lawyers`, backend keeps raw relation IDs in `relationFields` and additionally returns readable linked
 objects in `relations`:
@@ -298,7 +301,7 @@ Read-only in CMS:
 - `externalId`;
 - `source`;
 - `showOnSite`;
-- qualification scores and relations.
+- qualification scores, relations, `isActive`, and `removedFromSourceAt`.
 
 Editable in CMS only when meta says so:
 

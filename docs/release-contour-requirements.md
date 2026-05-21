@@ -628,9 +628,20 @@ changes this rule.
 ERP-owned source fields are read-only from the CMS admin perspective. CMS must not edit source fields,
 delete ERP-imported objects, or manually change the ERP-owned `show_on_site` value.
 
-ERP pushes changes into CMS one object at a time through private service-to-service endpoints. These
-endpoints must be protected by IAM/service-account identity between backend services, not by a public API
-or CMS admin screen.
+ERP pushes normal changes into CMS one object at a time through private service-to-service endpoints.
+These endpoints must be protected by IAM/service-account identity between backend services, not by a
+public API or CMS admin screen.
+
+The first release also requires scheduled reconciliation for qualification/link tables. Google Scheduler
+may call `data-inside-migrator` every 5 minutes; the migrator itself decides which task is due. The first
+scheduled task is `cms-reference-qualifications-full-sync`, which runs in the 02:00-02:04 Kyiv window or
+when explicitly forced by an operator. The task compares complete ERP snapshots for lawyer and region
+qualifications with CMS state and deactivates missing qualification rows instead of deleting them.
+
+Explicit ERP delete events are also required for qualification/link tables. ERP sends `mode="delete"` to
+`data-inside-migrator` for `lawyerQualification` or `regionQualification` rows, and CMS marks the matching
+qualification row inactive. The scheduled full sync is a guaranteed reconciliation control if an event was
+missed, not the primary deletion mechanism.
 
 Each ERP-imported object must have a stable internal CMS id plus an `external_id` from ERP. Do not use ERP
 ids as primary CMS ids. Source uniqueness is enforced inside each typed reference table by:
@@ -664,8 +675,10 @@ Public slugs are CMS-owned, shared across locales, and unique within object type
 must not automatically change public URLs. When CMS changes a public slug/public route, redirects from
 old public URLs to new public URLs must be created for all affected locale routes.
 
-If ERP stops sending an object, CMS does not auto-delete it and does not auto-disable it. The last known
-`show_on_site` value remains authoritative until ERP sends a new value.
+For normal reference objects, if ERP stops sending an object, CMS does not auto-delete it and does not
+auto-disable it. The last known `show_on_site` value remains authoritative until ERP sends a new value.
+Qualification rows are the exception: explicit delete events and scheduled full sync may mark missing
+relation facts as `is_active=false` and set `removed_from_source_at`, while keeping the historical row.
 
 If ERP updates a reference object, CMS updates the typed source table and marks as stale only pages whose
 current published snapshots explicitly reference that object. The current published snapshot is not
