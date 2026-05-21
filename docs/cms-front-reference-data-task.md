@@ -342,23 +342,28 @@ The backend now exposes the first media-record API for CMS-owned media metadata:
 GET    /api/admin/media/meta
 GET    /api/admin/media
 GET    /api/admin/media/{id}
+POST   /api/admin/media/upload
 POST   /api/admin/media
 POST   /api/admin/media/{id}/complete-upload
 PUT    /api/admin/media/{id}/translations/{locale}
 DELETE /api/admin/media/{id}
 ```
 
-This API manages CMS media records and reserves backend-generated storage paths. The bucket may stay
-private. The frontend must not invent storage object keys and must not treat the returned media URL as a
-direct Cloud Storage public URL.
+This API manages CMS media records and file upload through `cms-back`. The bucket may stay private. The
+frontend must not upload directly to Cloud Storage, invent storage object keys, or treat the returned media
+URL as a direct Cloud Storage public URL.
 
-The first upload flow is:
+The primary first upload flow is:
 
-1. frontend calls `POST /api/admin/media` with file metadata and localized media text;
-2. backend creates a `pending_upload` media record and returns `bucket`, `objectKey`, and `servingPath`;
-3. the file is uploaded to the returned object key through the approved upload path;
-4. frontend calls `POST /api/admin/media/{id}/complete-upload`;
+1. frontend sends multipart form data to `POST /api/admin/media/upload`;
+2. backend validates usage type, MIME, size, and required localized media text;
+3. backend creates the media record, generates the object key, uploads bytes to the configured bucket, and
+   marks the record `uploaded`;
+4. frontend receives the ready `AdminMediaAsset`;
 5. only `uploaded` media can be used where public rendering requires an actual file.
+
+The lower-level `POST /api/admin/media` plus `POST /api/admin/media/{id}/complete-upload` endpoints still
+exist as an internal/advanced path, but normal CMS frontend upload should use `POST /api/admin/media/upload`.
 
 `GET /api/admin/media/meta` returns usage policies:
 
@@ -382,7 +387,32 @@ generic
 For public image usages such as `lawyer_photo`, `article_cover`, and `og_image`, the backend requires
 `altText` and `titleText` for every supported locale.
 
-Create a pending media record:
+Upload a file through the backend:
+
+```http
+POST /api/admin/media/upload
+Content-Type: multipart/form-data
+```
+
+Form fields:
+
+- `file`: binary file;
+- `usageType`: one of the backend usage types;
+- `translations`: JSON string with localized media metadata;
+- `width`: optional positive integer;
+- `height`: optional positive integer.
+
+Example `translations` value:
+
+```json
+{
+  "uk": { "altText": "Ivan Ivanov lawyer portrait UK", "titleText": "Ivan Ivanov UK" },
+  "ru": { "altText": "Ivan Ivanov lawyer portrait RU", "titleText": "Ivan Ivanov RU" },
+  "en": { "altText": "Ivan Ivanov lawyer portrait", "titleText": "Ivan Ivanov" }
+}
+```
+
+Create a pending media record without uploading bytes:
 
 ```http
 POST /api/admin/media
@@ -423,7 +453,7 @@ media/lawyer_photo/2026/05/{mediaId}/original.webp
 Develop/release separation is done by `MEDIA_BUCKET`, not by adding `develop/` or `release/` prefixes to
 the object key.
 
-Complete the upload after the object exists in storage:
+Complete a lower-level upload after the object exists in storage:
 
 ```http
 POST /api/admin/media/{id}/complete-upload

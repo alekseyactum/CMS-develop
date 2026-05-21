@@ -228,6 +228,8 @@ Write model:
 - `cms-front-develop-runner`: no write.
 
 The admin frontend uploads through `cms-back`, not directly to the bucket.
+`cms-back` writes objects with the Cloud Storage SDK using the `cms-back-develop-runner` service account
+and the configured `MEDIA_BUCKET`.
 
 Snapshots and render payloads:
 

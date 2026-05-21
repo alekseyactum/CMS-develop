@@ -838,9 +838,11 @@ Current backend implementation direction:
 - `cms_media_assets` stores the first media metadata layer;
 - `cms_media_asset_translations` stores localized alt/title metadata;
 - admin endpoints live under `/api/admin/media`;
+- `POST /api/admin/media/upload` is the normal admin upload path: frontend sends multipart data to
+  `cms-back`, and `cms-back` writes to Cloud Storage with its service account;
 - `POST /api/admin/media` creates a `pending_upload` record and reserves backend-generated `objectKey` and
-  `servingPath`;
-- the upload path must use the reserved `objectKey`;
+  `servingPath` for internal/advanced flows;
+- the frontend must not upload directly to Cloud Storage or invent object keys;
 - `POST /api/admin/media/{id}/complete-upload` marks the record as `uploaded` after the object exists;
 - `lawyer_photo`, `article_cover`, and `og_image` require public image metadata;
 - lawyer `photoMediaId` must point to an active uploaded `lawyer_photo` media record;

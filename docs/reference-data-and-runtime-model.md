@@ -740,15 +740,20 @@ The first backend implementation creates `cms_media_assets` and admin endpoints:
 GET    /api/admin/media/meta
 GET    /api/admin/media
 GET    /api/admin/media/{id}
+POST   /api/admin/media/upload
 POST   /api/admin/media
 POST   /api/admin/media/{id}/complete-upload
 PUT    /api/admin/media/{id}/translations/{locale}
 DELETE /api/admin/media/{id}
 ```
 
-The first API reserves a media record before the file is considered usable. Backend generates the storage
-object key and the stable public serving path. Browser upload/signing is a separate layer, but it must use
-the backend-created record and must not bypass `cms-back` ownership of media identity and metadata.
+The normal admin upload path is `POST /api/admin/media/upload`. The CMS frontend sends multipart form data
+to `cms-back`; `cms-back` validates the request, creates the metadata record, generates the object key,
+uploads the bytes to Cloud Storage with its service account, and marks the record `uploaded`.
+
+The lower-level `POST /api/admin/media` and `POST /api/admin/media/{id}/complete-upload` endpoints remain
+available for internal/advanced flows that need to reserve a record before upload. They still must use the
+backend-created record and must not bypass `cms-back` ownership of media identity and metadata.
 
 The bucket may remain private. Public rendering must use the stable serving path or a later media-serving
 layer, not a raw public Cloud Storage URL.
