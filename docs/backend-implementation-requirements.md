@@ -357,6 +357,13 @@ page schema, connect page-owned sections and shared global sections, expose curr
 drafts for page-owned sections. Runtime slots remain read-model slots and are not persisted as page-section
 bindings.
 
+Implementation note, 2026-05-21: `cms-back` now contains the first admin page workbench slice:
+`GET /api/admin/page-workbench/tree` and `GET /api/admin/page-workbench/page-types/{pageType}`. This layer is
+an editor-facing aggregator above page schemas, pages catalog, and page authoring state. It returns the left
+tree and matrix-ready section/runtime cell summaries for `contacts_page` and `lawyers_page` without exposing
+section content. `lawyer_page` is visible as a generated collection node and will get full generated matrix
+support later.
+
 ## Review Gate
 
 Any change that ports prototype behavior into `CMS` should answer these questions:

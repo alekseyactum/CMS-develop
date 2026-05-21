@@ -10,6 +10,8 @@ request/response shapes, especially for authoring state, preview, publish, and r
 ```text
 GET  /api/admin/page-schemas
 GET  /api/admin/page-schemas/{pageType}
+GET  /api/admin/page-workbench/tree
+GET  /api/admin/page-workbench/page-types/{pageType}
 GET  /api/admin/pages
 POST /api/admin/pages/bootstrap
 GET  /api/admin/pages/{pageId}/authoring
@@ -24,13 +26,14 @@ All write operations may send `x-cms-actor` until real CMS auth/session audit is
 ## Basic Flow
 
 1. Load page schemas/meta.
-2. Load the pages catalog.
-3. Bootstrap or open a page.
-4. Render `authoring.page`, editable `authoring.sections`, and read-only `authoring.runtimeSlots`.
-5. Save drafts only through `POST /sections/{slotKey}/draft`.
-6. Build preview through `POST /preview`.
-7. Publish through `POST /publish`.
-8. Rollback through `POST /rollback` when needed.
+2. Load the page workbench tree.
+3. Open a page type workbench matrix.
+4. Bootstrap or open a concrete page from the selected row.
+5. Render `authoring.page`, editable `authoring.sections`, and read-only `authoring.runtimeSlots`.
+6. Save drafts only through `POST /sections/{slotKey}/draft`.
+7. Build preview through `POST /preview`.
+8. Publish through `POST /publish`.
+9. Rollback through `POST /rollback` when needed.
 
 The frontend must not reconstruct publish rules. Backend decides what can be saved, previewed, published,
 or rolled back.
@@ -58,6 +61,49 @@ This is the UI metadata source for page authoring. It returns:
 
 The frontend should use this endpoint to build page creation forms and section editors. Do not hardcode
 the available page types, slots, route params, or field lists in the frontend.
+
+## Page Workbench
+
+Use:
+
+```text
+GET /api/admin/page-workbench/tree?locale=uk
+GET /api/admin/page-workbench/page-types/{pageType}?locale=uk
+```
+
+This is the source for the main page workbench screen: left tree plus section matrix. It is intentionally
+summary-only and must not replace the section editor.
+
+`GET /tree` returns page groups and page-type nodes:
+
+- fixed page types already supported by the workbench: `contacts_page`, `lawyers_page`;
+- generated collections that are visible in the tree but not fully matrix-managed yet: `lawyer_page`;
+- `variantMode`: `single`, `regional`, or `generated_collection`;
+- `createdCount` and high-level summary counters for badges.
+
+`GET /page-types/{pageType}` returns:
+
+- `columns`: fixed section/runtime slots from the backend page schema;
+- `rows`: concrete page variants for the selected locale;
+- `cells`: one summary cell per section/runtime slot;
+- `summary`: counters for the whole opened matrix.
+
+For this first slice, `contacts_page` and `lawyers_page` are supported as single-row matrices. Regional
+and generated matrices will be expanded later without changing the general contract shape.
+
+Section cells contain only metadata and status:
+
+- ids: `bindingId`, `sectionId`, `sourceSectionId`, `localSectionId`;
+- state: `visibility`, `draftStatus`, `draftVersion`, `publishedVersion`;
+- ownership/publish info: `ownershipScope`, `publishMode`, `composition`;
+- `diagnostics`: errors, warnings, missing published version, stale state;
+- `actions`: what the UI may show (`canOpen`, `canEdit`, `canSaveDraft`, `canPublish`, etc.).
+
+Section cells do not contain section content. When the editor opens one cell, load the full edit state
+through `GET /api/admin/pages/{pageId}/authoring` or the future dedicated section editor endpoint.
+
+Runtime cells represent read-model data, not editable CMS drafts. They expose `source` metadata and should
+be shown as read-only blocks in the matrix.
 
 ## Pages Catalog
 
