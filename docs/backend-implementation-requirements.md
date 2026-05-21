@@ -364,6 +364,12 @@ tree and matrix-ready section/runtime cell summaries for `contacts_page` and `la
 section content. `lawyer_page` is visible as a generated collection node and will get full generated matrix
 support later.
 
+Implementation note, 2026-05-21: `cms-back` now contains the first section editor read slice:
+`GET /api/admin/pages/{pageId}/sections/{slotKey}/editor`. This endpoint opens one CMS section from the
+workbench matrix and returns draft/published content, schema metadata, diagnostics, and backend-computed
+action flags. The workbench matrix remains summary-only; full section content belongs to the section editor
+payload.
+
 ## Review Gate
 
 Any change that ports prototype behavior into `CMS` should answer these questions:

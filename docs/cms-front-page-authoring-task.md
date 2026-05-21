@@ -15,6 +15,7 @@ GET  /api/admin/page-workbench/page-types/{pageType}
 GET  /api/admin/pages
 POST /api/admin/pages/bootstrap
 GET  /api/admin/pages/{pageId}/authoring
+GET  /api/admin/pages/{pageId}/sections/{slotKey}/editor
 POST /api/admin/pages/{pageId}/sections/{slotKey}/draft
 POST /api/admin/pages/{pageId}/preview
 POST /api/admin/pages/{pageId}/publish
@@ -100,7 +101,7 @@ Section cells contain only metadata and status:
 - `actions`: what the UI may show (`canOpen`, `canEdit`, `canSaveDraft`, `canPublish`, etc.).
 
 Section cells do not contain section content. When the editor opens one cell, load the full edit state
-through `GET /api/admin/pages/{pageId}/authoring` or the future dedicated section editor endpoint.
+through `GET /api/admin/pages/{pageId}/sections/{slotKey}/editor`.
 
 Runtime cells represent read-model data, not editable CMS drafts. They expose `source` metadata and should
 be shown as read-only blocks in the matrix.
@@ -157,6 +158,41 @@ For each item in `sections`, pay attention to:
 
 Only page-owned, editable slots should expose draft editing controls. Shared/global/runtime slots should be
 displayed as part of the page state, but not edited through the page-owned draft endpoint.
+
+## Section Editor
+
+Use:
+
+```text
+GET /api/admin/pages/{pageId}/sections/{slotKey}/editor
+```
+
+This endpoint opens one CMS section from the workbench matrix. It is the main payload for the section edit
+screen.
+
+The response contains:
+
+- `page`: page identity and route;
+- `slot`: schema-driven section metadata: fields, layout, content shape, allowed composition strategies;
+- `section`: binding/current authoring state: ids, ownership, publish mode, visibility, composition,
+  draft/published version refs;
+- `content.draft`: full current draft content for this section, if a draft exists;
+- `content.published`: full current published content for this section, if a published version exists;
+- `diagnostics.draftValidation`: latest recorded publish validation state for the draft, if available;
+- `diagnostics.errors` and `diagnostics.warnings`;
+- `actions`: backend-computed flags for the UI.
+
+Important boundaries:
+
+- Workbench matrix cells are summary-only.
+- Section editor is the place where full section content appears.
+- Runtime slots must not call this endpoint; they are read-model blocks and should stay read-only in this
+  slice.
+- `actions.canSavePageDraft` means use
+  `POST /api/admin/pages/{pageId}/sections/{slotKey}/draft`.
+- `actions.canSaveIndependentDraft` means the section is an independent/global section. Use the existing
+  section lifecycle API (`POST /api/admin/sections/{sectionId}/drafts`) with the schema fields from the
+  editor payload.
 
 ## Save Draft
 
