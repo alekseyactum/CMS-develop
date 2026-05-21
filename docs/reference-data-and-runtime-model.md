@@ -740,6 +740,7 @@ The first backend implementation creates `cms_media_assets` and admin endpoints:
 GET    /api/admin/media/meta
 GET    /api/admin/media
 GET    /api/admin/media/{id}
+GET    /api/admin/media/{id}/file
 POST   /api/admin/media/upload
 POST   /api/admin/media
 POST   /api/admin/media/{id}/complete-upload
@@ -754,6 +755,10 @@ uploads the bytes to Cloud Storage with its service account, and marks the recor
 The lower-level `POST /api/admin/media` and `POST /api/admin/media/{id}/complete-upload` endpoints remain
 available for internal/advanced flows that need to reserve a record before upload. They still must use the
 backend-created record and must not bypass `cms-back` ownership of media identity and metadata.
+
+`GET /api/admin/media/{id}/file` is the protected admin preview/download path. It streams bytes only for
+active uploaded media records. It is not the public `/media/...` serving layer; public media serving remains
+a separate site frontend/media-serving concern.
 
 The bucket may remain private. Public rendering must use the stable serving path or a later media-serving
 layer, not a raw public Cloud Storage URL.

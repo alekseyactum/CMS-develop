@@ -342,6 +342,7 @@ The backend now exposes the first media-record API for CMS-owned media metadata:
 GET    /api/admin/media/meta
 GET    /api/admin/media
 GET    /api/admin/media/{id}
+GET    /api/admin/media/{id}/file
 POST   /api/admin/media/upload
 POST   /api/admin/media
 POST   /api/admin/media/{id}/complete-upload
@@ -364,6 +365,17 @@ The primary first upload flow is:
 
 The lower-level `POST /api/admin/media` plus `POST /api/admin/media/{id}/complete-upload` endpoints still
 exist as an internal/advanced path, but normal CMS frontend upload should use `POST /api/admin/media/upload`.
+
+The protected admin preview/download endpoint is:
+
+```http
+GET /api/admin/media/{id}/file
+```
+
+It streams file bytes only for an active uploaded media record. It is for CMS admin preview and media
+picker use, not for public site rendering. Because `cms-back` is not a browser-public service in the
+develop contour, `cms-front` should proxy this endpoint through its own authenticated server-side route
+when an `<img>`/preview URL is needed in the browser.
 
 `GET /api/admin/media/meta` returns usage policies:
 
@@ -484,6 +496,57 @@ PUT /api/admin/media/{id}/translations/{locale}
 Use `cmsFields.photoMediaId` on lawyers to connect a lawyer to a media record. The backend now validates
 that `photoMediaId` points to an active uploaded media record with `usageType="lawyer_photo"`.
 
+### Lawyer Photo Picker Flow
+
+For the first lawyer photo picker, use this practical flow:
+
+1. Open existing photo choices:
+
+```http
+GET /api/admin/media?usageType=lawyer_photo&uploadState=uploaded&limit=50&offset=0
+```
+
+2. Show each choice using media metadata and an admin preview URL proxied by `cms-front`:
+
+```text
+cms-front browser route -> cms-front server handler -> GET /api/admin/media/{id}/file -> image bytes
+```
+
+3. Upload a new lawyer photo with:
+
+```http
+POST /api/admin/media/upload
+Content-Type: multipart/form-data
+```
+
+Required fields for `usageType=lawyer_photo`:
+
+- `file`;
+- `usageType=lawyer_photo`;
+- `translations` JSON string with `altText` and `titleText` for `uk`, `ru`, and `en`.
+
+4. After upload succeeds, attach the media record to the lawyer:
+
+```http
+PATCH /api/admin/reference/lawyers/{lawyerId}
+```
+
+```json
+{
+  "photoMediaId": "5d6f0f95-80b5-401e-9100-7f94fc5e04ce"
+}
+```
+
+5. Re-read the lawyer detail:
+
+```http
+GET /api/admin/reference/lawyers/{lawyerId}
+```
+
+The detail response should now return `cmsFields.photoMediaId`. If the selected media is missing, deleted,
+not uploaded, or not `usageType="lawyer_photo"`, backend rejects the PATCH. The frontend should show the
+backend validation message and keep the editor's current form state.
+
 Deletion is soft and guarded. `DELETE /api/admin/media/{id}` is rejected if the record is already referenced
 by a lawyer photo or by a published page snapshot.
 
@@ -506,6 +569,8 @@ The task is ready when:
 - normal dictionary detail/list views show the last CMS editor when returned by backend;
 - region translations expose `prepositionalName` for each locale;
 - diagnostics are visible and grouped by severity;
+- media picker can list uploaded lawyer photos, upload a new `lawyer_photo`, preview it through the
+  protected admin file endpoint/proxy, and save `photoMediaId` to a lawyer;
 - the UI handles backend validation errors without losing the editor's current form state.
 
 ## Non-Goals

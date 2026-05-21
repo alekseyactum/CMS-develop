@@ -840,6 +840,7 @@ Current backend implementation direction:
 - admin endpoints live under `/api/admin/media`;
 - `POST /api/admin/media/upload` is the normal admin upload path: frontend sends multipart data to
   `cms-back`, and `cms-back` writes to Cloud Storage with its service account;
+- `GET /api/admin/media/{id}/file` is the protected admin preview/download path for active uploaded media;
 - `POST /api/admin/media` creates a `pending_upload` record and reserves backend-generated `objectKey` and
   `servingPath` for internal/advanced flows;
 - the frontend must not upload directly to Cloud Storage or invent object keys;
