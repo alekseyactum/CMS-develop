@@ -612,9 +612,10 @@ The first release scope includes:
 - lawyer qualifications;
 - region qualifications.
 
-ERP is the source of truth for object identity and public eligibility. The CMS is the source of truth for
-CMS-owned public enrichment such as public slugs, localized display fields, media, sort order, validation,
-preview, publish, snapshots, and diagnostics.
+ERP is the source of truth for object identity, source slugs for practices/services/problems/regions, and
+public eligibility. The CMS is the source of truth for CMS-owned public enrichment such as localized
+display fields, media, sort order, generated read-only lawyer slugs, validation, preview, publish,
+snapshots, and diagnostics.
 
 The only ERP visibility flag used by CMS public logic is:
 
@@ -669,6 +670,9 @@ editor separately from ERP/source sync metadata. This should be stored as CMS-sp
 such as `cms_updated_by` / `cms_updated_at`, because generic source update fields may be changed by
 `data-inside-migrator`.
 
+Admin API `updatedAt` / `updatedBy` for normal reference resources reflects non-translation CMS base-field
+edits only. Translation edits are exposed separately through `translationsMeta`.
+
 For translatable reference objects, CMS must create missing `uk`, `ru`, and `en` translation skeleton rows
 on first insert and must repeat the same idempotent check on admin detail read. ERP and
 `data-inside-migrator` do not own localized CMS fields, and skeleton creation must never overwrite existing
@@ -677,8 +681,9 @@ editor-entered translations.
 Region translations must include a localized prepositional-name field for regional text composition.
 This field is CMS-owned and edited per locale.
 
-Public slugs are CMS-owned, shared across locales, and unique within object type. ERP source slug changes
-must not automatically change public URLs. When CMS changes a public slug/public route, redirects from
+For practices, services, problems, and regions, public route slugs come from ERP source slugs and are
+read-only in CMS. For lawyers, CMS generates one stable read-only slug on first insert and does not
+regenerate it after name changes. If a slug changes through ERP or controlled maintenance, redirects from
 old public URLs to new public URLs must be created for all affected locale routes.
 
 For normal reference objects, if ERP stops sending an object, CMS does not auto-delete it and does not

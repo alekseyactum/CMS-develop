@@ -6,9 +6,10 @@ screens.
 The goal is to give editors a simple interface for ERP-imported site dictionaries while preserving the
 ownership boundary:
 
-- ERP owns source identity, relations, ranking signals, and `show_on_site`;
-- CMS owns public slugs, CMS media references, sort order, localized public labels, descriptions, and
-  diagnostics display;
+- ERP owns source identity, source slugs for practices/services/problems/regions, relations, ranking
+  signals, and `show_on_site`;
+- CMS owns CMS media references, sort order, localized public labels, descriptions, generated read-only
+  lawyer slugs, and diagnostics display;
 - the backend owns the field contract, validation rules, and admin API shape.
 
 The frontend must not call internal ERP upsert endpoints and must not duplicate backend field rules.
@@ -95,12 +96,12 @@ Each row should show:
 - object title from the best available source/localized field;
 - `externalId`;
 - `showOnSite` if present;
-- main CMS-owned fields such as `publicSlug`, `sortOrder`, or `photoMediaId` when present;
+- main CMS-owned fields such as `sortOrder`, `photoMediaId`, or read-only lawyer `slug` when present;
 - relation hints from `relationFields`;
 - readable relation objects from `relations` when present;
 - readable child lists from `children` when present;
 - diagnostics summary with warning/error count;
-- last CMS editor when the backend returns `cmsUpdatedBy`;
+- last non-translation CMS editor when the backend returns `updatedBy`;
 - link/button to open the object detail.
 
 Do not allow editing directly inside the first list version unless it is trivial and uses the same PATCH
@@ -126,7 +127,10 @@ The detail screen should have clear groups:
 - CMS base fields: editable only when meta marks them editable;
 - translations: one tab or segment per locale;
 - diagnostics: visible near the top and near affected fields where practical.
-- last CMS editor/date: show `cmsUpdatedBy` / `cmsUpdatedAt` for normal dictionary resources when present.
+- last non-translation CMS editor/date: show `updatedBy` / `updatedAt` for normal dictionary resources
+  when present.
+- translation audit: show `translationsMeta.latestUpdatedAt`, `translationsMeta.latestUpdatedBy`, and
+  per-locale `translationsMeta.locales[locale]` where useful.
 
 Do not expose source fields, relation fields, `showOnSite`, qualification scores, or qualification
 sync-state fields as editable controls.
@@ -193,7 +197,6 @@ Practices can include their services:
           "legalCond": false
         },
         "cmsFields": {
-          "publicSlug": "legal-consultation",
           "sortOrder": 10
         },
         "translations": {
@@ -242,7 +245,6 @@ Request body:
 
 ```json
 {
-  "publicSlug": "family-law",
   "sortOrder": 10
 }
 ```
@@ -284,7 +286,8 @@ Severity behavior:
 
 Examples:
 
-- missing public slug;
+- missing source slug for visible routable source dictionaries;
+- missing generated lawyer slug;
 - missing localized public name;
 - unresolved relation;
 - missing localized address.
@@ -301,11 +304,11 @@ Read-only in CMS:
 - `externalId`;
 - `source`;
 - `showOnSite`;
+- source slugs for practices/services/problems/regions and generated lawyer `slug`;
 - qualification scores, relations, `isActive`, and `removedFromSourceAt`.
 
 Editable in CMS only when meta says so:
 
-- public slugs;
 - media references such as lawyer photo id;
 - sort order;
 - localized public names, menu titles, descriptions, addresses, review display text.
