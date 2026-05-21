@@ -729,3 +729,78 @@ The backend should implement this layer in phases:
 
 The full table foundation should be designed up front, but runtime use can be connected page type by page
 type.
+
+## Media Records
+
+CMS media is stored as metadata records in the CMS database. File bytes are not stored in MySQL.
+
+The first backend implementation creates `cms_media_assets` and admin endpoints:
+
+```text
+GET    /api/admin/media/meta
+GET    /api/admin/media
+GET    /api/admin/media/{id}
+POST   /api/admin/media
+POST   /api/admin/media/{id}/complete-upload
+PUT    /api/admin/media/{id}/translations/{locale}
+DELETE /api/admin/media/{id}
+```
+
+The first API reserves a media record before the file is considered usable. Backend generates the storage
+object key and the stable public serving path. Browser upload/signing is a separate layer, but it must use
+the backend-created record and must not bypass `cms-back` ownership of media identity and metadata.
+
+The bucket may remain private. Public rendering must use the stable serving path or a later media-serving
+layer, not a raw public Cloud Storage URL.
+
+Media records include:
+
+- stable `media_id`;
+- usage type;
+- lifecycle state;
+- upload state;
+- storage provider and bucket;
+- backend-generated object key;
+- stable serving path;
+- original filename;
+- MIME type;
+- size in bytes;
+- checksum and object generation when available;
+- dimensions when available;
+- CMS editor audit fields.
+
+Localized media metadata is stored separately in `cms_media_asset_translations`:
+
+- `media_id`;
+- `locale`;
+- `alt_text`;
+- `title_text`;
+- last translation editor and timestamp.
+
+Initial usage types:
+
+```text
+lawyer_photo
+article_cover
+og_image
+license_document
+generic
+```
+
+Public image usage types require `alt_text` and `title_text`. Size and MIME limits are owned by the backend
+and exposed through `GET /api/admin/media/meta`. Public image usage types require these fields for every
+supported locale.
+
+Reference-data integration:
+
+- lawyer `cmsFields.photoMediaId` must reference an active uploaded `lawyer_photo` media record;
+- the backend rejects missing, deleted, pending-upload, or wrong-usage media ids;
+- media deletion is soft;
+- deletion is blocked when a record is referenced by a lawyer photo or by a published page snapshot.
+
+The first release does not introduce a universal `cms_media_usages` table. Media ownership remains in the
+field that references the media asset, for example lawyer `photo_media_id` or a section payload field.
+Deletion/readiness checks must inspect the implemented owner fields and published snapshots. A separate
+usage index can be added later only if real cross-object media reporting needs it.
+
+This gives the CMS frontend a stable media identifier before the richer media-library UI is implemented.

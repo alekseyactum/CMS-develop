@@ -334,6 +334,124 @@ The first version does not need advanced bulk editing, drag sorting, import scre
 integration. For media fields, a plain id field or temporary selector is acceptable until the media module
 is implemented.
 
+## Media Record Contract
+
+The backend now exposes the first media-record API for CMS-owned media metadata:
+
+```text
+GET    /api/admin/media/meta
+GET    /api/admin/media
+GET    /api/admin/media/{id}
+POST   /api/admin/media
+POST   /api/admin/media/{id}/complete-upload
+PUT    /api/admin/media/{id}/translations/{locale}
+DELETE /api/admin/media/{id}
+```
+
+This API manages CMS media records and reserves backend-generated storage paths. The bucket may stay
+private. The frontend must not invent storage object keys and must not treat the returned media URL as a
+direct Cloud Storage public URL.
+
+The first upload flow is:
+
+1. frontend calls `POST /api/admin/media` with file metadata and localized media text;
+2. backend creates a `pending_upload` media record and returns `bucket`, `objectKey`, and `servingPath`;
+3. the file is uploaded to the returned object key through the approved upload path;
+4. frontend calls `POST /api/admin/media/{id}/complete-upload`;
+5. only `uploaded` media can be used where public rendering requires an actual file.
+
+`GET /api/admin/media/meta` returns usage policies:
+
+- supported `usageType` values;
+- allowed MIME types;
+- maximum file size;
+- whether localized `altText` and `titleText` are required;
+- supported upload states;
+- serving path pattern.
+
+Initial usage types:
+
+```text
+lawyer_photo
+article_cover
+og_image
+license_document
+generic
+```
+
+For public image usages such as `lawyer_photo`, `article_cover`, and `og_image`, the backend requires
+`altText` and `titleText` for every supported locale.
+
+Create a pending media record:
+
+```http
+POST /api/admin/media
+```
+
+```json
+{
+  "usageType": "lawyer_photo",
+  "originalFilename": "ivan-ivanov.webp",
+  "mimeType": "image/webp",
+  "sizeBytes": 112000,
+  "translations": {
+    "uk": { "altText": "Ivan Ivanov lawyer portrait UK", "titleText": "Ivan Ivanov UK" },
+    "ru": { "altText": "Ivan Ivanov lawyer portrait RU", "titleText": "Ivan Ivanov RU" },
+    "en": { "altText": "Ivan Ivanov lawyer portrait", "titleText": "Ivan Ivanov" }
+  }
+}
+```
+
+The backend owns and returns:
+
+- `id`;
+- configured `bucket`;
+- backend-generated `objectKey`;
+- stable `servingPath`, for example `/media/{mediaId}/original.webp`;
+- `lifecycleState`;
+- `uploadState`;
+- localized `translations`;
+- `translationsMeta`;
+- audit fields.
+
+Complete the upload after the object exists in storage:
+
+```http
+POST /api/admin/media/{id}/complete-upload
+```
+
+```json
+{
+  "objectGeneration": "1700000000000000",
+  "checksum": "optional-checksum",
+  "width": 1200,
+  "height": 1600
+}
+```
+
+Editable media metadata is localized and saved one locale at a time:
+
+```http
+PUT /api/admin/media/{id}/translations/{locale}
+```
+
+```json
+{
+  "altText": "Updated localized alt",
+  "titleText": "Updated localized title"
+}
+```
+
+Use `cmsFields.photoMediaId` on lawyers to connect a lawyer to a media record. The backend now validates
+that `photoMediaId` points to an active uploaded media record with `usageType="lawyer_photo"`.
+
+Deletion is soft and guarded. `DELETE /api/admin/media/{id}` is rejected if the record is already referenced
+by a lawyer photo or by a published page snapshot.
+
+There is intentionally no separate `cms_media_usages` API in the current implementation. Media usage is
+known by the owning object or section field, and deletion checks the implemented owners plus published
+snapshot payloads.
+
 ## Acceptance Criteria
 
 The task is ready when:

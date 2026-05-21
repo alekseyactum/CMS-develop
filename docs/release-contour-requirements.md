@@ -774,16 +774,18 @@ The CMS must have media records for uploaded or referenced files.
 Required media metadata should include:
 
 - stable media identifier;
+- media lifecycle state;
+- upload state;
 - storage bucket or provider identifier;
-- storage object key;
-- public URL or public URL derivation data;
+- backend-generated storage object key;
+- stable public serving path or public URL derivation data;
 - MIME type;
 - file size;
 - checksum or equivalent integrity marker when available;
 - original filename;
 - media usage type;
-- alt text when the asset is used as a public content image;
-- title when the asset is used as a public content image and the page type requires it;
+- localized alt text when the asset is used as a public content image;
+- localized title when the asset is used as a public content image and the page type requires it;
 - upload author and timestamps;
 - replacement/deprecation status when relevant.
 
@@ -801,17 +803,41 @@ usage type where needed.
 Public media URLs must be stable enough for published content, SEO metadata, Open Graph previews, and
 cached frontend rendering.
 
+If the storage bucket is private, the stable public surface must not be a raw Cloud Storage public URL.
+The backend should store the private object key separately from a stable serving path such as
+`/media/{mediaId}/original.webp`. A frontend or media-serving layer can later resolve that path to the
+private object while keeping published payloads stable.
+
 Media deletion must be safe:
 
 - a file used by a current published snapshot must not be physically deleted;
 - a file referenced by historical snapshots should be retained or intentionally archived according to the
   retention policy;
-- the admin UI should show where a media record is used before allowing deletion;
+- the admin UI should show where a media record is used where the backend can determine it;
 - replacing an asset should create a new controlled state rather than silently mutating historical
   published content.
 
 The first release does not require a large, polished media-library UI. A minimal administrative interface
-is acceptable if the data model, validation, usage tracking, and safe deletion rules are correct.
+is acceptable if the data model, validation, owner-reference checks, and safe deletion rules are correct.
+
+The first release does not require a universal `cms_media_usages` table. A media asset belongs to the
+object or section field that references it. Safe deletion and diagnostics should inspect implemented owner
+fields, such as lawyer `photo_media_id`, and current published snapshots. A separate usage index can be
+added later if reporting or cross-object cleanup becomes painful enough to justify the extra write path.
+
+Current backend implementation direction:
+
+- `cms_media_assets` stores the first media metadata layer;
+- `cms_media_asset_translations` stores localized alt/title metadata;
+- admin endpoints live under `/api/admin/media`;
+- `POST /api/admin/media` creates a `pending_upload` record and reserves backend-generated `objectKey` and
+  `servingPath`;
+- the upload path must use the reserved `objectKey`;
+- `POST /api/admin/media/{id}/complete-upload` marks the record as `uploaded` after the object exists;
+- `lawyer_photo`, `article_cover`, and `og_image` require public image metadata;
+- lawyer `photoMediaId` must point to an active uploaded `lawyer_photo` media record;
+- deletion is soft and blocked when the asset is referenced by a lawyer photo or by a published page
+  snapshot.
 
 ## Decision 14: Frontend Rendering Boundary And Section Specification
 
@@ -1427,7 +1453,7 @@ Backend release-ready criteria:
 - regional services-tree inheritance, override, and append work;
 - generated lists use published/current state and approved public read models;
 - auth, sessions, RBAC, and audit requirements are implemented;
-- media metadata and usage tracking work;
+- media metadata and owner-reference checks work;
 - safe media deletion rules are enforced;
 - database migrations and seed rules are enforced;
 - release readiness diagnostics expose content, route, SEO, media, locale, regional, and stale-state
