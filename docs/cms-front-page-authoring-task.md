@@ -16,6 +16,7 @@ GET  /api/admin/pages
 POST /api/admin/pages/bootstrap
 GET  /api/admin/pages/{pageId}/authoring
 GET  /api/admin/pages/{pageId}/sections/{slotKey}/editor
+PATCH /api/admin/pages/{pageId}/sections/{slotKey}/editor/state
 POST /api/admin/pages/{pageId}/sections/{slotKey}/editor/draft
 POST /api/admin/pages/{pageId}/sections/{slotKey}/editor/validate
 POST /api/admin/pages/{pageId}/sections/{slotKey}/editor/publish
@@ -219,6 +220,8 @@ Important boundaries:
 - `actions.canSavePageDraft` means the backend can save this slot as a page-owned draft.
 - `actions.canSaveIndependentDraft` means the backend can save this slot as an independent/global section
   draft.
+- `actions.canEnableSection` and `actions.canDisableSection` mean the backend allows changing only the
+  page binding visibility for this slot.
 - The frontend should use the page-scoped editor action endpoints below for both cases. The frontend does
   not need to decide which low-level section lifecycle endpoint is correct.
 
@@ -227,12 +230,26 @@ Important boundaries:
 Use these endpoints from the section edit screen:
 
 ```text
+PATCH /api/admin/pages/{pageId}/sections/{slotKey}/editor/state
 POST /api/admin/pages/{pageId}/sections/{slotKey}/editor/draft
 POST /api/admin/pages/{pageId}/sections/{slotKey}/editor/validate
 POST /api/admin/pages/{pageId}/sections/{slotKey}/editor/publish
 GET  /api/admin/pages/{pageId}/sections/{slotKey}/editor/history
 POST /api/admin/pages/{pageId}/sections/{slotKey}/editor/rollback
 ```
+
+State request body:
+
+```json
+{
+  "visibility": "disabled"
+}
+```
+
+Use this endpoint for section enable/disable switches in the page editor. It updates only the page-section
+binding visibility. It does not create a new section draft and does not change published section versions.
+The backend rejects disabling fixed/required slots where the page schema does not allow it. The response
+returns `previousVisibility`, the new `visibility`, and a reloaded `editor` payload.
 
 Draft request body:
 

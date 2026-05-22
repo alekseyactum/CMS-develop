@@ -394,6 +394,12 @@ snapshot from backend-computed flags and can display backend-computed publish bl
 sections, validation failures, empty required sections, or required independent sections that must be
 published before page publish.
 
+Implementation note, 2026-05-22: `cms-back` section editor now exposes backend-computed visibility actions
+and `PATCH /api/admin/pages/{pageId}/sections/{slotKey}/editor/state`. The endpoint changes only the
+page-section binding visibility (`enabled`/`disabled`), returns the reloaded editor payload, and does not
+create section drafts or rewrite published section versions. Disabling is allowed only when the registered
+page schema permits it for that slot.
+
 ## Review Gate
 
 Any change that ports prototype behavior into `CMS` should answer these questions:
