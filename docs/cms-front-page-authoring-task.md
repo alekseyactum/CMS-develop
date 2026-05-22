@@ -19,6 +19,8 @@ GET  /api/admin/pages/{pageId}/sections/{slotKey}/editor
 POST /api/admin/pages/{pageId}/sections/{slotKey}/editor/draft
 POST /api/admin/pages/{pageId}/sections/{slotKey}/editor/validate
 POST /api/admin/pages/{pageId}/sections/{slotKey}/editor/publish
+GET  /api/admin/pages/{pageId}/sections/{slotKey}/editor/history
+POST /api/admin/pages/{pageId}/sections/{slotKey}/editor/rollback
 POST /api/admin/pages/{pageId}/sections/{slotKey}/draft
 POST /api/admin/pages/{pageId}/preview
 POST /api/admin/pages/{pageId}/publish
@@ -206,6 +208,8 @@ Use these endpoints from the section edit screen:
 POST /api/admin/pages/{pageId}/sections/{slotKey}/editor/draft
 POST /api/admin/pages/{pageId}/sections/{slotKey}/editor/validate
 POST /api/admin/pages/{pageId}/sections/{slotKey}/editor/publish
+GET  /api/admin/pages/{pageId}/sections/{slotKey}/editor/history
+POST /api/admin/pages/{pageId}/sections/{slotKey}/editor/rollback
 ```
 
 Draft request body:
@@ -244,6 +248,39 @@ Publish request body:
 
 This endpoint is only for independent sections such as shared/global sections. Page-owned sections are
 published with the page through `POST /api/admin/pages/{pageId}/publish`.
+
+History:
+
+```text
+GET /api/admin/pages/{pageId}/sections/{slotKey}/editor/history?limit=50&offset=0
+```
+
+The response returns version rows for the section currently opened through the page editor:
+
+- draft, published and archived versions;
+- version content for preview/review;
+- `createdBy`, `createdAt`, `publishedBy`, `publishedAt`;
+- `isCurrentDraft` and `isCurrentPublished`;
+- `canRollback`, which is true only for published versions.
+
+Rollback:
+
+```text
+POST /api/admin/pages/{pageId}/sections/{slotKey}/editor/rollback
+```
+
+Request body:
+
+```json
+{
+  "sourcePublishedVersionId": "section-contacts-header-published-v1"
+}
+```
+
+Rollback does not move the published pointer backwards. It creates a new draft copied from the selected
+published version and returns a reloaded `editor` payload. For page-owned sections the backend also points
+the page binding to the new rollback draft. For independent/global sections the backend updates the section
+latest draft pointer, and pages keep their published state until a later publish/rebuild.
 
 The older `POST /api/admin/pages/{pageId}/sections/{slotKey}/draft` endpoint still exists for the first
 page-owned slice, but new CMS page editor UI should prefer the `/editor/draft` endpoint.

@@ -379,6 +379,15 @@ registered Nest page schema, and returns the reloaded editor payload. Independen
 resolve `latest_draft_version_id` and `current_published_version_id` from `cms_section_current_versions`, so
 shared sections edited outside a page binding still appear correctly in the page editor.
 
+Implementation note, 2026-05-21: `cms-back` now contains page-scoped section history and rollback endpoints:
+`GET /api/admin/pages/{pageId}/sections/{slotKey}/editor/history` and
+`POST /api/admin/pages/{pageId}/sections/{slotKey}/editor/rollback`. History returns draft/published/archive
+section versions with audit metadata and current-version markers. Section rollback does not move the
+published pointer backwards; it creates a new draft copied from the selected published section version. For
+page-owned sections the page binding is pointed to that new rollback draft. For independent/global sections
+the section latest-draft pointer is updated while published pages stay unchanged until a later publish or
+affected snapshot rebuild.
+
 ## Review Gate
 
 Any change that ports prototype behavior into `CMS` should answer these questions:
