@@ -14,6 +14,13 @@ GET  /api/admin/page-workbench/tree
 GET  /api/admin/page-workbench/page-types/{pageType}
 GET  /api/admin/page-workbench/pages/{pageId}/row
 POST /api/admin/page-workbench/pages/bootstrap
+GET  /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor
+PATCH /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/state
+POST /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/draft
+POST /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/validate
+POST /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/publish
+GET  /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/history
+POST /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/rollback
 GET  /api/admin/page-workbench/pages/{pageId}/snapshots
 GET  /api/admin/page-workbench/pages/{pageId}/snapshots/{snapshotId}
 POST /api/admin/page-workbench/pages/{pageId}/preview
@@ -44,8 +51,8 @@ All write operations may send `x-cms-actor` until real CMS auth/session audit is
 3. Open a page type workbench matrix.
 4. Bootstrap or open a concrete page from the selected row.
 5. Render `authoring.page`, editable `authoring.sections`, and read-only `authoring.runtimeSlots`.
-6. Open a concrete section through `GET /sections/{slotKey}/editor`.
-7. Save/validate/publish that section through the page-scoped editor action endpoints.
+6. Open a concrete section through the workbench section editor endpoint.
+7. Save/validate/publish that section through the workbench section action endpoints.
 8. Build preview through the workbench page action endpoint.
 9. Publish a page through the workbench page action endpoint.
 10. Rollback through the workbench page action endpoint when needed.
@@ -86,6 +93,13 @@ GET /api/admin/page-workbench/tree?locale=uk
 GET /api/admin/page-workbench/page-types/{pageType}?locale=uk
 GET /api/admin/page-workbench/pages/{pageId}/row
 POST /api/admin/page-workbench/pages/bootstrap
+GET /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor
+PATCH /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/state
+POST /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/draft
+POST /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/validate
+POST /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/publish
+GET /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/history
+POST /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/rollback
 GET /api/admin/page-workbench/pages/{pageId}/snapshots?limit=50&offset=0
 GET /api/admin/page-workbench/pages/{pageId}/snapshots/{snapshotId}
 POST /api/admin/page-workbench/pages/{pageId}/preview
@@ -140,6 +154,22 @@ Use this endpoint for `actions.canBootstrap`. After success, replace the not-cre
 the page schema, route, shared sections, initial section versions, and row state. If a page already exists
 for the same public route, the endpoint returns `bootstrap.created = false` plus the existing page row.
 
+The workbench section editor endpoints wrap the same editor logic as
+`/api/admin/pages/{pageId}/sections/{slotKey}/editor...`, but always return a fresh workbench row:
+
+- `GET /pages/{pageId}/sections/{slotKey}/editor`: returns `{ editor, workbench }`;
+- `PATCH /pages/{pageId}/sections/{slotKey}/editor/state`: returns `{ updateState, workbench }`;
+- `POST /pages/{pageId}/sections/{slotKey}/editor/draft`: returns `{ saveDraft, workbench }`;
+- `POST /pages/{pageId}/sections/{slotKey}/editor/validate`: returns `{ validation, workbench }`;
+- `POST /pages/{pageId}/sections/{slotKey}/editor/publish`: returns `{ publish, workbench }`;
+- `GET /pages/{pageId}/sections/{slotKey}/editor/history`: returns `{ history, workbench }`;
+- `POST /pages/{pageId}/sections/{slotKey}/editor/rollback`: returns `{ rollback, workbench }`.
+
+Use these workbench endpoints for the main page editor UI. The nested operation object contains the same
+payload as the lower-level authoring endpoint, and `response.workbench.row` is the row that should replace
+the current matrix row after the action. This removes the need for the frontend to manually call
+`GET /pages/{pageId}/row` after every save, validation, publish, rollback, enable, or disable action.
+
 The workbench page action endpoints wrap the same lifecycle logic as `POST /api/admin/pages/{pageId}/...`,
 but they also return `workbench`, a fresh row-refresh payload for the affected page:
 
@@ -182,7 +212,7 @@ Section cells contain only metadata and status:
 - `actions.canEnable` / `actions.canDisable`: show section visibility controls computed by the backend.
 
 Section cells do not contain section content. When the editor opens one cell, load the full edit state
-through `GET /api/admin/pages/{pageId}/sections/{slotKey}/editor`.
+through `GET /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor`.
 
 Runtime cells represent read-model data, not editable CMS drafts. They expose `source` metadata and should
 be shown as read-only blocks in the matrix.
@@ -264,13 +294,25 @@ displayed as part of the page state, but not edited through the page-owned draft
 Use:
 
 ```text
-GET /api/admin/pages/{pageId}/sections/{slotKey}/editor
+GET /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor
 ```
 
 This endpoint opens one CMS section from the workbench matrix. It is the main payload for the section edit
-screen.
+screen. The response shape is:
 
-The response contains:
+```json
+{
+  "editor": {},
+  "workbench": {
+    "row": {}
+  }
+}
+```
+
+Use `response.editor` to render the section editor and `response.workbench.row` to refresh the matrix row
+behind the opened editor.
+
+`response.editor` contains:
 
 - `page`: page identity and route;
 - `slot`: schema-driven section metadata: fields, layout, content shape, allowed composition strategies;
@@ -301,12 +343,12 @@ Important boundaries:
 Use these endpoints from the section edit screen:
 
 ```text
-PATCH /api/admin/pages/{pageId}/sections/{slotKey}/editor/state
-POST /api/admin/pages/{pageId}/sections/{slotKey}/editor/draft
-POST /api/admin/pages/{pageId}/sections/{slotKey}/editor/validate
-POST /api/admin/pages/{pageId}/sections/{slotKey}/editor/publish
-GET  /api/admin/pages/{pageId}/sections/{slotKey}/editor/history
-POST /api/admin/pages/{pageId}/sections/{slotKey}/editor/rollback
+PATCH /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/state
+POST /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/draft
+POST /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/validate
+POST /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/publish
+GET  /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/history
+POST /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/rollback
 ```
 
 State request body:
@@ -321,6 +363,8 @@ Use this endpoint for section enable/disable switches in the page editor. It upd
 binding visibility. It does not create a new section draft and does not change published section versions.
 The backend rejects disabling fixed/required slots where the page schema does not allow it. The response
 returns `previousVisibility`, the new `visibility`, and a reloaded `editor` payload.
+In the workbench wrapper, read it as `response.updateState.editor` and then replace the matrix row with
+`response.workbench.row`.
 
 Draft request body:
 
@@ -334,7 +378,8 @@ Draft request body:
 
 The backend decides whether this is a `with_page` page-owned section or an `independent` global section.
 The response returns operation metadata plus a reloaded `editor` payload. Use `response.editor` as the new
-current section state in the UI.
+current section state in the UI on the lower-level endpoint. In the workbench wrapper, use
+`response.saveDraft.editor` and then replace the matrix row with `response.workbench.row`.
 
 Validate request body:
 
@@ -347,6 +392,7 @@ Validate request body:
 
 If `sectionVersionId` is omitted, the backend validates the current draft visible in the editor payload.
 The response returns `ok`, `errors`, `validationRunId`, and a reloaded `editor` payload.
+In the workbench wrapper, use `response.validation.editor` and `response.workbench.row`.
 
 Publish request body:
 
@@ -358,11 +404,12 @@ Publish request body:
 
 This endpoint is only for independent sections such as shared/global sections. Page-owned sections are
 published with the page through `POST /api/admin/pages/{pageId}/publish`.
+In the workbench wrapper, use `response.publish.editor` and `response.workbench.row`.
 
 History:
 
 ```text
-GET /api/admin/pages/{pageId}/sections/{slotKey}/editor/history?limit=50&offset=0
+GET /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/history?limit=50&offset=0
 ```
 
 The response returns version rows for the section currently opened through the page editor:
@@ -379,6 +426,12 @@ Rollback:
 POST /api/admin/pages/{pageId}/sections/{slotKey}/editor/rollback
 ```
 
+For the workbench UI use:
+
+```text
+POST /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/rollback
+```
+
 Request body:
 
 ```json
@@ -391,9 +444,14 @@ Rollback does not move the published pointer backwards. It creates a new draft c
 published version and returns a reloaded `editor` payload. For page-owned sections the backend also points
 the page binding to the new rollback draft. For independent/global sections the backend updates the section
 latest draft pointer, and pages keep their published state until a later publish/rebuild.
+In the workbench wrapper, use `response.rollback.editor` and `response.workbench.row`.
 
 The older `POST /api/admin/pages/{pageId}/sections/{slotKey}/draft` endpoint still exists for the first
 page-owned slice, but new CMS page editor UI should prefer the `/editor/draft` endpoint.
+
+The lower-level `/api/admin/pages/.../editor...` endpoints still exist and keep the same operation payloads.
+For the main CMS page workbench, prefer the `/api/admin/page-workbench/...` wrappers because they remove
+one extra refresh request after every action.
 
 ## Preview
 
@@ -436,6 +494,25 @@ POST /api/admin/pages/{pageId}/rollback
 
 Rollback creates a new current snapshot from a historical source snapshot. It does not mean the frontend
 should manually assemble old page state.
+
+## Planned Backend Follow-Ups For CMS Front
+
+The current page workbench slice is intentionally limited to the first usable page-editor flow. The backend
+team plans to add the following pieces next, so the frontend should keep screens modular and avoid hardcoding
+temporary assumptions:
+
+- Practice/service/problem hierarchy: generated workbench rows and page schemas for practice, service,
+  problem, and later regional variants.
+- Dependency-aware runtime/read-model slots: practice pages should expose services, service pages should
+  expose problems, and generated pages should be driven by CMS reference data rather than frontend guesses.
+- Richer page bootstrap for generated pages: creating/opening a page from a reference object such as a
+  practice, service, problem, or lawyer.
+- Section action coverage for future movable/blog-like sections: add/remove/reorder will come later and
+  should be a backend-owned action layer, not a frontend-only mutation.
+- Warning diagnostics: currently critical validation is the main blocker; field-level warnings will become
+  part of section/page diagnostics without blocking every save.
+- Typed client generation: OpenAPI should remain the source for DTOs; frontend should prefer generated
+  clients when that pipeline is connected.
 
 ## UI Notes
 

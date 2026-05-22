@@ -428,6 +428,19 @@ workflow and returns the bootstrap result plus a fresh workbench row. It exists 
 create a page directly from a not-created matrix row and immediately replace that row with backend-computed
 state, without calling the lower-level authoring endpoint and then manually refreshing the matrix.
 
+Implementation note, 2026-05-22: `cms-back` page workbench now exposes section editor wrappers:
+`GET /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor`,
+`PATCH /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/state`,
+`POST /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/draft`,
+`POST /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/validate`,
+`POST /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/publish`,
+`GET /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/history`, and
+`POST /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/rollback`. These endpoints are
+thin UI-facing wrappers over the existing page authoring section editor service. Each response returns the
+operation result plus a fresh workbench row, so the CMS frontend can update both the opened section editor
+and the matrix row after save, validate, publish, rollback, enable, or disable without reconstructing
+backend rules or making a separate row-refresh request.
+
 ## Review Gate
 
 Any change that ports prototype behavior into `CMS` should answer these questions:
