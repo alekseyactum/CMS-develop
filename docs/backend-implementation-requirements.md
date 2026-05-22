@@ -388,6 +388,12 @@ page-owned sections the page binding is pointed to that new rollback draft. For 
 the section latest-draft pointer is updated while published pages stay unchanged until a later publish or
 affected snapshot rebuild.
 
+Implementation note, 2026-05-22: `cms-back` workbench matrix rows now expose page-level `actions` and
+`diagnostics`. The CMS frontend can show page buttons for open/bootstrap/preview/publish/rollback/current
+snapshot from backend-computed flags and can display backend-computed publish blockers such as stale
+sections, validation failures, empty required sections, or required independent sections that must be
+published before page publish.
+
 ## Review Gate
 
 Any change that ports prototype behavior into `CMS` should answer these questions:

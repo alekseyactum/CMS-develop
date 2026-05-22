@@ -92,6 +92,9 @@ summary-only and must not replace the section editor.
 
 - `columns`: fixed section/runtime slots from the backend page schema;
 - `rows`: concrete page variants for the selected locale;
+- row-level `actions`: whether the UI can open, bootstrap, preview, publish, rollback, or view the
+  current snapshot for the page;
+- row-level `diagnostics`: publish blockers and warnings for the whole page;
 - `cells`: one summary cell per section/runtime slot;
 - `summary`: counters for the whole opened matrix.
 
@@ -111,6 +114,25 @@ through `GET /api/admin/pages/{pageId}/sections/{slotKey}/editor`.
 
 Runtime cells represent read-model data, not editable CMS drafts. They expose `source` metadata and should
 be shown as read-only blocks in the matrix.
+
+Use row-level `actions` for page buttons:
+
+- `actions.canBootstrap`: show create/bootstrap page action when the row is not created yet;
+- `actions.canOpen`: open page authoring state;
+- `actions.canPreview`: allow preview build for the current draft/published mix;
+- `actions.canPublish`: allow page publish;
+- `actions.canRollback`: allow rollback flow only when the page already has a current snapshot;
+- `actions.canViewCurrentSnapshot`: show current public snapshot details.
+
+Use row-level `diagnostics.blockingReasons` for page banners/tooltips. The frontend should display the
+messages and codes, but should not recreate the rules. Important codes:
+
+- `PAGE_NOT_CREATED`;
+- `PAGE_SECTION_DRAFT_STALE`;
+- `PAGE_SECTION_VALIDATION_FAILED`;
+- `PAGE_REQUIRED_SECTION_EMPTY`;
+- `PAGE_REQUIRED_INDEPENDENT_SECTION_NOT_PUBLISHED`;
+- `PAGE_NO_CURRENT_SNAPSHOT`.
 
 ## Pages Catalog
 
