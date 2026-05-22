@@ -13,6 +13,7 @@ GET  /api/admin/page-schemas/{pageType}
 GET  /api/admin/page-workbench/tree
 GET  /api/admin/page-workbench/page-types/{pageType}
 GET  /api/admin/page-workbench/pages/{pageId}/row
+POST /api/admin/page-workbench/pages/bootstrap
 GET  /api/admin/page-workbench/pages/{pageId}/snapshots
 GET  /api/admin/page-workbench/pages/{pageId}/snapshots/{snapshotId}
 POST /api/admin/page-workbench/pages/{pageId}/preview
@@ -84,6 +85,7 @@ Use:
 GET /api/admin/page-workbench/tree?locale=uk
 GET /api/admin/page-workbench/page-types/{pageType}?locale=uk
 GET /api/admin/page-workbench/pages/{pageId}/row
+POST /api/admin/page-workbench/pages/bootstrap
 GET /api/admin/page-workbench/pages/{pageId}/snapshots?limit=50&offset=0
 GET /api/admin/page-workbench/pages/{pageId}/snapshots/{snapshotId}
 POST /api/admin/page-workbench/pages/{pageId}/preview
@@ -115,6 +117,28 @@ summary-only and must not replace the section editor.
 editor actions such as save draft, validate, publish independent section, rollback, enable, or disable.
 The response gives backend-computed cell statuses, diagnostics, and actions, so the frontend can replace
 the row in the opened matrix without recalculating publish or visibility rules locally.
+
+`POST /pages/bootstrap` creates or opens a page authoring instance from the selected workbench row and
+returns `{ bootstrap, workbench }`. The request body is the same as `POST /api/admin/pages/bootstrap`:
+
+```json
+{
+  "pageType": "contacts_page",
+  "locale": "uk",
+  "pagePath": "contacts",
+  "regionSlug": null,
+  "initialSectionContents": {
+    "seo": {
+      "title": "Contacts"
+    }
+  }
+}
+```
+
+Use this endpoint for `actions.canBootstrap`. After success, replace the not-created row with
+`response.workbench.row`. The frontend should not build routes or section bindings itself; backend resolves
+the page schema, route, shared sections, initial section versions, and row state. If a page already exists
+for the same public route, the endpoint returns `bootstrap.created = false` plus the existing page row.
 
 The workbench page action endpoints wrap the same lifecycle logic as `POST /api/admin/pages/{pageId}/...`,
 but they also return `workbench`, a fresh row-refresh payload for the affected page:

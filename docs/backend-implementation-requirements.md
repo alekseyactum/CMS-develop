@@ -422,6 +422,12 @@ returns the same metadata plus the stored public payload. The CMS frontend shoul
 show historical published states and pass the selected `snapshotId` as `sourceSnapshotId` to the existing
 rollback action. Historical snapshots remain immutable; rollback creates a new current snapshot.
 
+Implementation note, 2026-05-22: `cms-back` page workbench now exposes
+`POST /api/admin/page-workbench/pages/bootstrap`. This endpoint wraps the existing page authoring bootstrap
+workflow and returns the bootstrap result plus a fresh workbench row. It exists so the CMS frontend can
+create a page directly from a not-created matrix row and immediately replace that row with backend-computed
+state, without calling the lower-level authoring endpoint and then manually refreshing the matrix.
+
 ## Review Gate
 
 Any change that ports prototype behavior into `CMS` should answer these questions:
