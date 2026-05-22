@@ -13,6 +13,9 @@ GET  /api/admin/page-schemas/{pageType}
 GET  /api/admin/page-workbench/tree
 GET  /api/admin/page-workbench/page-types/{pageType}
 GET  /api/admin/page-workbench/pages/{pageId}/row
+POST /api/admin/page-workbench/pages/{pageId}/preview
+POST /api/admin/page-workbench/pages/{pageId}/publish
+POST /api/admin/page-workbench/pages/{pageId}/rollback
 GET  /api/admin/pages
 POST /api/admin/pages/bootstrap
 GET  /api/admin/pages/{pageId}/authoring
@@ -40,9 +43,9 @@ All write operations may send `x-cms-actor` until real CMS auth/session audit is
 5. Render `authoring.page`, editable `authoring.sections`, and read-only `authoring.runtimeSlots`.
 6. Open a concrete section through `GET /sections/{slotKey}/editor`.
 7. Save/validate/publish that section through the page-scoped editor action endpoints.
-8. Build preview through `POST /preview`.
-9. Publish a page through `POST /publish`.
-10. Rollback through `POST /rollback` when needed.
+8. Build preview through the workbench page action endpoint.
+9. Publish a page through the workbench page action endpoint.
+10. Rollback through the workbench page action endpoint when needed.
 
 The frontend must not reconstruct publish rules. Backend decides what can be saved, previewed, published,
 or rolled back.
@@ -79,6 +82,9 @@ Use:
 GET /api/admin/page-workbench/tree?locale=uk
 GET /api/admin/page-workbench/page-types/{pageType}?locale=uk
 GET /api/admin/page-workbench/pages/{pageId}/row
+POST /api/admin/page-workbench/pages/{pageId}/preview
+POST /api/admin/page-workbench/pages/{pageId}/publish
+POST /api/admin/page-workbench/pages/{pageId}/rollback
 ```
 
 This is the source for the main page workbench screen: left tree plus section matrix. It is intentionally
@@ -105,6 +111,17 @@ summary-only and must not replace the section editor.
 editor actions such as save draft, validate, publish independent section, rollback, enable, or disable.
 The response gives backend-computed cell statuses, diagnostics, and actions, so the frontend can replace
 the row in the opened matrix without recalculating publish or visibility rules locally.
+
+The workbench page action endpoints wrap the same lifecycle logic as `POST /api/admin/pages/{pageId}/...`,
+but they also return `workbench`, a fresh row-refresh payload for the affected page:
+
+- `POST /pages/{pageId}/preview`: returns `{ preview, workbench }`;
+- `POST /pages/{pageId}/publish`: returns `{ publish, workbench }`;
+- `POST /pages/{pageId}/rollback`: returns `{ rollback, workbench }`.
+
+Use these endpoints for page buttons on the matrix screen. The request bodies are the same as the existing
+page lifecycle endpoints. After a successful action, replace the row with `response.workbench.row` and keep
+using backend-provided `actions`/`diagnostics`.
 
 For this first slice, `contacts_page` and `lawyers_page` are supported as single-row matrices. Regional
 and generated matrices will be expanded later without changing the general contract shape.

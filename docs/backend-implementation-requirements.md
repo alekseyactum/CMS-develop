@@ -406,6 +406,14 @@ editor action, CMS frontend can request this row and replace the matrix row with
 diagnostics, and action flags. Workbench cell actions now distinguish `canEnable` and `canDisable` for
 section visibility controls.
 
+Implementation note, 2026-05-22: `cms-back` page workbench now exposes page-level action endpoints:
+`POST /api/admin/page-workbench/pages/{pageId}/preview`,
+`POST /api/admin/page-workbench/pages/{pageId}/publish`, and
+`POST /api/admin/page-workbench/pages/{pageId}/rollback`. These endpoints are thin UI-facing wrappers over
+the existing page lifecycle service; they do not create a second publish path. Each successful action
+returns the lifecycle result plus a fresh workbench row payload, so the CMS frontend can update the matrix
+row after preview/publish/rollback without locally reconstructing publish rules.
+
 ## Review Gate
 
 Any change that ports prototype behavior into `CMS` should answer these questions:
