@@ -12,6 +12,7 @@ GET  /api/admin/page-schemas
 GET  /api/admin/page-schemas/{pageType}
 GET  /api/admin/page-workbench/tree
 GET  /api/admin/page-workbench/page-types/{pageType}
+GET  /api/admin/page-workbench/pages/{pageId}/row
 GET  /api/admin/pages
 POST /api/admin/pages/bootstrap
 GET  /api/admin/pages/{pageId}/authoring
@@ -77,6 +78,7 @@ Use:
 ```text
 GET /api/admin/page-workbench/tree?locale=uk
 GET /api/admin/page-workbench/page-types/{pageType}?locale=uk
+GET /api/admin/page-workbench/pages/{pageId}/row
 ```
 
 This is the source for the main page workbench screen: left tree plus section matrix. It is intentionally
@@ -99,6 +101,11 @@ summary-only and must not replace the section editor.
 - `cells`: one summary cell per section/runtime slot;
 - `summary`: counters for the whole opened matrix.
 
+`GET /pages/{pageId}/row` returns one fresh matrix row for an already created page. Use it after section
+editor actions such as save draft, validate, publish independent section, rollback, enable, or disable.
+The response gives backend-computed cell statuses, diagnostics, and actions, so the frontend can replace
+the row in the opened matrix without recalculating publish or visibility rules locally.
+
 For this first slice, `contacts_page` and `lawyers_page` are supported as single-row matrices. Regional
 and generated matrices will be expanded later without changing the general contract shape.
 
@@ -109,6 +116,7 @@ Section cells contain only metadata and status:
 - ownership/publish info: `ownershipScope`, `publishMode`, `composition`;
 - `diagnostics`: errors, warnings, missing published version, stale state;
 - `actions`: what the UI may show (`canOpen`, `canEdit`, `canSaveDraft`, `canPublish`, etc.).
+- `actions.canEnable` / `actions.canDisable`: show section visibility controls computed by the backend.
 
 Section cells do not contain section content. When the editor opens one cell, load the full edit state
 through `GET /api/admin/pages/{pageId}/sections/{slotKey}/editor`.

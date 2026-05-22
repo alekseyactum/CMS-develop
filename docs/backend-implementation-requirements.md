@@ -400,6 +400,12 @@ page-section binding visibility (`enabled`/`disabled`), returns the reloaded edi
 create section drafts or rewrite published section versions. Disabling is allowed only when the registered
 page schema permits it for that slot.
 
+Implementation note, 2026-05-22: `cms-back` page workbench now exposes
+`GET /api/admin/page-workbench/pages/{pageId}/row` as a lightweight row refresh endpoint. After a section
+editor action, CMS frontend can request this row and replace the matrix row with backend-computed statuses,
+diagnostics, and action flags. Workbench cell actions now distinguish `canEnable` and `canDisable` for
+section visibility controls.
+
 ## Review Gate
 
 Any change that ports prototype behavior into `CMS` should answer these questions:
