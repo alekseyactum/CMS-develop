@@ -414,6 +414,14 @@ the existing page lifecycle service; they do not create a second publish path. E
 returns the lifecycle result plus a fresh workbench row payload, so the CMS frontend can update the matrix
 row after preview/publish/rollback without locally reconstructing publish rules.
 
+Implementation note, 2026-05-22: `cms-back` page workbench now exposes page snapshot history for rollback
+screens: `GET /api/admin/page-workbench/pages/{pageId}/snapshots` and
+`GET /api/admin/page-workbench/pages/{pageId}/snapshots/{snapshotId}`. The list endpoint returns historical
+snapshots, current-marker metadata, audit timestamps, and exact section version refs. The detail endpoint
+returns the same metadata plus the stored public payload. The CMS frontend should use these endpoints to
+show historical published states and pass the selected `snapshotId` as `sourceSnapshotId` to the existing
+rollback action. Historical snapshots remain immutable; rollback creates a new current snapshot.
+
 ## Review Gate
 
 Any change that ports prototype behavior into `CMS` should answer these questions:

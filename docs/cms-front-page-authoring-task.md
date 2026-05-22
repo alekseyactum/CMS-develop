@@ -13,6 +13,8 @@ GET  /api/admin/page-schemas/{pageType}
 GET  /api/admin/page-workbench/tree
 GET  /api/admin/page-workbench/page-types/{pageType}
 GET  /api/admin/page-workbench/pages/{pageId}/row
+GET  /api/admin/page-workbench/pages/{pageId}/snapshots
+GET  /api/admin/page-workbench/pages/{pageId}/snapshots/{snapshotId}
 POST /api/admin/page-workbench/pages/{pageId}/preview
 POST /api/admin/page-workbench/pages/{pageId}/publish
 POST /api/admin/page-workbench/pages/{pageId}/rollback
@@ -82,6 +84,8 @@ Use:
 GET /api/admin/page-workbench/tree?locale=uk
 GET /api/admin/page-workbench/page-types/{pageType}?locale=uk
 GET /api/admin/page-workbench/pages/{pageId}/row
+GET /api/admin/page-workbench/pages/{pageId}/snapshots?limit=50&offset=0
+GET /api/admin/page-workbench/pages/{pageId}/snapshots/{snapshotId}
 POST /api/admin/page-workbench/pages/{pageId}/preview
 POST /api/admin/page-workbench/pages/{pageId}/publish
 POST /api/admin/page-workbench/pages/{pageId}/rollback
@@ -122,6 +126,24 @@ but they also return `workbench`, a fresh row-refresh payload for the affected p
 Use these endpoints for page buttons on the matrix screen. The request bodies are the same as the existing
 page lifecycle endpoints. After a successful action, replace the row with `response.workbench.row` and keep
 using backend-provided `actions`/`diagnostics`.
+
+Snapshot history endpoints support the rollback UI:
+
+- `GET /pages/{pageId}/snapshots`: returns historical page snapshots, newest first;
+- `GET /pages/{pageId}/snapshots/{snapshotId}`: returns one snapshot with its public payload.
+
+Use the list endpoint to open the page history panel. Each item contains:
+
+- `snapshotId`, `snapshotNo`, `status`;
+- `createdBy` / `createdAt`: who created this snapshot and when;
+- `activatedBy` / `activatedAt`: who made it current and when, only for the current snapshot;
+- `isCurrent`: whether this snapshot is currently served publicly;
+- `sectionRefs`: exact section versions used by that snapshot.
+
+Use the detail endpoint when the editor clicks "view" on a historical snapshot. It returns the same metadata
+plus `publicPayload`, so the UI can preview exactly what rollback would restore. To rollback, send the chosen
+`snapshotId` as `sourceSnapshotId` to `POST /pages/{pageId}/rollback`. Rollback creates a new current snapshot;
+it does not mutate the historical snapshot.
 
 For this first slice, `contacts_page` and `lawyers_page` are supported as single-row matrices. Regional
 and generated matrices will be expanded later without changing the general contract shape.
