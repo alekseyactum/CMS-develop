@@ -63,8 +63,9 @@ The response contains `groups`:
 
 - `pages`: page authoring navigation. It contains the service tree area (`practice_page`, `service_page`,
   `problem_page`), fixed pages (`contacts_page`, `lawyers_page`), and lawyer pages.
-- `global_sections`: shared sections such as menu/header, footer, and prices. These entries are currently
-  marked `availability: "planned"` until the direct global-section workbench API is added.
+- `global_sections`: shared sections such as menu/header, footer, and prices. Menu/header and footer are
+  backed by `/api/admin/global-sections`; prices remain `availability: "planned"` until the separate price
+  workflow is added.
 - `reference_data`: editable CMS reference resources from ERP-owned source objects: practices, services,
   problems, lawyers, regions, offices, reviews. Competencies are intentionally not exposed as a separate
   regular editor menu item.
@@ -81,6 +82,56 @@ Each item can include:
 Important: `GET /api/admin/page-workbench/tree` remains the page workbench tree, not the whole CMS sidebar.
 Use `/api/admin/navigation` for the sidebar entry points, then use page-workbench/reference/users endpoints
 for the selected area.
+
+## Global Sections
+
+Use:
+
+```text
+GET  /api/admin/global-sections?locale=uk
+GET  /api/admin/global-sections/{sectionKey}/editor?locale=uk
+POST /api/admin/global-sections/{sectionKey}/draft?locale=uk
+POST /api/admin/global-sections/{sectionKey}/validate?locale=uk
+POST /api/admin/global-sections/{sectionKey}/publish?locale=uk
+GET  /api/admin/global-sections/{sectionKey}/history?locale=uk&limit=50&offset=0
+POST /api/admin/global-sections/{sectionKey}/rollback?locale=uk
+```
+
+Supported editable section keys now:
+
+- `site_header`;
+- `site_footer`.
+
+`global_price` is visible in navigation/list responses as planned, but is not editable through this API yet.
+Price needs a separate workflow because it has source-of-truth and inheritance rules that are different
+from passive shared globals.
+
+Global sections are locale-specific. Opening the editor for `site_footer?locale=uk` reads or creates the
+Ukrainian global footer section record. Russian and English versions are separate section records and
+separate version histories.
+
+Save draft:
+
+```json
+{
+  "content": {
+    "columns": []
+  }
+}
+```
+
+Validate and publish may omit `sectionVersionId`; backend then uses the latest draft:
+
+```json
+{}
+```
+
+Publishing `site_header` or `site_footer` uses `rebuild_affected_snapshots`: backend creates the new
+published section version and plans/rebuilds affected page snapshots without touching unrelated page-owned
+draft sections.
+
+All mutation responses return a fresh `editor` object. Use it to replace the current editor state after
+save, validate, publish, or rollback.
 
 ## Basic Flow
 

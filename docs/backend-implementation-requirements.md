@@ -470,6 +470,18 @@ are not resolved twice, which preserves backward compatibility with manual previ
 visible sources or unroutable visible child items now fail as `PAGE_RUNTIME_RESOLUTION_FAILED` before an
 invalid public snapshot is created.
 
+Implementation note, 2026-05-23: `cms-back` now exposes the first direct global sections workbench API:
+`GET /api/admin/global-sections`, `GET /api/admin/global-sections/{sectionKey}/editor`,
+`POST /api/admin/global-sections/{sectionKey}/draft`,
+`POST /api/admin/global-sections/{sectionKey}/validate`,
+`POST /api/admin/global-sections/{sectionKey}/publish`,
+`GET /api/admin/global-sections/{sectionKey}/history`, and
+`POST /api/admin/global-sections/{sectionKey}/rollback`. The first editable keys are `site_header` and
+`site_footer`; `global_price` remains planned because prices need a separate source-of-truth and inheritance
+workflow. Global sections are locale-specific, reuse the existing `SectionLifecycleService`, and publish
+with `rebuild_affected_snapshots` so affected page snapshots can be refreshed without touching unrelated
+page-owned drafts.
+
 ## Review Gate
 
 Any change that ports prototype behavior into `CMS` should answer these questions:
