@@ -491,6 +491,14 @@ selected source object and lets backend compute/validate the page route before c
 page. This removes the need for the CMS frontend to assemble generated page paths by hand for
 practice/service/problem pages.
 
+Implementation note, 2026-05-23: generated practice/service/problem bootstrap now also creates backend-owned
+minimal draft content for required page-owned sections when the CMS frontend sends an empty body. The first
+defaults cover SEO title/description, intro title, and paired runtime block headings. Explicit
+`initialSectionContents` from the frontend are shallow-merged over these defaults, so the UI can override a
+field without taking responsibility for the whole generated payload. Optional page-owned FAQ/consultation
+CTA slots are created as disabled bindings when no initial content is supplied, preventing empty optional
+sections from blocking preview/publish until an editor deliberately enables and fills them.
+
 ## Review Gate
 
 Any change that ports prototype behavior into `CMS` should answer these questions:

@@ -301,13 +301,23 @@ POST /api/admin/page-workbench/generated-sources/service_page/{sourceRecord.id}/
 POST /api/admin/page-workbench/generated-sources/problem_page/{sourceRecord.id}/bootstrap?locale=uk
 ```
 
-Request body may be empty or may contain initial section content:
+Request body may be empty. For practice/service/problem generated pages, backend creates minimal valid
+draft content for required page-owned sections:
+
+- `seo`: `title` and `description` from the source object title;
+- intro section: `title` from the source object title;
+- paired runtime block headings, for example `service_problems_block` / `service_lawyers_block`;
+- optional FAQ/consultation CTA sections are created as bindings but disabled until the editor enables and
+  fills them.
+
+The request body may still contain overrides for initial section content. Object-shaped section content is
+shallow-merged over backend defaults:
 
 ```json
 {
   "initialSectionContents": {
     "seo": {
-      "title": "Family law"
+      "title": "Custom SEO title"
     }
   }
 }
@@ -315,7 +325,8 @@ Request body may be empty or may contain initial section content:
 
 Backend rereads the source object, verifies slugs/parent links/route, creates or opens the page, and
 returns `{ bootstrap, workbench }`. This should be the default frontend path for creating generated
-practice/service/problem pages, because the frontend does not have to trust its own assembled URL.
+practice/service/problem pages, because the frontend does not have to trust its own assembled URL and does
+not have to invent the first draft payload.
 
 The older generic bootstrap still exists for fixed pages or advanced flows:
 
@@ -743,7 +754,8 @@ temporary assumptions:
 - Dependency-aware runtime/read-model slots: practice pages should expose services, service pages should
   expose problems, and generated pages should be driven by CMS reference data rather than frontend guesses.
 - Richer page bootstrap for generated lawyer pages remains future work. Practice, service, and problem
-  pages should already be created through `POST /api/admin/page-workbench/generated-sources/.../bootstrap`.
+  pages should already be created through `POST /api/admin/page-workbench/generated-sources/.../bootstrap`;
+  this endpoint now also supplies minimal required section drafts when the frontend sends an empty body.
 - Section action coverage for future movable/blog-like sections: add/remove/reorder will come later and
   should be a backend-owned action layer, not a frontend-only mutation.
 - Warning diagnostics: currently critical validation is the main blocker; field-level warnings will become
