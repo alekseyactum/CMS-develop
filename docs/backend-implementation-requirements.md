@@ -448,8 +448,9 @@ source slugs as `services/{practiceSlug}`, `services/{practiceSlug}/{serviceSlug
 rows for visible practices, services, and problems from the CMS reference-data tables. Each row includes a
 `sourceRecord` with reference ids, route params, computed `pagePath`/`publicPath`, parent refs, and source
 diagnostics. If a generated row has a valid path and no critical source diagnostics, the frontend may call
-the existing workbench bootstrap endpoint with the returned `pagePath`. Regional variants, page-specific
-runtime resolvers, richer section sets, and generated `lawyer_page` rows remain follow-up work.
+the workbench generated bootstrap endpoint so the backend can reread the source and build the route.
+Regional variants are now handled by the workbench matrix through row-level `region`/`regionSlug` and
+optional bootstrap `regionId`. Richer section sets and generated `lawyer_page` rows remain follow-up work.
 
 Implementation note, 2026-05-22: generated service-tree schemas now expose a first realistic section
 scaffold for CMS UI work. Runtime/read-model slots can be paired with editable page-owned block sections
@@ -498,6 +499,14 @@ defaults cover SEO title/description, intro title, and paired runtime block head
 field without taking responsibility for the whole generated payload. Optional page-owned FAQ/consultation
 CTA slots are created as disabled bindings when no initial content is supplied, preventing empty optional
 sections from blocking preview/publish until an editor deliberately enables and fills them.
+
+Implementation note, 2026-05-23: generated practice/service/problem workbench matrices now include regional
+variants. `GET /api/admin/page-workbench/page-types/{practice_page|service_page|problem_page}` returns the
+base row plus regional rows for visible regions with valid `sourceSlug`. Regional rows keep the same
+`sourceRecord` and add row-level `region`/`regionSlug`. The generated bootstrap endpoint accepts optional
+`regionId`; backend rereads the region, builds the canonical regional route, and passes `regionSlug` into
+page authoring. The service-tree endpoint remains non-regional so the left hierarchy stays practice ->
+service -> problem without multiplying every node by regions.
 
 ## Review Gate
 

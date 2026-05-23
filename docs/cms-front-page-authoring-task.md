@@ -234,7 +234,8 @@ Each node contains:
 - `actions.canBootstrap`: create the CMS page from this source object when backend says it is safe.
 
 Use this endpoint for the tree-like left UI where practices contain services and services contain
-problems. Use `GET /page-types/{pageType}` when the user opens a matrix/table for one page type.
+problems. This tree intentionally does not expand regional variants. Use `GET /page-types/{pageType}` when
+the user opens a matrix/table for one page type and needs base/regional page rows.
 
 `GET /page-types/{pageType}` returns:
 
@@ -244,6 +245,8 @@ problems. Use `GET /page-types/{pageType}` when the user opens a matrix/table fo
 - `rows`: concrete page variants for the selected locale;
 - for generated service-tree rows, `sourceRecord`: the source practice/service/problem record that drives
   the row and route;
+- for generated regional rows, `region` and `regionSlug`: the CMS region source used to build the
+  regional route;
 - row-level `actions`: whether the UI can open, bootstrap, preview, publish, rollback, or view the
   current snapshot for the page;
 - row-level `diagnostics`: publish blockers and warnings for the whole page;
@@ -268,6 +271,31 @@ Each generated row is tied to one visible reference object from the CMS database
 - `practice_page`: one visible practice;
 - `service_page`: one visible service with `serviceCond=true` and a resolved visible practice;
 - `problem_page`: one visible problem with resolved visible practice and service.
+
+For `practice_page`, `service_page`, and `problem_page`, the matrix now returns both:
+
+- base non-regional rows, for example `/services/family-law`;
+- regional rows for visible regions with a valid `sourceSlug`, for example `/kyiv/services/family-law`.
+
+Regional rows still use the same `sourceRecord` as the base page. The region is a separate row field:
+
+```json
+{
+  "kind": "regional",
+  "title": "Kyiv / Family law",
+  "regionSlug": "kyiv",
+  "region": {
+    "resource": "regions",
+    "id": "region-1",
+    "externalId": "74",
+    "title": "Kyiv",
+    "locale": "uk",
+    "sourceSlug": "kyiv",
+    "showOnSite": true,
+    "diagnostics": []
+  }
+}
+```
 
 Rows contain `sourceRecord`:
 
@@ -323,10 +351,20 @@ shallow-merged over backend defaults:
 }
 ```
 
-Backend rereads the source object, verifies slugs/parent links/route, creates or opens the page, and
-returns `{ bootstrap, workbench }`. This should be the default frontend path for creating generated
-practice/service/problem pages, because the frontend does not have to trust its own assembled URL and does
-not have to invent the first draft payload.
+To create/open a regional generated page, call the same endpoint and pass the returned `row.region.id` as
+`regionId`:
+
+```json
+{
+  "regionId": "region-1"
+}
+```
+
+Backend rereads the source object, and when `regionId` is present also rereads the region source. It
+verifies slugs/parent links/route, creates or opens the page with the same `pagePath` and the selected
+`regionSlug`, and returns `{ bootstrap, workbench }`. This should be the default frontend path for creating
+generated practice/service/problem pages, because the frontend does not have to trust its own assembled URL
+and does not have to invent the first draft payload.
 
 The older generic bootstrap still exists for fixed pages or advanced flows:
 
@@ -430,9 +468,8 @@ plus `publicPayload`, so the UI can preview exactly what rollback would restore.
 `snapshotId` as `sourceSnapshotId` to `POST /pages/{pageId}/rollback`. Rollback creates a new current snapshot;
 it does not mutate the historical snapshot.
 
-For this first slice, `contacts_page` and `lawyers_page` are supported as single-row matrices. Regional
-variants will be expanded later without changing the general contract shape. The first generated
-service-tree matrices are now available for base non-regional practice, service, and problem pages.
+For this first slice, `contacts_page` and `lawyers_page` are supported as single-row matrices. Generated
+service-tree matrices are available for base and regional practice, service, and problem pages.
 
 Generated service-tree schemas now pair editable CMS block sections with runtime/read-model slots through
 `compositeGroupKey`, so the UI can render them as one block:
@@ -749,8 +786,8 @@ team plans to add the following pieces next, so the frontend should keep screens
 temporary assumptions:
 
 - Practice/service/problem hierarchy: generated workbench rows and page schemas for practice, service,
-  problem, and later regional variants. Base non-regional generated rows and schemas are already present;
-  the backend service-tree endpoint is present; regional variants still need follow-up implementation.
+  and problem are present for base and regional variants. The backend service-tree endpoint stays
+  non-regional for the left hierarchy; the opened matrix is where regional page rows appear.
 - Dependency-aware runtime/read-model slots: practice pages should expose services, service pages should
   expose problems, and generated pages should be driven by CMS reference data rather than frontend guesses.
 - Richer page bootstrap for generated lawyer pages remains future work. Practice, service, and problem
