@@ -482,6 +482,15 @@ workflow. Global sections are locale-specific, reuse the existing `SectionLifecy
 with `rebuild_affected_snapshots` so affected page snapshots can be refreshed without touching unrelated
 page-owned drafts.
 
+Implementation note, 2026-05-23: `cms-back` now exposes the first real generated service-tree workbench
+API: `GET /api/admin/page-workbench/service-tree` and
+`POST /api/admin/page-workbench/generated-sources/{pageType}/{sourceId}/bootstrap`. The service-tree
+endpoint returns nested practice -> service -> problem nodes from CMS reference data, with existing page
+state, diagnostics, and safe `canBootstrap`/`canOpen` actions. The generated bootstrap endpoint rereads the
+selected source object and lets backend compute/validate the page route before creating or opening the CMS
+page. This removes the need for the CMS frontend to assemble generated page paths by hand for
+practice/service/problem pages.
+
 ## Review Gate
 
 Any change that ports prototype behavior into `CMS` should answer these questions:

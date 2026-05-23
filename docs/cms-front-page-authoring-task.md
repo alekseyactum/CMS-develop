@@ -12,9 +12,11 @@ GET  /api/admin/page-schemas
 GET  /api/admin/page-schemas/{pageType}
 GET  /api/admin/navigation
 GET  /api/admin/page-workbench/tree
+GET  /api/admin/page-workbench/service-tree
 GET  /api/admin/page-workbench/page-types/{pageType}
 GET  /api/admin/page-workbench/pages/{pageId}/row
 POST /api/admin/page-workbench/pages/bootstrap
+POST /api/admin/page-workbench/generated-sources/{pageType}/{sourceId}/bootstrap
 GET  /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor
 PATCH /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/state
 POST /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/draft
@@ -79,9 +81,10 @@ Each item can include:
 - `children`: nested entries, for example the service tree page collections;
 - `availability`: `available` or `planned`.
 
-Important: `GET /api/admin/page-workbench/tree` remains the page workbench tree, not the whole CMS sidebar.
-Use `/api/admin/navigation` for the sidebar entry points, then use page-workbench/reference/users endpoints
-for the selected area.
+Important: `GET /api/admin/page-workbench/tree` remains the page-type workbench tree, not the whole CMS
+sidebar. For the actual practice/service/problem hierarchy use
+`GET /api/admin/page-workbench/service-tree?locale=uk`. Use `/api/admin/navigation` for the sidebar entry
+points, then use page-workbench/reference/users endpoints for the selected area.
 
 ## Global Sections
 
@@ -179,9 +182,11 @@ Use:
 
 ```text
 GET /api/admin/page-workbench/tree?locale=uk
+GET /api/admin/page-workbench/service-tree?locale=uk
 GET /api/admin/page-workbench/page-types/{pageType}?locale=uk
 GET /api/admin/page-workbench/pages/{pageId}/row
 POST /api/admin/page-workbench/pages/bootstrap
+POST /api/admin/page-workbench/generated-sources/{pageType}/{sourceId}/bootstrap?locale=uk
 GET /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor
 PATCH /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/state
 POST /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/draft
@@ -207,6 +212,29 @@ summary-only and must not replace the section editor.
   reference data; `lawyer_page` is still visible as a generated collection but not fully matrix-managed yet;
 - `variantMode`: `single`, `regional`, or `generated_collection`;
 - `createdCount` and high-level summary counters for badges.
+
+`GET /service-tree` returns the real service-tree hierarchy for the left page workbench area:
+
+```text
+GET /api/admin/page-workbench/service-tree?locale=uk
+```
+
+The response is nested:
+
+- practice node;
+- child service nodes;
+- child problem nodes.
+
+Each node contains:
+
+- `sourceRecord`: the CMS reference object that drives the generated page;
+- `page`: existing CMS page state, or `null` when the page is not created yet;
+- `diagnostics`: source/page blockers and warnings;
+- `actions.canOpen`: open the page workbench/editor when `page` exists;
+- `actions.canBootstrap`: create the CMS page from this source object when backend says it is safe.
+
+Use this endpoint for the tree-like left UI where practices contain services and services contain
+problems. Use `GET /page-types/{pageType}` when the user opens a matrix/table for one page type.
 
 `GET /page-types/{pageType}` returns:
 
@@ -264,7 +292,32 @@ Rows contain `sourceRecord`:
 ```
 
 If the generated page is not created yet, `row.page = null` and `actions.canBootstrap = true` when
-`sourceRecord.pagePath` and `sourceRecord.publicPath` are available. Bootstrap with the returned values:
+`sourceRecord.pagePath` and `sourceRecord.publicPath` are available. Prefer backend-owned generated
+bootstrap:
+
+```text
+POST /api/admin/page-workbench/generated-sources/practice_page/{sourceRecord.id}/bootstrap?locale=uk
+POST /api/admin/page-workbench/generated-sources/service_page/{sourceRecord.id}/bootstrap?locale=uk
+POST /api/admin/page-workbench/generated-sources/problem_page/{sourceRecord.id}/bootstrap?locale=uk
+```
+
+Request body may be empty or may contain initial section content:
+
+```json
+{
+  "initialSectionContents": {
+    "seo": {
+      "title": "Family law"
+    }
+  }
+}
+```
+
+Backend rereads the source object, verifies slugs/parent links/route, creates or opens the page, and
+returns `{ bootstrap, workbench }`. This should be the default frontend path for creating generated
+practice/service/problem pages, because the frontend does not have to trust its own assembled URL.
+
+The older generic bootstrap still exists for fixed pages or advanced flows:
 
 ```json
 {
@@ -686,11 +739,11 @@ temporary assumptions:
 
 - Practice/service/problem hierarchy: generated workbench rows and page schemas for practice, service,
   problem, and later regional variants. Base non-regional generated rows and schemas are already present;
-  regional variants still need follow-up implementation.
+  the backend service-tree endpoint is present; regional variants still need follow-up implementation.
 - Dependency-aware runtime/read-model slots: practice pages should expose services, service pages should
   expose problems, and generated pages should be driven by CMS reference data rather than frontend guesses.
-- Richer page bootstrap for generated pages: creating/opening a page from a reference object such as a
-  practice, service, problem, or lawyer.
+- Richer page bootstrap for generated lawyer pages remains future work. Practice, service, and problem
+  pages should already be created through `POST /api/admin/page-workbench/generated-sources/.../bootstrap`.
 - Section action coverage for future movable/blog-like sections: add/remove/reorder will come later and
   should be a backend-owned action layer, not a frontend-only mutation.
 - Warning diagnostics: currently critical validation is the main blocker; field-level warnings will become
