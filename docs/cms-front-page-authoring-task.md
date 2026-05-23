@@ -10,6 +10,7 @@ request/response shapes, especially for authoring state, preview, publish, and r
 ```text
 GET  /api/admin/page-schemas
 GET  /api/admin/page-schemas/{pageType}
+GET  /api/admin/navigation
 GET  /api/admin/page-workbench/tree
 GET  /api/admin/page-workbench/page-types/{pageType}
 GET  /api/admin/page-workbench/pages/{pageId}/row
@@ -43,6 +44,43 @@ POST /api/admin/pages/{pageId}/rollback
 ```
 
 All write operations may send `x-cms-actor` until real CMS auth/session audit is wired.
+Navigation and other user-aware endpoints should send one of the current identity headers:
+`x-cms-user-id`, `x-cms-user-email`, or temporary develop-only `x-cms-actor`.
+
+## Admin Navigation
+
+Use:
+
+```text
+GET /api/admin/navigation?locale=uk
+```
+
+This endpoint is the source for the left CMS menu. Do not build the whole sidebar by hardcoding separate
+frontend lists. Backend groups navigation by domain and filters system/admin entries by the current user's
+permissions.
+
+The response contains `groups`:
+
+- `pages`: page authoring navigation. It contains the service tree area (`practice_page`, `service_page`,
+  `problem_page`), fixed pages (`contacts_page`, `lawyers_page`), and lawyer pages.
+- `global_sections`: shared sections such as menu/header, footer, and prices. These entries are currently
+  marked `availability: "planned"` until the direct global-section workbench API is added.
+- `reference_data`: editable CMS reference resources from ERP-owned source objects: practices, services,
+  problems, lawyers, regions, offices, reviews. Competencies are intentionally not exposed as a separate
+  regular editor menu item.
+- `access_management`: users and roles/permissions. Backend returns this group only for users with
+  `users.read` permission, which currently means admin-level access.
+
+Each item can include:
+
+- `route`: frontend route to open;
+- `endpoint`: backend endpoint that should be used to load the main data for that menu item;
+- `children`: nested entries, for example the service tree page collections;
+- `availability`: `available` or `planned`.
+
+Important: `GET /api/admin/page-workbench/tree` remains the page workbench tree, not the whole CMS sidebar.
+Use `/api/admin/navigation` for the sidebar entry points, then use page-workbench/reference/users endpoints
+for the selected area.
 
 ## Basic Flow
 
@@ -113,14 +151,20 @@ summary-only and must not replace the section editor.
 `GET /tree` returns page groups and page-type nodes:
 
 - fixed page types already supported by the workbench: `contacts_page`, `lawyers_page`;
-- generated collections that are visible in the tree but not fully matrix-managed yet: `lawyer_page`;
+- generated collections: `practice_page`, `service_page`, `problem_page`, and `lawyer_page`;
+- `practice_page`, `service_page`, and `problem_page` already return generated matrix rows from CMS
+  reference data; `lawyer_page` is still visible as a generated collection but not fully matrix-managed yet;
 - `variantMode`: `single`, `regional`, or `generated_collection`;
 - `createdCount` and high-level summary counters for badges.
 
 `GET /page-types/{pageType}` returns:
 
 - `columns`: fixed section/runtime slots from the backend page schema;
+- `columns[].compositeGroupKey`: optional key telling the UI that several columns belong to one visual
+  block, for example editable CMS block settings plus a runtime list from reference data;
 - `rows`: concrete page variants for the selected locale;
+- for generated service-tree rows, `sourceRecord`: the source practice/service/problem record that drives
+  the row and route;
 - row-level `actions`: whether the UI can open, bootstrap, preview, publish, rollback, or view the
   current snapshot for the page;
 - row-level `diagnostics`: publish blockers and warnings for the whole page;
@@ -131,6 +175,59 @@ summary-only and must not replace the section editor.
 editor actions such as save draft, validate, publish independent section, rollback, enable, or disable.
 The response gives backend-computed cell statuses, diagnostics, and actions, so the frontend can replace
 the row in the opened matrix without recalculating publish or visibility rules locally.
+
+For generated service-tree page types, call the same matrix endpoint:
+
+```text
+GET /api/admin/page-workbench/page-types/practice_page?locale=uk
+GET /api/admin/page-workbench/page-types/service_page?locale=uk
+GET /api/admin/page-workbench/page-types/problem_page?locale=uk
+```
+
+Each generated row is tied to one visible reference object from the CMS database:
+
+- `practice_page`: one visible practice;
+- `service_page`: one visible service with `serviceCond=true` and a resolved visible practice;
+- `problem_page`: one visible problem with resolved visible practice and service.
+
+Rows contain `sourceRecord`:
+
+```json
+{
+  "pageType": "practice_page",
+  "resource": "practices",
+  "id": "practice-1",
+  "externalId": "10",
+  "title": "Family law",
+  "locale": "uk",
+  "sourceSlug": "family-law",
+  "showOnSite": true,
+  "routeParams": {
+    "practiceSlug": "family-law"
+  },
+  "pagePath": "services/family-law",
+  "publicPath": "/services/family-law",
+  "parentRefs": {},
+  "diagnostics": []
+}
+```
+
+If the generated page is not created yet, `row.page = null` and `actions.canBootstrap = true` when
+`sourceRecord.pagePath` and `sourceRecord.publicPath` are available. Bootstrap with the returned values:
+
+```json
+{
+  "pageType": "practice_page",
+  "locale": "uk",
+  "pagePath": "services/family-law",
+  "regionSlug": null
+}
+```
+
+If a source slug or required parent relation is missing, backend returns a generated row with critical
+diagnostics such as `PAGE_SOURCE_SLUG_MISSING`, `PAGE_SOURCE_PARENT_UNRESOLVED`,
+`PAGE_SOURCE_PARENT_NOT_VISIBLE`, or `PAGE_SOURCE_ROUTE_INVALID`; in that case `canBootstrap=false`.
+The frontend should show these diagnostics and route the editor to fix the underlying reference record.
 
 `POST /pages/bootstrap` creates or opens a page authoring instance from the selected workbench row and
 returns `{ bootstrap, workbench }`. The request body is the same as `POST /api/admin/pages/bootstrap`:
@@ -181,6 +278,25 @@ Use these endpoints for page buttons on the matrix screen. The request bodies ar
 page lifecycle endpoints. After a successful action, replace the row with `response.workbench.row` and keep
 using backend-provided `actions`/`diagnostics`.
 
+For generated service-tree pages, the backend now resolves missing runtime/read-model payloads during
+preview and publish. The frontend does not need to manually send payloads for these slots:
+
+- `practice_services`;
+- `practice_lawyers`;
+- `service_problems`;
+- `service_lawyers`;
+- `problem_lawyers`.
+
+The resolver reads CMS reference tables, uses the page route context (`services/{practiceSlug}`,
+`services/{practiceSlug}/{serviceSlug}`, etc.), and returns list payloads with route-ready items. If the
+frontend sends a `runtimePayloads` entry for one of these slots, backend keeps the provided payload and does
+not resolve that same slot again. This is mainly useful for tests or transitional UI experiments; normal CMS
+frontend code should let backend resolve service-tree runtime slots.
+
+Runtime resolution can block preview/publish with `PAGE_RUNTIME_RESOLUTION_FAILED` when the page route no
+longer matches visible reference data or a visible child item has no required source slug. Show this as a
+backend validation error and route the editor to fix the underlying reference object.
+
 Snapshot history endpoints support the rollback UI:
 
 - `GET /pages/{pageId}/snapshots`: returns historical page snapshots, newest first;
@@ -200,7 +316,23 @@ plus `publicPayload`, so the UI can preview exactly what rollback would restore.
 it does not mutate the historical snapshot.
 
 For this first slice, `contacts_page` and `lawyers_page` are supported as single-row matrices. Regional
-and generated matrices will be expanded later without changing the general contract shape.
+variants will be expanded later without changing the general contract shape. The first generated
+service-tree matrices are now available for base non-regional practice, service, and problem pages.
+
+Generated service-tree schemas now pair editable CMS block sections with runtime/read-model slots through
+`compositeGroupKey`, so the UI can render them as one block:
+
+- `practice_services_block` + `practice_services` use `practice_services`;
+- `practice_lawyers_block` + `practice_lawyers` use `practice_lawyers`;
+- `service_problems_block` + `service_problems` use `service_problems`;
+- `service_lawyers_block` + `service_lawyers` use `service_lawyers`;
+- `problem_lawyers_block` + `problem_lawyers` use `problem_lawyers`.
+
+The `*_block` section stores CMS-authored title/lead/settings for the block. The runtime slot stores the
+read-only list contract. Optional page-owned `*_faq` and `*_consultation_cta` sections are also present
+and may be enabled/disabled through backend-provided actions. Price sections are intentionally not modeled
+as plain page-owned sections in this slice because their inheritance/source-of-truth behavior needs a
+separate backend workflow.
 
 Section cells contain only metadata and status:
 
@@ -502,7 +634,8 @@ team plans to add the following pieces next, so the frontend should keep screens
 temporary assumptions:
 
 - Practice/service/problem hierarchy: generated workbench rows and page schemas for practice, service,
-  problem, and later regional variants.
+  problem, and later regional variants. Base non-regional generated rows and schemas are already present;
+  regional variants still need follow-up implementation.
 - Dependency-aware runtime/read-model slots: practice pages should expose services, service pages should
   expose problems, and generated pages should be driven by CMS reference data rather than frontend guesses.
 - Richer page bootstrap for generated pages: creating/opening a page from a reference object such as a

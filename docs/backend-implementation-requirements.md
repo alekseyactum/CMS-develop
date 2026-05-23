@@ -441,6 +441,35 @@ operation result plus a fresh workbench row, so the CMS frontend can update both
 and the matrix row after save, validate, publish, rollback, enable, or disable without reconstructing
 backend rules or making a separate row-refresh request.
 
+Implementation note, 2026-05-22: `cms-back` now registers the first generated service-tree page schemas:
+`practice_page`, `service_page`, and `problem_page`. Their canonical base paths are built from ERP-owned
+source slugs as `services/{practiceSlug}`, `services/{practiceSlug}/{serviceSlug}`, and
+`services/{practiceSlug}/{serviceSlug}/{problemSlug}`. The page workbench matrix can now return generated
+rows for visible practices, services, and problems from the CMS reference-data tables. Each row includes a
+`sourceRecord` with reference ids, route params, computed `pagePath`/`publicPath`, parent refs, and source
+diagnostics. If a generated row has a valid path and no critical source diagnostics, the frontend may call
+the existing workbench bootstrap endpoint with the returned `pagePath`. Regional variants, page-specific
+runtime resolvers, richer section sets, and generated `lawyer_page` rows remain follow-up work.
+
+Implementation note, 2026-05-22: generated service-tree schemas now expose a first realistic section
+scaffold for CMS UI work. Runtime/read-model slots can be paired with editable page-owned block sections
+through `compositeGroupKey`, for example `practice_services_block` with `practice_services` and
+`service_problems_block` with `service_problems`. The frontend may display those paired slots as one visual
+block while the backend keeps CMS-authored draft content and runtime reference-data payloads separate.
+Optional page-owned FAQ and consultation CTA sections are present for practice, service, and problem pages.
+Price sections remain a separate follow-up because their global/base/regional inheritance behavior must be
+implemented as a dedicated source-backed workflow, not as a simple page-owned block.
+
+Implementation note, 2026-05-22: `cms-back` now contains the first page runtime resolver layer. During
+preview and publish, page lifecycle asks `PageRuntimeResolverService` to fill missing runtime payloads for
+service-tree pages. The first supported slots are `practice_services`, `practice_lawyers`,
+`service_problems`, `service_lawyers`, and `problem_lawyers`. The resolver reads CMS reference-data tables,
+uses source slugs from the page path, filters visible/public records, applies lawyer qualification score
+rules (`score > 1`), and builds route-ready list items. Provided runtime payloads are still respected and
+are not resolved twice, which preserves backward compatibility with manual preview/publish requests. Missing
+visible sources or unroutable visible child items now fail as `PAGE_RUNTIME_RESOLUTION_FAILED` before an
+invalid public snapshot is created.
+
 ## Review Gate
 
 Any change that ports prototype behavior into `CMS` should answer these questions:
