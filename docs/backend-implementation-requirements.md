@@ -508,6 +508,12 @@ base row plus regional rows for visible regions with valid `sourceSlug`. Regiona
 page authoring. The service-tree endpoint remains non-regional so the left hierarchy stays practice ->
 service -> problem without multiplying every node by regions.
 
+Implementation note, 2026-05-24: workbench matrix rows now expose row-level `pagePath` and `publicPath`.
+For existing pages these fields mirror the stored page route; for not-created generated rows they expose
+the backend-computed route that will be used after bootstrap, including regional prefixes. Matrix summary
+`errors` and `warnings` now count row-level page diagnostics, not only section cell diagnostics, so
+not-created or source-blocked rows are reflected in the top-level counters shown to editors.
+
 ## Review Gate
 
 Any change that ports prototype behavior into `CMS` should answer these questions:

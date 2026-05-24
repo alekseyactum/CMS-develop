@@ -243,6 +243,9 @@ the user opens a matrix/table for one page type and needs base/regional page row
 - `columns[].compositeGroupKey`: optional key telling the UI that several columns belong to one visual
   block, for example editable CMS block settings plus a runtime list from reference data;
 - `rows`: concrete page variants for the selected locale;
+- `rows[].pagePath` and `rows[].publicPath`: backend-computed route fields for the row. For existing
+  pages they mirror `row.page.pagePath` / `row.page.publicPath`; for not-created generated rows they show
+  the route that will be used after bootstrap. They may be `null` only when the row is not route-ready;
 - for generated service-tree rows, `sourceRecord`: the source practice/service/problem record that drives
   the row and route;
 - for generated regional rows, `region` and `regionSlug`: the CMS region source used to build the
@@ -251,7 +254,8 @@ the user opens a matrix/table for one page type and needs base/regional page row
   current snapshot for the page;
 - row-level `diagnostics`: publish blockers and warnings for the whole page;
 - `cells`: one summary cell per section/runtime slot;
-- `summary`: counters for the whole opened matrix.
+- `summary`: counters for the whole opened matrix. `summary.errors` and `summary.warnings` are row-level
+  counters, so page diagnostics such as `PAGE_NOT_CREATED` are included, not only section cell diagnostics.
 
 `GET /pages/{pageId}/row` returns one fresh matrix row for an already created page. Use it after section
 editor actions such as save draft, validate, publish independent section, rollback, enable, or disable.
@@ -283,6 +287,8 @@ Regional rows still use the same `sourceRecord` as the base page. The region is 
 {
   "kind": "regional",
   "title": "Kyiv / Family law",
+  "pagePath": "services/family-law",
+  "publicPath": "/kyiv/services/family-law",
   "regionSlug": "kyiv",
   "region": {
     "resource": "regions",
@@ -320,8 +326,10 @@ Rows contain `sourceRecord`:
 ```
 
 If the generated page is not created yet, `row.page = null` and `actions.canBootstrap = true` when
-`sourceRecord.pagePath` and `sourceRecord.publicPath` are available. Prefer backend-owned generated
-bootstrap:
+`row.pagePath` and `row.publicPath` are available and there are no critical route/source diagnostics.
+Use row-level route fields for UI display. `sourceRecord.pagePath` / `sourceRecord.publicPath` still
+describe the base source route; regional rows may have a different `row.publicPath`. Prefer backend-owned
+generated bootstrap:
 
 ```text
 POST /api/admin/page-workbench/generated-sources/practice_page/{sourceRecord.id}/bootstrap?locale=uk
