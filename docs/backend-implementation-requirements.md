@@ -226,6 +226,13 @@ Section schemas must also support:
 - price-section inheritance chain where regional service-tree pages inherit price values and price text
   from the current published base non-regional page price result, while base pages inherit from the shared
   global price source;
+- first implemented price inheritance layer: generated `practice_page`, `service_page`, and `problem_page`
+  schemas expose a page-owned `price` slot with `sourcePolicy = price_inheritance`; base non-regional
+  pages bind that local price section to the locale `global_price` source, and regional generated pages
+  bind their local price section to the base page's local price section;
+- page publish/preview must resolve `source + local` price composition before assembling the public
+  payload, and page snapshots must record both source and local section refs when both contributed to the
+  resolved price block;
 - shared fixed global sections such as footer/menu, where all pages inherit one published global section
   version and a publish event triggers affected page snapshot rebuilds instead of page-local section
   versions;

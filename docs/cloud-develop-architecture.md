@@ -104,9 +104,12 @@ calls over the service URL need network reachability plus IAM. For this contour,
 boundary.
 
 Cloud Run IAP is used directly for the develop admin frontend to avoid a load-balancer perimeter before it
-is needed. This keeps the develop entrypoint simple while preserving identity-gated access. User membership
-for the IAP perimeter is intentionally not listed in this repository; access is managed in GCP by the owner.
-This direct-IAP choice must be reassessed before any release or production-like contour.
+is needed. This keeps the develop entrypoint simple while preserving identity-gated access. External Google
+accounts authenticate through a console-created custom OAuth client in IAP / Google Auth Platform. Do not
+use `gcloud iam oauth-clients` for browser IAP: it creates an IAM OAuth client ID that Google Sign-In does
+not accept for this flow. OAuth credential secrets must not be stored in markdown. User membership for the
+IAP perimeter is intentionally not listed in this repository; access is managed in GCP by the owner. This
+direct-IAP choice must be reassessed before any release or production-like contour.
 
 ## Service Accounts
 

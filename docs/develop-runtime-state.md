@@ -59,6 +59,11 @@ Access state:
   - Cloud Run invoker is granted to the IAP service agent
     `service-865011807785@gcp-sa-iap.iam.gserviceaccount.com`.
   - Human access is managed through the IAP IAM policy with `roles/iap.httpsResourceAccessor`.
+  - External Google accounts authenticate through a console-created custom OAuth client in IAP /
+    Google Auth Platform. The active OAuth client ID has the expected `.apps.googleusercontent.com`
+    form. OAuth credential secrets are intentionally not recorded in markdown.
+  - Do not use `gcloud iam oauth-clients` for browser IAP: it creates an IAM OAuth client ID that
+    Google Sign-In does not accept for this flow.
 - `cms-back-develop`: ingress `all`, no unauthenticated access, invoker allowed only for:
   - `site-front-develop-runner@composite-ally-360719.iam.gserviceaccount.com`
   - `cms-front-develop-runner@composite-ally-360719.iam.gserviceaccount.com`

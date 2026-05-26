@@ -65,9 +65,9 @@ The response contains `groups`:
 
 - `pages`: page authoring navigation. It contains the service tree area (`practice_page`, `service_page`,
   `problem_page`), fixed pages (`contacts_page`, `lawyers_page`), and lawyer pages.
-- `global_sections`: shared sections such as menu/header, footer, and prices. All three are backed by
-  `/api/admin/global-sections`; price is currently the first shared global price block, while the deeper
-  base-page/regional inheritance workflow remains a later backend step.
+- `global_sections`: shared sections such as menu/header, footer, and the global price source. All three
+  are backed by `/api/admin/global-sections`. The global price editor manages the upper shared source;
+  concrete generated pages expose their own page `price` slot when the page is opened in the workbench.
 - `reference_data`: editable CMS reference resources from ERP-owned source objects: practices, services,
   problems, lawyers, regions, offices, reviews. Competencies are intentionally not exposed as a separate
   regular editor menu item.
@@ -107,10 +107,23 @@ Supported editable section keys now:
 - `global_price`.
 
 `global_price` uses the same draft/validate/publish/history/rollback endpoints. Its first content contract
-is an object with required `items: []` and optional `title`, `lead`, and `notes`. Generated
-practice/service/problem schemas now also expose an optional `price` slot backed by this global section, so
-published global price changes can rebuild affected page snapshots. Full base-page -> regional price
-inheritance is intentionally not part of this first price slice yet.
+is an object with required `items: []` and optional `title`, `lead`, and `notes`.
+
+Generated `practice_page`, `service_page`, and `problem_page` schemas also expose an optional page
+`price` slot. This slot is not edited through the global section screen. It is a page-owned section with
+`sourcePolicy: "price_inheritance"`:
+
+- base non-regional generated pages source their page `price` from the locale-specific `global_price`;
+- regional generated pages source their page `price` from the matching base non-regional page price
+  section;
+- the page `price` may inherit the source, override allowed fields, or append allowed list/rich-text
+  fields;
+- public snapshots store the resolved price payload and keep separate source/local section refs for
+  diagnostics and rollback.
+
+This means the global price screen edits the shared source, while the page section editor edits the local
+page/regional layer. Header/footer remain direct shared globals and do not create page-local section
+versions.
 
 Global sections are locale-specific. Opening the editor for `site_footer?locale=uk` reads or creates the
 Ukrainian global footer section record. Russian and English versions are separate section records and
@@ -135,6 +148,10 @@ Validate and publish may omit `sectionVersionId`; backend then uses the latest d
 Publishing `site_header`, `site_footer`, or `global_price` uses `rebuild_affected_snapshots`: backend
 creates the new published section version and plans/rebuilds affected page snapshots without touching
 unrelated page-owned draft sections.
+
+For `global_price`, affected rebuilds apply to pages that directly depend on the global source, normally
+the base non-regional generated pages. Regional pages depend on the base page price layer and should be
+reviewed/republished through the regional page workflow when that layer changes.
 
 All mutation responses return a fresh `editor` object. Use it to replace the current editor state after
 save, validate, publish, or rollback.
@@ -175,6 +192,7 @@ This is the UI metadata source for page authoring. It returns:
 - runtime slots;
 - section fields and required/optional state;
 - section ownership/publish/composition rules needed to decide which controls to show.
+- optional `sourcePolicy` for special source resolution. Currently only `price_inheritance` exists.
 
 The frontend should use this endpoint to build page creation forms and section editors. Do not hardcode
 the available page types, slots, route params, or field lists in the frontend.
