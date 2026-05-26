@@ -245,6 +245,8 @@ Section schemas must also support:
   field-level inherited/appended price composition;
 - price publish rebuild must preserve the current page snapshot and recompute only the price block from
   the new global published price plus current published local append/override deltas;
+- `latest_draft` preview may use latest draft layers, but `published` preview and public snapshot creation
+  must use only current published source/local versions;
 - whole-section price overrides and disabled optional price bindings must not be changed by global price
   publish;
 - page-owned parent section publish must not automatically publish inherited child/regional pages;
@@ -382,6 +384,11 @@ for inherited sections such as page `price`: `content.source`, `content.local`, 
 The resolved layer is computed by the backend from section schema, binding composition, source versions,
 and local versions. This keeps the CMS frontend from reimplementing inherit/override/append merging logic
 and gives editors a direct view of inherited, local, and final section content.
+
+Implementation note, 2026-05-26: `PageLifecycleService` contract tests now cover inherited price
+composition across latest-draft preview, published preview, page publish snapshot refs, and regional
+base-page -> regional-page price source chains. Published preview intentionally ignores newer draft layers;
+only latest-draft preview may use them.
 
 Implementation note, 2026-05-21: `cms-back` now contains page-scoped section editor action endpoints:
 `POST /api/admin/pages/{pageId}/sections/{slotKey}/editor/draft`,

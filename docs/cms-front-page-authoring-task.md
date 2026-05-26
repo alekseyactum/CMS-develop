@@ -125,6 +125,17 @@ This means the global price screen edits the shared source, while the page secti
 page/regional layer. Header/footer remain direct shared globals and do not create page-local section
 versions.
 
+Price preview modes are intentionally separate:
+
+- `latest_draft` preview composes the latest available source draft/published version with the latest
+  available local draft/published version;
+- `published` preview composes only the current published source and local versions, even if newer drafts
+  already exist.
+
+The public snapshot/publish path uses the same backend composition rule as `published` preview: the
+snapshot stores only the resolved price payload, while section refs keep the exact source/local versions
+that produced it.
+
 Global sections are locale-specific. Opening the editor for `site_footer?locale=uk` reads or creates the
 Ukrainian global footer section record. Russian and English versions are separate section records and
 separate version histories.
@@ -655,6 +666,9 @@ showing the three-layer view:
 
 The frontend should not merge source and local content itself. Use `content.resolved.*` for the preview of
 the final section result, and use `section.composition` plus `slot.fieldPolicies` only to render controls.
+For inherited price sections, `content.resolved.draft` is the editor's latest-draft preview and
+`content.resolved.published` is the currently published result. Do not show draft-resolved content as if it
+were already public.
 
 Important boundaries:
 
