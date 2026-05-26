@@ -236,6 +236,9 @@ Section schemas must also support:
 - shared fixed global sections such as footer/menu, where all pages inherit one published global section
   version and a publish event triggers affected page snapshot rebuilds instead of page-local section
   versions;
+- first fixed global section contracts: `site_header` requires `menu: []`, and `site_footer` requires
+  `columns: []` with optional `copyright`; deeper navigation/footer fields should be added through the
+  same section schema instead of custom page-local copies;
 - patch-based affected snapshot rebuild for shared fixed footer/menu sections, preserving other current
   published section payloads and refs without reading page drafts or runtime read models;
 - best-effort footer/menu rebuild with diagnostics/retry for failed pages, not all-or-nothing blocking;

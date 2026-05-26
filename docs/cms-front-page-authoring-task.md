@@ -106,6 +106,12 @@ Supported editable section keys now:
 - `site_footer`;
 - `global_price`.
 
+`site_header` is the shared header/menu source. Its current minimal content contract is an object with
+required `menu: []`. Extra header fields can be added later without changing the global-section lifecycle.
+
+`site_footer` is the shared footer source. Its current minimal content contract is an object with required
+`columns: []` and optional `copyright`.
+
 `global_price` uses the same draft/validate/publish/history/rollback endpoints. Its first content contract
 is an object with required `items: []` and optional `title`, `lead`, and `notes`.
 
