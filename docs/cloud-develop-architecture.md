@@ -86,13 +86,13 @@ CPU mode:
 Public and admin entrypoints:
 
 - `site-front-develop`: public web entrypoint, unauthenticated access allowed.
-- `cms-front-develop`: closed Cloud Run service prepared for a future load-balancer/IAP entrypoint.
+- `cms-front-develop`: develop admin entrypoint protected by direct Cloud Run IAP.
 - `cms-back-develop`: not public for browser use, authentication required.
 
 Ingress and auth:
 
 - `site-front-develop`: ingress `all`, allow unauthenticated.
-- `cms-front-develop`: ingress `internal-and-cloud-load-balancing`, no unauthenticated access.
+- `cms-front-develop`: ingress `all`, direct Cloud Run IAP enabled, no unauthenticated access.
 - `cms-back-develop`: ingress `all`, no unauthenticated access.
 
 The backend URL may technically exist, but direct browser-originated access is not an approved API path.
@@ -103,8 +103,10 @@ unless a matching internal service-to-service network path is introduced. Plain 
 calls over the service URL need network reachability plus IAM. For this contour, IAM is the backend
 boundary.
 
-Admin user membership for the future IAP/load-balancer perimeter is intentionally not listed in this
-repository. Access is managed in GCP by the owner.
+Cloud Run IAP is used directly for the develop admin frontend to avoid a load-balancer perimeter before it
+is needed. This keeps the develop entrypoint simple while preserving identity-gated access. User membership
+for the IAP perimeter is intentionally not listed in this repository; access is managed in GCP by the owner.
+This direct-IAP choice must be reassessed before any release or production-like contour.
 
 ## Service Accounts
 
@@ -281,8 +283,9 @@ Indexing:
 
 ## CMS Admin Auth
 
-The intended external entry to `cms-front-develop` is a future load-balancer/IAP perimeter. Until that is
-created, `cms-front-develop` remains closed at Cloud Run ingress/auth level.
+The external entry to `cms-front-develop` in develop is direct Cloud Run IAP on the service's standard
+`*.run.app` URL. This is a develop perimeter only; a future release contour must choose and approve its own
+admin access boundary separately.
 
 Inside the CMS:
 

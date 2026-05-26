@@ -477,11 +477,12 @@ Implementation note, 2026-05-23: `cms-back` now exposes the first direct global 
 `POST /api/admin/global-sections/{sectionKey}/validate`,
 `POST /api/admin/global-sections/{sectionKey}/publish`,
 `GET /api/admin/global-sections/{sectionKey}/history`, and
-`POST /api/admin/global-sections/{sectionKey}/rollback`. The first editable keys are `site_header` and
-`site_footer`; `global_price` remains planned because prices need a separate source-of-truth and inheritance
-workflow. Global sections are locale-specific, reuse the existing `SectionLifecycleService`, and publish
-with `rebuild_affected_snapshots` so affected page snapshots can be refreshed without touching unrelated
-page-owned drafts.
+`POST /api/admin/global-sections/{sectionKey}/rollback`. The editable keys are `site_header`,
+`site_footer`, and `global_price`. Global sections are locale-specific, reuse the existing
+`SectionLifecycleService`, and publish with `rebuild_affected_snapshots` so affected page snapshots can be
+refreshed without touching unrelated page-owned drafts. `global_price` is now available as the first shared
+price block for generated practice/service/problem pages; the deeper base-page -> regional price
+inheritance workflow remains a separate implementation step.
 
 Implementation note, 2026-05-23: `cms-back` now exposes the first real generated service-tree workbench
 API: `GET /api/admin/page-workbench/service-tree` and

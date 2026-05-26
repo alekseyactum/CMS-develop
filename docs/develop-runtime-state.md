@@ -3,7 +3,7 @@
 This document records the actual minimal develop runtime created for the clean CMS implementation.
 
 Initial date: 2026-05-07.
-Latest update: 2026-05-08.
+Latest update: 2026-05-26.
 
 GCP preflight was run from `gcp-infra-playbook` before reading or changing cloud state.
 
@@ -55,10 +55,17 @@ Current service URLs:
 Access state:
 
 - `site-front-develop`: ingress `all`, `allUsers` has `roles/run.invoker`.
-- `cms-front-develop`: ingress `internal-and-cloud-load-balancing`, no public invoker.
+- `cms-front-develop`: ingress `all`, direct Cloud Run IAP enabled, no public invoker.
+  - Cloud Run invoker is granted to the IAP service agent
+    `service-865011807785@gcp-sa-iap.iam.gserviceaccount.com`.
+  - Human access is managed through the IAP IAM policy with `roles/iap.httpsResourceAccessor`.
 - `cms-back-develop`: ingress `all`, no unauthenticated access, invoker allowed only for:
   - `site-front-develop-runner@composite-ally-360719.iam.gserviceaccount.com`
   - `cms-front-develop-runner@composite-ally-360719.iam.gserviceaccount.com`
+
+`cms-front-develop` originally used `internal-and-cloud-load-balancing` while waiting for an admin perimeter.
+On 2026-05-26, develop admin access moved to direct Cloud Run IAP on the service's standard `*.run.app`
+URL. This is a develop convenience boundary and must be reassessed before any release contour.
 
 `cms-back-develop` uses ingress `all` intentionally in the first develop contour. Attempts to use
 `internal-and-cloud-load-balancing` blocked the simple Cloud Run service-to-service readiness check without
@@ -265,7 +272,8 @@ Verified externally:
 
 - `site-front-develop /health` returned `200` with `{"service":"site-front","status":"ok"}`.
 - `site-front-develop /robots.txt` returned `Disallow: /`.
-- Direct external unauthenticated access to `cms-front-develop /health` was blocked.
+- Direct external unauthenticated access to `cms-front-develop` redirects to Google OAuth/IAP and does not
+  return CMS content.
 - Direct external unauthenticated access to `cms-back-develop /api/ready` returned `403`.
 - Cloud Run Job `cms-back-ready-check`, running as `site-front-develop-runner`, successfully called
   `cms-back-develop /api/ready`.
@@ -275,6 +283,8 @@ Verified externally:
 
 Local notes:
 
+- As of 2026-05-26, latest created `cms-front-develop` revision `cms-front-develop-00005-ltc` fails startup
+  health checks; traffic remains on latest ready revision `cms-front-develop-00004-l28`.
 - `cms-back` local build passed before deployment.
 - `cms-back` local `typecheck` passed.
 - `cms-back` local `npm audit --omit=dev` reported `0 vulnerabilities`.
