@@ -511,9 +511,9 @@ Generated service-tree schemas now pair editable CMS block sections with runtime
 
 The `*_block` section stores CMS-authored title/lead/settings for the block. The runtime slot stores the
 read-only list contract. Optional page-owned `*_faq` and `*_consultation_cta` sections are also present
-and may be enabled/disabled through backend-provided actions. Price sections are intentionally not modeled
-as plain page-owned sections in this slice because their inheritance/source-of-truth behavior needs a
-separate backend workflow.
+and may be enabled/disabled through backend-provided actions. Price sections are modeled as source-backed
+page-owned sections: base generated pages inherit from `global_price`, while regional generated pages
+inherit from the matching base page price section.
 
 Section cells contain only metadata and status:
 
@@ -629,13 +629,32 @@ behind the opened editor.
 
 - `page`: page identity and route;
 - `slot`: schema-driven section metadata: fields, layout, content shape, allowed composition strategies;
+  inherited/source-backed sections also include `slot.fieldPolicies`, so the UI knows which fields may
+  inherit, override, or append;
 - `section`: binding/current authoring state: ids, ownership, publish mode, visibility, composition,
   draft/published version refs;
 - `content.draft`: full current draft content for this section, if a draft exists;
 - `content.published`: full current published content for this section, if a published version exists;
+- `content.source`: for inherited/source-backed sections, the current source draft/published versions;
+- `content.local`: for inherited/source-backed sections, the page/regional local draft/published versions;
+- `content.resolved.draft`: backend-composed draft preview content from source + local, when it can be
+  resolved;
+- `content.resolved.published`: backend-composed published content from source + local, when it can be
+  resolved;
 - `diagnostics.draftValidation`: latest recorded publish validation state for the draft, if available;
 - `diagnostics.errors` and `diagnostics.warnings`;
 - `actions`: backend-computed flags for the UI.
+
+For normal non-inherited sections, `content.source`, `content.local`, and `content.resolved.*` may be
+`null`; use the existing `content.draft` / `content.published` fields. For page price sections, prefer
+showing the three-layer view:
+
+- source: inherited parent content;
+- local: what this page/region changes;
+- resolved: what preview/publish will render.
+
+The frontend should not merge source and local content itself. Use `content.resolved.*` for the preview of
+the final section result, and use `section.composition` plus `slot.fieldPolicies` only to render controls.
 
 Important boundaries:
 

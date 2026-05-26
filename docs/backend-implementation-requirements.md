@@ -377,6 +377,12 @@ workbench matrix and returns draft/published content, schema metadata, diagnosti
 action flags. The workbench matrix remains summary-only; full section content belongs to the section editor
 payload.
 
+Implementation note, 2026-05-26: the section editor read payload now exposes source-backed content layers
+for inherited sections such as page `price`: `content.source`, `content.local`, and `content.resolved`.
+The resolved layer is computed by the backend from section schema, binding composition, source versions,
+and local versions. This keeps the CMS frontend from reimplementing inherit/override/append merging logic
+and gives editors a direct view of inherited, local, and final section content.
+
 Implementation note, 2026-05-21: `cms-back` now contains page-scoped section editor action endpoints:
 `POST /api/admin/pages/{pageId}/sections/{slotKey}/editor/draft`,
 `POST /api/admin/pages/{pageId}/sections/{slotKey}/editor/validate`, and
