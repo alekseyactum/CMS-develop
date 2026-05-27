@@ -115,6 +115,10 @@ required `menu: []`. Extra header fields can be added later without changing the
 `global_price` uses the same draft/validate/publish/history/rollback endpoints. Its first content contract
 is an object with required `items: []` and optional `title`, `lead`, and `notes`.
 
+The editor response includes `schema.fields`. Use it as the current backend contract for required fields
+and simple field shapes. The frontend should not hardcode a separate validation contract for these global
+sections.
+
 Generated `practice_page`, `service_page`, and `problem_page` schemas also expose an optional page
 `price` slot. This slot is not edited through the global section screen. It is a page-owned section with
 `sourcePolicy: "price_inheritance"`:
@@ -165,6 +169,18 @@ Validate and publish may omit `sectionVersionId`; backend then uses the latest d
 Publishing `site_header`, `site_footer`, or `global_price` uses `rebuild_affected_snapshots`: backend
 creates the new published section version and plans/rebuilds affected page snapshots without touching
 unrelated page-owned draft sections.
+
+The publish response contains:
+
+- `publish.publishedVersionId`: the new published section version;
+- `publish.affectedPages`: pages that depend on this global section;
+- `publish.affectedBindings`: exact page-section bindings affected by the new section version;
+- `publish.rebuiltSnapshots`: rebuild result per affected page, with `status = rebuilt | skipped | failed`;
+- `editor`: fresh global-section editor state after publish.
+
+For the UI this means: show publish success from `publishedVersionId`, then show rebuild impact from
+`rebuiltSnapshots`. `failed` or `skipped` rebuilds are page/snapshot follow-up work, not a missing section
+publication.
 
 For `global_price`, affected rebuilds apply to pages that directly depend on the global source, normally
 the base non-regional generated pages. Regional pages depend on the base page price layer and should be

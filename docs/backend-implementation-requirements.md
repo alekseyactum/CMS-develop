@@ -507,6 +507,10 @@ refreshed without touching unrelated page-owned drafts. `global_price` is now av
 price block for generated practice/service/problem pages; the deeper base-page -> regional price
 inheritance workflow remains a separate implementation step.
 
+Implementation note, 2026-05-27: global-section editor DTOs expose `schema.fields`, and global-section
+publish responses document the lifecycle publish result instead of an opaque `unknown`: affected pages,
+affected bindings, and rebuilt snapshot statuses are part of the frontend contract.
+
 Implementation note, 2026-05-23: `cms-back` now exposes the first real generated service-tree workbench
 API: `GET /api/admin/page-workbench/service-tree` and
 `POST /api/admin/page-workbench/generated-sources/{pageType}/{sourceId}/bootstrap`. The service-tree
