@@ -370,7 +370,7 @@ The intended model:
 - a base service price is maintained once in a global CMS section or future external source;
 - non-regional service pages inherit or reference that price section/source by default;
 - pages may override only fields allowed by schema;
-- pages may append contextual notes where allowed;
+- pages may append contextual local price content where allowed;
 - regional variants may inherit, override allowed fields, or append allowed regional context.
 
 Regional price sections must not inherit directly from the global price source when a base
@@ -382,7 +382,7 @@ global price source/section
       -> regional page price section
 ```
 
-This applies to both price values and CMS-authored price text/notes. The base non-regional page is the
+This applies to both price values and CMS-authored price text. The base non-regional page is the
 parent content layer for regional variants, while the global price source remains the upper shared source
 for base pages.
 
@@ -453,6 +453,13 @@ fields. Whole-section overrides and disabled optional bindings are not stale bec
 the global price payload.
 
 The first release should not implement the full price catalog or ERP integration.
+
+The detailed global price workbench requirement is fixed separately in
+`docs/global-price-section-workbench.md`. In short, the global price editor stores only editable
+`items` in section version JSON, returns read-only localized header content from backend code registry,
+uses strict item-level validation with warnings, exposes computed editor/history roles for the UI, and
+publishes through the independent global-section flow with affected snapshot rebuild diagnostics in the
+publish response.
 
 ## Current Section Versions
 

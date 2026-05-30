@@ -53,6 +53,8 @@ implementation should port proven behavior from `notstrapitest` through typed pa
 preview/snapshot contracts, focused domain services, and tests around the preserved edge cases.
 
 See [`docs/backend-implementation-requirements.md`](docs/backend-implementation-requirements.md).
+See [`docs/global-price-section-workbench.md`](docs/global-price-section-workbench.md) for the detailed
+global price section editor, version history, validation, and publish-impact contract.
 See [`docs/reference-data-and-runtime-model.md`](docs/reference-data-and-runtime-model.md) for the agreed
 ERP-imported reference data and runtime/read-model boundary.
 See [`docs/cms-front-reference-data-task.md`](docs/cms-front-reference-data-task.md) for the first CMS
@@ -120,6 +122,7 @@ This repository contains project documentation:
 - the agreed develop cloud architecture;
 - the actual develop runtime state;
 - backend implementation requirements based on the reviewed `notstrapitest` refactoring assessments;
+- the detailed global price section workbench contract;
 - development sequencing and module transfer rules;
 - a transferred current-state summary from `notstrapitest`;
 - local Codex rules for working in this repository.

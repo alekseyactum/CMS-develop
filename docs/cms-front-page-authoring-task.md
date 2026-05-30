@@ -246,12 +246,24 @@ required `menu: []`. Extra header fields can be added later without changing the
 `site_footer` is the shared footer source. Its current minimal content contract is an object with required
 `columns: []` and optional `copyright`.
 
-`global_price` uses the same draft/validate/publish/history/rollback endpoints. Its first content contract
-is an object with required `items: []` and optional `title`, `lead`, and `notes`.
+`global_price` uses the same global section lifecycle, but its detailed workbench contract is fixed in
+`docs/global-price-section-workbench.md`.
+
+For the global price screen:
+
+- the backend persists only editable content: `{ "items": [...] }`;
+- the top section header (`title`, `accentText`, `description`) is read-only content from backend registry
+  for the active locale;
+- editor responses should expose `readonlyContent`, `editableContent`, and full `workingContent`;
+- draft save accepts only `{ content: { items } }` and returns `saved: true | false` with diagnostics;
+- per-card apply buttons are local UI state only; backend persistence happens through the global draft
+  save action;
+- publishing is triggered from the history action for `latest_draft`, and publish response contains
+  affected snapshot rebuild results.
 
 The editor response includes `schema.fields`. Use it as the current backend contract for required fields
-and simple field shapes. The frontend should not hardcode a separate validation contract for these global
-sections.
+and simple field shapes. For `global_price`, use the dedicated workbench contract above because it adds
+read-only header content, item-level diagnostics, computed working content, and history actions.
 
 Generated `practice_page`, `service_page`, and `problem_page` schemas also expose an optional page
 `price` slot. This slot is not edited through the global section screen. It is a page-owned section with

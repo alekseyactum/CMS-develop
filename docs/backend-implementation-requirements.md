@@ -222,7 +222,7 @@ Section schemas must also support:
   without absorbing publish decisions, page-schema rules, or content resolution logic;
 - global-owned and external-source-backed sections, including the price-section use case where base
   service prices come from one shared source and pages inherit, override allowed fields, or append allowed
-  notes;
+  local content;
 - price-section inheritance chain where regional service-tree pages inherit price values and price text
   from the current published base non-regional page price result, while base pages inherit from the shared
   global price source;
@@ -248,6 +248,10 @@ Section schemas must also support:
   field-level inherited/appended price composition;
 - price publish rebuild must preserve the current page snapshot and recompute only the price block from
   the new global published price plus current published local append/override deltas;
+- global price editor requirements are fixed in `docs/global-price-section-workbench.md`: the persisted
+  editable content is `{ items }`, the read-only localized section header comes from backend code registry,
+  save returns `saved: true | false` with diagnostics, history exposes computed version roles/actions, and
+  publish response is the source of affected snapshot rebuild results;
 - `latest_draft` preview may use latest draft layers, but `published` preview and public snapshot creation
   must use only current published source/local versions;
 - whole-section price overrides and disabled optional price bindings must not be changed by global price
@@ -592,9 +596,9 @@ Implementation note, 2026-05-23: `cms-back` now exposes the first direct global 
 `POST /api/admin/global-sections/{sectionKey}/rollback`. The editable keys are `site_header`,
 `site_footer`, and `global_price`. Global sections are locale-specific, reuse the existing
 `SectionLifecycleService`, and publish with `rebuild_affected_snapshots` so affected page snapshots can be
-refreshed without touching unrelated page-owned drafts. `global_price` is now available as the first shared
-price block for generated practice/service/problem pages; the deeper base-page -> regional price
-inheritance workflow remains a separate implementation step.
+refreshed without touching unrelated page-owned drafts. `global_price` is available as the first shared
+price source for generated practice/service/problem pages. Its detailed editor/API contract is defined in
+`docs/global-price-section-workbench.md`.
 
 Implementation note, 2026-05-27: global-section editor DTOs expose `schema.fields`, and global-section
 publish responses document the lifecycle publish result instead of an opaque `unknown`: affected pages,
