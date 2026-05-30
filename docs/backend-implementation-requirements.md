@@ -265,9 +265,11 @@ Section schemas must also support:
   fixed starting and fixed ending sections.
 
 The first concrete page schema registry must be code-defined in Nest, not editable database configuration.
-Initial page types are `lawyers_page`, `lawyer_page`, and `contacts_page`. They are localized but not
-regional in the first iteration, use required global-owned header/footer slots, required page-owned SEO,
-and runtime/reference slots for lawyers listing/filter, lawyer profile, and contacts map data.
+Initial page types include `practice_collection_page`, `practice_page`, `service_page`, `problem_page`,
+`lawyers_page`, `lawyer_page`, and `contacts_page`. Service-tree page types are localized and regional;
+lawyers and contacts are localized but not regional in the first iteration. All page types use required
+global-owned header/footer slots, required page-owned SEO, and explicit runtime/reference slots where
+needed.
 
 This preserves editor flexibility without breaking snapshot-first public rendering, rollback, cache
 revalidation, route diagnostics, SEO validation, or release readiness.
@@ -277,6 +279,88 @@ must also initiate public frontend revalidation for the affected Next.js routes 
 introduced later, the same snapshot activation event must initiate CDN purge/revalidation for the affected
 HTML cache entries. Failed revalidation must be recorded as an operational signal; it must not be hidden
 as a successful publish-side effect.
+
+## Admin Navigation Contract
+
+The backend should expose one lightweight admin navigation endpoint for the CMS sidebar:
+
+```text
+GET /api/admin/navigation?locale=uk
+GET /api/admin/navigation?locale=uk&includeIndicators=true
+```
+
+This endpoint is a navigation and prioritization contract. It must not replace page workbench, section
+editor, global section, reference data, publication, or user-management APIs.
+
+Required top-level groups:
+
+- `practices`: the public services/practice collection entry plus the full non-regional practice ->
+  service -> problem tree. The collection entry opens `practice_collection_page`; tree nodes open the
+  matching generated page workbench. Regional variants are not expanded in the sidebar and belong to the
+  selected workbench screen.
+- `lawyer_pages`: generated public lawyer profile pages for visible lawyers. This is not the lawyers
+  reference-data editor; it opens the page/workbench area for individual lawyer public pages.
+- `publications`: publication collections such as articles, cases, and media mentions.
+- `global_sections`: `site_header`, `site_footer`, and `global_price`.
+- `reference_data`: practices, services, problems, lawyers, regions, offices, and reviews. Competencies
+  stay internal/read-model data and are not a regular standalone editor item.
+- `single_pages`: home, about, career, lawyer license, and contacts.
+- `users`: CMS users list, filtered by future access permissions. Roles/permissions are not shown as a
+  separate item until that workflow is implemented.
+
+Every menu item should contain a typed `target` that tells the frontend what to open. The frontend should
+not infer target behavior from titles or hardcoded sidebar lists.
+
+The endpoint should return only nodes that can be opened by the current frontend/backend implementation.
+Do not return disabled "planned" nodes in the runtime menu. Future target groups may remain documented but
+should appear in the API only when they have a real opening target.
+
+`indicators` should be controlled by `includeIndicators=true`. Without this flag, the backend may return
+only the navigation tree. The first backend slice does not need server-side menu filters; the frontend may
+filter locally from the aggregate indicators if needed.
+
+The menu should support a compact statistical addon through aggregate `indicators`. Diagnostics must be
+split into `own` and `descendants`, so editors can distinguish a problem on the current page from problems
+below it. For menu purposes, draft changes and stale inherited dependencies can be combined into an
+editor-facing `attention` aggregate, but the underlying domain model must keep them separate because they
+have different publish/review workflows. Publication coverage should be exposed as lightweight
+published/total counters where meaningful.
+
+Practice/service/problem publication coverage must be split into:
+
+- `own`: whether the base non-regional page itself is published;
+- `regional`: published/total regional variants of the same node;
+- `descendants`: published/total child service/problem pages below this node, including regional variants
+  where relevant.
+
+Global section indicators must expose only real publish impact. For `global_price`, affected pages are
+pages whose current public snapshot would change because they inherit or append from the global source.
+Fully overridden or disabled price sections should not be counted. For `site_header` and `site_footer`,
+affected pages are pages whose published snapshot includes the shared global slot.
+The first implementation returns this as `publishImpact.affectedPages.count` and
+`publishImpact.affectedBindings.count`; it is a menu summary, not a detailed rebuild plan.
+
+Reference-data menu indicators should stay simple: dictionary-level validation errors/warnings and
+visible/total record counts. Do not add a separate reference-data `attention` wrapper in the first slice.
+Single pages should expose own diagnostics, own attention, and own publication state, with regional
+coverage only if the page type becomes regional. Lawyer pages should use generated-page indicators driven
+by visible lawyer records, without service-tree descendants. Users should expose active/total counts in the
+first slice.
+
+Current implementation coverage:
+
+- `practices` returns the services collection entry and the full practice/service/problem tree with page
+  indicators;
+- `lawyer_pages` returns generated lawyer profile page coverage based on visible lawyers;
+- `single_pages` returns indicators for currently implemented standalone page types;
+- `global_sections` returns draft/published status plus lightweight publish impact;
+- `reference_data` returns aggregate diagnostics plus visible/total counts;
+- `users` returns active/total counts.
+
+The navigation response should return the complete practice/service/problem tree in the first release slice
+because current expected volumes are small enough and a full tree keeps the UI simple. The response must
+remain summary-only: no full section content, no full validation history, no snapshot history, and no
+authoring payloads.
 
 ## Porting Rules From notstrapitest
 
@@ -341,7 +425,7 @@ Do not use these prototype traits as targets:
 
 The first clean backend implementation should stay narrow:
 
-- `services_root`;
+- `practice_collection_page` (clean CMS replacement for prototype `services_root`);
 - `practice_page`;
 - `uk` and `ru`;
 - base and regional page variants;
@@ -464,16 +548,19 @@ operation result plus a fresh workbench row, so the CMS frontend can update both
 and the matrix row after save, validate, publish, rollback, enable, or disable without reconstructing
 backend rules or making a separate row-refresh request.
 
-Implementation note, 2026-05-22: `cms-back` now registers the first generated service-tree page schemas:
-`practice_page`, `service_page`, and `problem_page`. Their canonical base paths are built from ERP-owned
-source slugs as `services/{practiceSlug}`, `services/{practiceSlug}/{serviceSlug}`, and
-`services/{practiceSlug}/{serviceSlug}/{problemSlug}`. The page workbench matrix can now return generated
-rows for visible practices, services, and problems from the CMS reference-data tables. Each row includes a
-`sourceRecord` with reference ids, route params, computed `pagePath`/`publicPath`, parent refs, and source
-diagnostics. If a generated row has a valid path and no critical source diagnostics, the frontend may call
-the workbench generated bootstrap endpoint so the backend can reread the source and build the route.
-Regional variants are now handled by the workbench matrix through row-level `region`/`regionSlug` and
-optional bootstrap `regionId`. Richer section sets and generated `lawyer_page` rows remain follow-up work.
+Implementation note, 2026-05-22/30: `cms-back` now registers the first generated service-tree page
+schemas: `practice_collection_page`, `practice_page`, `service_page`, and `problem_page`.
+`practice_collection_page` is the public services/root collection page. It uses the canonical base path
+`services`, has no `practiceId`, and can be regional. Practice/service/problem canonical base paths are
+built from ERP-owned source slugs as `services/{practiceSlug}`,
+`services/{practiceSlug}/{serviceSlug}`, and `services/{practiceSlug}/{serviceSlug}/{problemSlug}`. The
+page workbench matrix can now return generated rows for the services collection, visible practices,
+services, and problems from the CMS reference-data tables. Each row includes a `sourceRecord` with
+reference ids, route params, computed `pagePath`/`publicPath`, parent refs, and source diagnostics. If a
+generated row has a valid path and no critical source diagnostics, the frontend may call the workbench
+generated bootstrap endpoint so the backend can reread the source and build the route. Regional variants
+are now handled by the workbench matrix through row-level `region`/`regionSlug` and optional bootstrap
+`regionId`. Richer generated `lawyer_page` rows remain follow-up work.
 
 Implementation note, 2026-05-22: generated service-tree schemas now expose a first realistic section
 scaffold for CMS UI work. Runtime/read-model slots can be paired with editable page-owned block sections
@@ -486,13 +573,15 @@ implemented as a dedicated source-backed workflow, not as a simple page-owned bl
 
 Implementation note, 2026-05-22: `cms-back` now contains the first page runtime resolver layer. During
 preview and publish, page lifecycle asks `PageRuntimeResolverService` to fill missing runtime payloads for
-service-tree pages. The first supported slots are `practice_services`, `practice_lawyers`,
-`service_problems`, `service_lawyers`, and `problem_lawyers`. The resolver reads CMS reference-data tables,
-uses source slugs from the page path, filters visible/public records, applies lawyer qualification score
-rules (`score > 1`), and builds route-ready list items. Provided runtime payloads are still respected and
-are not resolved twice, which preserves backward compatibility with manual preview/publish requests. Missing
-visible sources or unroutable visible child items now fail as `PAGE_RUNTIME_RESOLUTION_FAILED` before an
-invalid public snapshot is created.
+service-tree pages. The first supported slots are `practice_collection`, `practice_services`,
+`practice_lawyers`, `service_problems`, `service_lawyers`, and `problem_lawyers`. The resolver reads CMS
+reference-data tables, uses source slugs from the page path, filters visible/public records, applies lawyer
+qualification score rules (`score > 1`), and builds route-ready list items. For
+`practice_collection_page`, base rows list all visible practices and regional rows list visible practices
+that have an active region qualification for the selected visible region. Provided runtime payloads are
+still respected and are not resolved twice, which preserves backward compatibility with manual
+preview/publish requests. Missing visible sources or unroutable visible child items now fail as
+`PAGE_RUNTIME_RESOLUTION_FAILED` before an invalid public snapshot is created.
 
 Implementation note, 2026-05-23: `cms-back` now exposes the first direct global sections workbench API:
 `GET /api/admin/global-sections`, `GET /api/admin/global-sections/{sectionKey}/editor`,
@@ -528,13 +617,13 @@ field without taking responsibility for the whole generated payload. Optional pa
 CTA slots are created as disabled bindings when no initial content is supplied, preventing empty optional
 sections from blocking preview/publish until an editor deliberately enables and fills them.
 
-Implementation note, 2026-05-23: generated practice/service/problem workbench matrices now include regional
-variants. `GET /api/admin/page-workbench/page-types/{practice_page|service_page|problem_page}` returns the
-base row plus regional rows for visible regions with valid `sourceSlug`. Regional rows keep the same
-`sourceRecord` and add row-level `region`/`regionSlug`. The generated bootstrap endpoint accepts optional
-`regionId`; backend rereads the region, builds the canonical regional route, and passes `regionSlug` into
-page authoring. The service-tree endpoint remains non-regional so the left hierarchy stays practice ->
-service -> problem without multiplying every node by regions.
+Implementation note, 2026-05-23/30: generated service-tree workbench matrices now include regional
+variants. `GET /api/admin/page-workbench/page-types/{practice_collection_page|practice_page|service_page|problem_page}`
+returns the base row plus regional rows for visible regions with valid `sourceSlug`. Regional rows keep the
+same `sourceRecord` and add row-level `region`/`regionSlug`. The generated bootstrap endpoint accepts
+optional `regionId`; backend rereads the region, builds the canonical regional route, and passes
+`regionSlug` into page authoring. The service-tree endpoint remains non-regional so the left hierarchy
+stays collection -> practice -> service -> problem without multiplying every node by regions.
 
 Implementation note, 2026-05-24: workbench matrix rows now expose row-level `pagePath` and `publicPath`.
 For existing pages these fields mirror the stored page route; for not-created generated rows they expose

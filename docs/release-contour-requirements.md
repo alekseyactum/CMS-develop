@@ -161,9 +161,9 @@ This is the target release scope, not the first implementation slice. Implementa
 page type by page type, with each type passing preview, publish, runtime, SEO, redirect, and diagnostics
 checks before the next larger surface is treated as ready.
 
-Validated page types from `notstrapitest`:
+Validated page types from `notstrapitest` mapped into the clean CMS model:
 
-- `services_root`;
+- `practice_collection_page` (public services/root collection page; prototype `services_root`);
 - `practice_page`;
 - `service_page`;
 - `problem_page`;
@@ -229,7 +229,7 @@ Regional variants must follow the proven `notstrapitest` scope.
 
 Regionality applies to the services tree:
 
-- `services_root`;
+- `practice_collection_page`;
 - `practice_page`;
 - `service_page`;
 - `problem_page`.
@@ -1439,8 +1439,60 @@ document, including:
 The frontend admin UI must be implemented as a separate frontend concern and should consume these backend
 contracts rather than forcing backend logic into UI-specific shapes.
 
-This decision intentionally avoids committing to a final screen list, layout, or UX workflow before the
-backend contracts and page type specifications are ready.
+The first CMS menu/sidebar contract is an exception to the earlier open-ended UI scope: backend should
+provide a single `GET /api/admin/navigation` entry point for the left admin menu. This endpoint is a
+navigation and attention-map contract, not a full editor payload.
+
+Indicators are requested explicitly through `includeIndicators=true`. Without this flag, backend may return
+only the navigation tree. The runtime menu should return only entries that can be opened by the current
+implementation; planned or not-yet-openable items should remain in requirements but should not be returned
+as disabled menu nodes. The first release slice does not require backend-side menu filters such as "only
+errors", "attention", or "unpublished"; those can be derived locally by the frontend from aggregate
+indicators if needed.
+
+Required first-level groups:
+
+- `practices`: the public services/practice collection entry plus the complete non-regional practice ->
+  service -> problem tree; every node opens the matching page workbench, while regional variants are shown
+  inside the opened workbench rather than expanded in the sidebar;
+- `lawyer_pages`: generated public lawyer profile pages for visible lawyers. This is separate from the
+  lawyers reference-data editor;
+- `publications`: publication collections such as articles, cases, and media mentions;
+- `global_sections`: `site_header`, `site_footer`, and `global_price`;
+- `reference_data`: ERP-owned editable CMS dictionaries: practices, services, problems, lawyers, regions,
+  offices, and reviews; competencies are not a standalone regular editor menu item;
+- `single_pages`: home, about, career, lawyer license, and contacts;
+- `users`: CMS users list, visible only to users with the relevant access permission. Role/permission
+  management is not shown as a separate menu item until that workflow is implemented.
+
+Every menu node should expose a backend-owned `target` telling the frontend what to open, for example a
+page workbench, global section editor, reference list, publication list, or users list. The frontend should
+not infer business routing rules from titles or hardcoded page-type lists.
+
+The menu may expose lightweight aggregate indicators for the statistical addon:
+
+- own and descendant validation diagnostics;
+- an editor-facing `attention` aggregate that combines draft changes and stale dependencies for menu
+  prioritization, while backend keeps those states separate internally;
+- publication coverage counters split into own base-page publication, regional coverage, and descendant
+  coverage for practice/service/problem nodes;
+- global-section publish impact, counted only for pages whose public snapshot would actually change after
+  the global section publish. For global price, this includes inherit/append consumers and excludes fully
+  overridden or disabled price sections. The first API shape is
+  `publishImpact.affectedPages.count` and `publishImpact.affectedBindings.count`;
+- reference-data validation counts and visible/total record counts, without a separate dictionary
+  `attention` wrapper;
+- single-page own diagnostics, own attention, and own publication state;
+- lawyer-page generated collection indicators driven by visible lawyer records;
+- users active/total counts for the first users-menu slice.
+
+The navigation response must stay lightweight. It should not include full section content, detailed
+diagnostic histories, page version histories, or authoring payloads. Those belong to the page workbench,
+section editor, global section, reference data, and user-management APIs opened from the selected menu
+target.
+
+This decision still avoids committing to final screen layout details, but it fixes the backend boundary for
+the admin sidebar/menu because the menu is now part of the core CMS workflow.
 
 ## Decision 30: Backend Release-Ready Definition
 
@@ -1524,7 +1576,7 @@ The initial implementation order is:
    reviews, and qualifications.
 5. Route builder, route registry, and aliases.
 6. Page type specification template.
-7. First vertical page slice: `services_root` or `practice_page`.
+7. First vertical page slice: `practice_collection_page` or `practice_page`.
 8. Preview, publish, snapshot, and rollback for the first slice.
 9. SEO validation and locale readiness for the first slice.
 10. Regional inherit, override, and append for the services tree.

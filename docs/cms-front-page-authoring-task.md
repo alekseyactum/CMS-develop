@@ -55,31 +55,165 @@ Use:
 
 ```text
 GET /api/admin/navigation?locale=uk
+GET /api/admin/navigation?locale=uk&includeIndicators=true
 ```
 
 This endpoint is the source for the left CMS menu. Do not build the whole sidebar by hardcoding separate
 frontend lists. Backend groups navigation by domain and filters system/admin entries by the current user's
-permissions.
+permissions. The menu is also the first-level attention map for the CMS: it should help an editor quickly
+see where there are validation issues, unpublished/stale changes, and incomplete publication coverage.
 
 The response contains `groups`:
 
-- `pages`: page authoring navigation. It contains the service tree area (`practice_page`, `service_page`,
-  `problem_page`), fixed pages (`contacts_page`, `lawyers_page`), and lawyer pages.
-- `global_sections`: shared sections such as menu/header, footer, and the global price source. All three
-  are backed by `/api/admin/global-sections`. The global price editor manages the upper shared source;
+- `practices`: the entry item `practice_collection_page` ("Услуги" on the public site) plus the complete
+  non-regional practice -> service -> problem page tree. The collection item opens the page/workbench for
+  the public list of all practices. Practice/service/problem nodes open the matching generated page
+  workbench. Regional page variants are not expanded in the left menu; they are shown inside the selected
+  page workbench.
+- `lawyer_pages`: generated public lawyer profile pages. This is separate from the lawyers reference
+  dictionary: the menu item opens the page/workbench area for lawyer profile pages that should exist for
+  visible lawyers, while `reference_data/lawyers` opens the ERP/CMS lawyer record editor.
+- `publications`: content-like publication collections, initially articles, cases, and media mentions.
+  This group opens publication lists, not operational queues. Queues such as "requires review" can be
+  added later as a dashboard, not mixed into the content tree.
+- `global_sections`: shared sections: `site_header`, `site_footer`, and `global_price`. All three are
+  backed by `/api/admin/global-sections`. The global price editor manages the upper shared source;
   concrete generated pages expose their own page `price` slot when the page is opened in the workbench.
 - `reference_data`: editable CMS reference resources from ERP-owned source objects: practices, services,
   problems, lawyers, regions, offices, reviews. Competencies are intentionally not exposed as a separate
   regular editor menu item.
-- `access_management`: users and roles/permissions. Backend returns this group only for users with
-  `users.read` permission, which currently means admin-level access.
+- `single_pages`: fixed standalone pages, initially home, about, career, lawyer license, and contacts.
+  Each node opens the matching page workbench.
+- `users`: CMS users list. Role and permission management is intentionally not shown as a separate menu
+  item until that workflow is implemented. Backend returns this group only for users with `users.read`
+  permission, which currently means admin-level access.
+
+For the first release-oriented slice, backend should return the full practice/service/problem tree in one
+navigation response. This keeps the frontend simple and lets the menu work as a full CMS map. The endpoint
+must still keep the payload lightweight: no full section content, no full diagnostics lists, and no page
+version history in the menu response. If the tree becomes too heavy later, the same contract may grow a
+lazy-loading mode without changing the meaning of menu nodes.
+
+The endpoint should return only menu items that can be opened now. Target-state items from the long-term
+requirements may stay documented, but unfinished entries should not be returned as disabled/planned nodes
+in the runtime menu. This keeps the CMS sidebar a working tool rather than a map of promises.
+
+Indicators are optional and should be included only when requested:
+
+- `GET /api/admin/navigation?locale=uk` may return the tree without stats;
+- `GET /api/admin/navigation?locale=uk&includeIndicators=true` returns the same tree with lightweight
+  `indicators`;
+- the first implementation does not need backend menu filters such as `filter=errors` or
+  `filter=attention`; if the frontend needs quick filters, it can derive them locally from the returned
+  indicators.
 
 Each item can include:
 
 - `route`: frontend route to open;
-- `endpoint`: backend endpoint that should be used to load the main data for that menu item;
+- `target`: typed backend-owned instruction for what the UI should open, for example
+  `page_workbench`, `publication_list`, `global_section_editor`, `reference_list`, `single_page_workbench`,
+  or `users_list`;
+- `endpoint`: backend endpoint that should be used to load the main data for that menu item, when it is
+  useful to expose directly;
 - `children`: nested entries, for example the service tree page collections;
-- `availability`: `available` or `planned`.
+- `availability`: `available` when the backend wants to expose availability explicitly. Planned/unopenable
+  nodes should normally be omitted from the response;
+- `indicators`: optional lightweight stats for the menu/statistical addon.
+
+Example menu item:
+
+```json
+{
+  "key": "practice:10",
+  "title": "Військовий адвокат",
+  "target": {
+    "kind": "page_workbench",
+    "pageType": "practice_page",
+    "sourceId": "practice-cms-id"
+  },
+  "children": [],
+  "indicators": {
+    "diagnostics": {
+      "own": { "errors": 0, "warnings": 2 },
+      "descendants": { "errors": 1, "warnings": 42 }
+    },
+    "attention": {
+      "own": {
+        "required": true,
+        "reasons": {
+          "draftChanges": true,
+          "staleDependencies": false
+        }
+      },
+      "descendants": {
+        "count": 14,
+        "byReason": {
+          "draftChanges": 5,
+          "staleDependencies": 9
+        }
+      }
+    },
+    "publication": {
+      "own": { "published": true },
+      "regional": {
+        "publishedCount": 15,
+        "totalCount": 17
+      },
+      "descendants": {
+        "publishedCount": 200,
+        "totalCount": 1329
+      }
+    }
+  }
+}
+```
+
+`diagnostics.own` means errors/warnings for the current node itself. `diagnostics.descendants` means
+aggregated issues below this node: child service/problem pages and/or regional descendants that belong to
+the opened workbench context.
+
+For menu display, `attention` intentionally combines draft changes and stale dependencies into one
+editor-facing signal: "this node needs attention". Internally backend must keep draft and stale states
+separate, because they require different publish/review behavior. The menu aggregate may expose reasons so
+the frontend can show a tooltip or details, but the primary sidebar signal should stay simple.
+
+`publication` is a short coverage counter. For practice/service/problem nodes it should help show how many
+base/regional or descendant pages are already published from the expected total:
+
+- `publication.own.published`: whether the base non-regional page for this node is currently published;
+- `publication.regional.publishedCount/totalCount`: published regional variants for this same node;
+- `publication.descendants.publishedCount/totalCount`: child service/problem pages below this node,
+  including their regional variants where they exist.
+
+For a `problem_page` node, `descendants` may be omitted or zero because there are no deeper
+practice/service/problem descendants.
+
+Group-specific indicator rules:
+
+- `global_sections`: use `diagnostics.own`, `attention.own`, `publication.own`, and `publishImpact`.
+  `publishImpact.affectedPages.count` and `publishImpact.affectedBindings.count` count only pages/bindings
+  whose public snapshot would actually change after publishing the global section. For `global_price`, count
+  pages using inherit/append or field-level inherit/append; do not count full override, fully independent
+  overridden fields, or disabled price sections. For `site_header` and `site_footer`, count pages whose
+  current published snapshot includes the shared global slot.
+- `reference_data`: use only `diagnostics.own.errors/warnings` and `records.visibleCount/totalCount`.
+  Do not add a separate `attention` layer for dictionaries; the frontend can treat non-zero diagnostics as
+  the signal.
+- `single_pages`: use `diagnostics.own`, `attention.own`, and `publication.own`. If a single page later
+  becomes regional, include `publication.regional`; otherwise omit it.
+- `lawyer_pages`: use the same generated-page indicator model as other generated collections, but without
+  practice/service/problem descendants. The expected total is driven by visible lawyers that should be
+  shown on the public site.
+- `users`: use `users.activeCount/totalCount` for the first implementation. More user states such as
+  pending invites, locked users, or missing roles belong to the later user/permissions workflow.
+
+Current backend implementation note:
+
+- `lawyer_pages`, `single_pages`, `global_sections`, `reference_data`, and `users` can now return menu
+  indicators when `includeIndicators=true`;
+- reference dictionary indicators are intentionally aggregate-only and do not return full diagnostic lists;
+- global section impact is a lightweight count, not a page rebuild plan. Open the global section editor or
+  page workbench for detailed actions.
 
 Important: `GET /api/admin/page-workbench/tree` remains the page-type workbench tree, not the whole CMS
 sidebar. For the actual practice/service/problem hierarchy use
@@ -319,6 +453,7 @@ the row in the opened matrix without recalculating publish or visibility rules l
 For generated service-tree page types, call the same matrix endpoint:
 
 ```text
+GET /api/admin/page-workbench/page-types/practice_collection_page?locale=uk
 GET /api/admin/page-workbench/page-types/practice_page?locale=uk
 GET /api/admin/page-workbench/page-types/service_page?locale=uk
 GET /api/admin/page-workbench/page-types/problem_page?locale=uk
@@ -326,11 +461,14 @@ GET /api/admin/page-workbench/page-types/problem_page?locale=uk
 
 Each generated row is tied to one visible reference object from the CMS database:
 
+- `practice_collection_page`: one synthetic source row, not an ERP object. It has no `practiceId` and
+  always uses `pagePath = "services"`;
 - `practice_page`: one visible practice;
 - `service_page`: one visible service with `serviceCond=true` and a resolved visible practice;
 - `problem_page`: one visible problem with resolved visible practice and service.
 
-For `practice_page`, `service_page`, and `problem_page`, the matrix now returns both:
+For `practice_collection_page`, `practice_page`, `service_page`, and `problem_page`, the matrix now
+returns both:
 
 - base non-regional rows, for example `/services/family-law`;
 - regional rows for visible regions with a valid `sourceSlug`, for example `/kyiv/services/family-law`.
@@ -386,13 +524,14 @@ describe the base source route; regional rows may have a different `row.publicPa
 generated bootstrap:
 
 ```text
+POST /api/admin/page-workbench/generated-sources/practice_collection_page/practice_collection/bootstrap?locale=uk
 POST /api/admin/page-workbench/generated-sources/practice_page/{sourceRecord.id}/bootstrap?locale=uk
 POST /api/admin/page-workbench/generated-sources/service_page/{sourceRecord.id}/bootstrap?locale=uk
 POST /api/admin/page-workbench/generated-sources/problem_page/{sourceRecord.id}/bootstrap?locale=uk
 ```
 
-Request body may be empty. For practice/service/problem generated pages, backend creates minimal valid
-draft content for required page-owned sections:
+Request body may be empty. For practice collection/practice/service/problem generated pages, backend
+creates minimal valid draft content for required page-owned sections:
 
 - `seo`: `title` and `description` from the source object title;
 - intro section: `title` from the source object title;
@@ -496,14 +635,17 @@ using backend-provided `actions`/`diagnostics`.
 For generated service-tree pages, the backend now resolves missing runtime/read-model payloads during
 preview and publish. The frontend does not need to manually send payloads for these slots:
 
+- `practice_collection`;
 - `practice_services`;
 - `practice_lawyers`;
 - `service_problems`;
 - `service_lawyers`;
 - `problem_lawyers`.
 
-The resolver reads CMS reference tables, uses the page route context (`services/{practiceSlug}`,
-`services/{practiceSlug}/{serviceSlug}`, etc.), and returns list payloads with route-ready items. If the
+The resolver reads CMS reference tables, uses the page route context (`services`,
+`services/{practiceSlug}`, `services/{practiceSlug}/{serviceSlug}`, etc.), and returns list payloads with
+route-ready items. For `practice_collection_page`, the base page lists all visible practices; regional rows
+list visible practices that have an active region qualification for the selected visible region. If the
 frontend sends a `runtimePayloads` entry for one of these slots, backend keeps the provided payload and does
 not resolve that same slot again. This is mainly useful for tests or transitional UI experiments; normal CMS
 frontend code should let backend resolve service-tree runtime slots.
@@ -531,7 +673,8 @@ plus `publicPayload`, so the UI can preview exactly what rollback would restore.
 it does not mutate the historical snapshot.
 
 For this first slice, `contacts_page` and `lawyers_page` are supported as single-row matrices. Generated
-service-tree matrices are available for base and regional practice, service, and problem pages.
+service-tree matrices are available for base and regional practice collection, practice, service, and
+problem pages.
 
 Generated service-tree schemas now pair editable CMS block sections with runtime/read-model slots through
 `compositeGroupKey`, so the UI can render them as one block:
