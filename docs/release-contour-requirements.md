@@ -1458,7 +1458,7 @@ Required first-level groups:
 - `lawyer_pages`: generated public lawyer profile pages for visible lawyers. This is separate from the
   lawyers reference-data editor;
 - `publications`: publication collections such as articles, cases, and media mentions;
-- `global_sections`: `site_header`, `site_footer`, and `global_price`;
+- `global_sections`: `site_header`, `site_footer_practices`, `site_footer`, and `global_price`;
 - `reference_data`: ERP-owned editable CMS dictionaries: practices, services, problems, lawyers, regions,
   offices, and reviews; competencies are not a standalone regular editor menu item;
 - `single_pages`: home, about, career, lawyer license, and contacts;

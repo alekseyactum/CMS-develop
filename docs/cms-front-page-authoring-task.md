@@ -76,9 +76,10 @@ The response contains `groups`:
 - `publications`: content-like publication collections, initially articles, cases, and media mentions.
   This group opens publication lists, not operational queues. Queues such as "requires review" can be
   added later as a dashboard, not mixed into the content tree.
-- `global_sections`: shared sections: `site_header`, `site_footer`, and `global_price`. All three are
-  backed by `/api/admin/global-sections`. The global price editor manages the upper shared source;
-  concrete generated pages expose their own page `price` slot when the page is opened in the workbench.
+- `global_sections`: shared sections: `site_header`, `site_footer_practices`, `site_footer`, and
+  `global_price`. They are backed by `/api/admin/global-sections`. The global price editor manages the
+  upper shared source; concrete generated pages expose their own page `price` slot when the page is opened
+  in the workbench.
 - `reference_data`: editable CMS reference resources from ERP-owned source objects: practices, services,
   problems, lawyers, regions, offices, reviews. Competencies are intentionally not exposed as a separate
   regular editor menu item.
@@ -237,14 +238,32 @@ POST /api/admin/global-sections/{sectionKey}/rollback?locale=uk
 Supported editable section keys now:
 
 - `site_header`;
+- `site_footer_practices` as a read-only/global diagnostics workbench;
 - `site_footer`;
 - `global_price`.
 
 `site_header` is the shared header/menu source. Its current minimal content contract is an object with
 required `menu: []`. Extra header fields can be added later without changing the global-section lifecycle.
 
-`site_footer` is the shared footer source. Its current minimal content contract is an object with required
-`columns: []` and optional `copyright`.
+`site_footer` is the shared footer source. Its detailed first-release workbench contract is fixed in
+`docs/site-footer-section-workbench.md`.
+
+For the footer screen:
+
+- practices in the footer are not edited through `site_footer`; they are a separate read-only/runtime
+  powered global section `site_footer_practices`, built from practice reference data;
+- `site_footer_practices` shows all active practices that have a locale `menuTitle` and public route;
+  missing `menuTitle` or route omits the practice and adds a warning;
+- `site_footer` edits only footer-owned settings for now: structured `workTime`, social URLs, and legal
+  PDF media refs;
+- allowed social network types and order are code-owned; the editor changes only URLs, and an empty URL
+  hides the social network without warning;
+- privacy/offer legal documents are uploaded through the media contour as PDF files up to 5 MB; missing
+  document refs are warnings and invalid media refs are errors;
+- first-level navigation links, contact label, legal link labels, sitemap route, and copyright are shown
+  as read-only/code-owned;
+- the public phone is temporarily frontend-owned and must come from one frontend config/constant, not from
+  `site_footer` API responses.
 
 `global_price` uses the same global section lifecycle, but its detailed workbench contract is fixed in
 `docs/global-price-section-workbench.md`.
@@ -301,7 +320,18 @@ Save draft:
 ```json
 {
   "content": {
-    "columns": []
+    "workTime": { "from": "08:00", "to": "22:00" },
+    "socialUrls": {
+      "telegram": "https://t.me/example",
+      "youtube": null,
+      "instagram": null,
+      "facebook": null,
+      "whatsapp": null
+    },
+    "legalDocuments": {
+      "privacyPolicyMediaId": null,
+      "offerContractMediaId": null
+    }
   }
 }
 ```
@@ -312,9 +342,9 @@ Validate and publish may omit `sectionVersionId`; backend then uses the latest d
 {}
 ```
 
-Publishing `site_header`, `site_footer`, or `global_price` uses `rebuild_affected_snapshots`: backend
-creates the new published section version and plans/rebuilds affected page snapshots without touching
-unrelated page-owned draft sections.
+Publishing `site_header`, `site_footer_practices`, `site_footer`, or `global_price` uses
+`rebuild_affected_snapshots`: backend creates the new published section version and plans/rebuilds
+affected page snapshots without touching unrelated page-owned draft sections.
 
 The publish response contains:
 

@@ -236,9 +236,9 @@ Section schemas must also support:
 - shared fixed global sections such as footer/menu, where all pages inherit one published global section
   version and a publish event triggers affected page snapshot rebuilds instead of page-local section
   versions;
-- first fixed global section contracts: `site_header` requires `menu: []`, and `site_footer` requires
-  `columns: []` with optional `copyright`; deeper navigation/footer fields should be added through the
-  same section schema instead of custom page-local copies;
+- first fixed global section contracts: `site_header` requires `menu: []`; the visual footer is split
+  into two fixed global sections, `site_footer_practices` and `site_footer`, as refined in
+  `docs/site-footer-section-workbench.md`; the public phone is temporarily frontend-owned;
 - patch-based affected snapshot rebuild for shared fixed footer/menu sections, preserving other current
   published section payloads and refs without reading page drafts or runtime read models;
 - best-effort footer/menu rebuild with diagnostics/retry for failed pages, not all-or-nothing blocking;
@@ -305,7 +305,7 @@ Required top-level groups:
 - `lawyer_pages`: generated public lawyer profile pages for visible lawyers. This is not the lawyers
   reference-data editor; it opens the page/workbench area for individual lawyer public pages.
 - `publications`: publication collections such as articles, cases, and media mentions.
-- `global_sections`: `site_header`, `site_footer`, and `global_price`.
+- `global_sections`: `site_header`, `site_footer_practices`, `site_footer`, and `global_price`.
 - `reference_data`: practices, services, problems, lawyers, regions, offices, and reviews. Competencies
   stay internal/read-model data and are not a regular standalone editor item.
 - `single_pages`: home, about, career, lawyer license, and contacts.
@@ -593,8 +593,9 @@ Implementation note, 2026-05-23: `cms-back` now exposes the first direct global 
 `POST /api/admin/global-sections/{sectionKey}/validate`,
 `POST /api/admin/global-sections/{sectionKey}/publish`,
 `GET /api/admin/global-sections/{sectionKey}/history`, and
-`POST /api/admin/global-sections/{sectionKey}/rollback`. The editable keys are `site_header`,
-`site_footer`, and `global_price`. Global sections are locale-specific, reuse the existing
+`POST /api/admin/global-sections/{sectionKey}/rollback`. The first keys are `site_header`,
+`site_footer_practices` (read-only diagnostics/runtime payload), `site_footer`, and `global_price`.
+Global sections are locale-specific, reuse the existing
 `SectionLifecycleService`, and publish with `rebuild_affected_snapshots` so affected page snapshots can be
 refreshed without touching unrelated page-owned drafts. `global_price` is available as the first shared
 price source for generated practice/service/problem pages. Its detailed editor/API contract is defined in
