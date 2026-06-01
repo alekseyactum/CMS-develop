@@ -233,15 +233,14 @@ Section schemas must also support:
 - page publish/preview must resolve `source + local` price composition before assembling the public
   payload, and page snapshots must record both source and local section refs when both contributed to the
   resolved price block;
-- shared fixed global sections such as footer/menu, where all pages inherit one published global section
-  version and a publish event triggers affected page snapshot rebuilds instead of page-local section
-  versions;
-- first fixed global section contracts: `site_header` requires `menu: []`; the visual footer is split
-  into two fixed global sections, `site_footer_practices` and `site_footer`, as refined in
-  `docs/site-footer-section-workbench.md`; the public phone is temporarily frontend-owned;
-- patch-based affected snapshot rebuild for shared fixed footer/menu sections, preserving other current
-  published section payloads and refs without reading page drafts or runtime read models;
-- best-effort footer/menu rebuild with diagnostics/retry for failed pages, not all-or-nothing blocking;
+- layout-level global data such as header/footer/contact settings, where public frontend reads a separate
+  layout payload instead of receiving those blocks inside every page snapshot;
+- first layout/global contracts: `site_header`, `site_footer_practices`, `site_footer`, and
+  `site_contact_settings`, as refined in `docs/site-layout-and-header-requirements.md` and
+  `docs/site-footer-section-workbench.md`;
+- layout revalidation for header/footer/contact settings, preserving page snapshots and page-owned drafts;
+- best-effort layout rebuild/revalidation diagnostics for failed layout refreshes, not all-or-nothing
+  page publication blocking;
 - footer/menu rollback through a new draft copied from the old published version, followed by current
   publish validation, not by moving the current published pointer back to the old version;
 - automatic affected snapshot rebuild for global price publish when pages use enabled inherit, append, or

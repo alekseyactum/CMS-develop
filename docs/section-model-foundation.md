@@ -316,19 +316,18 @@ snapshots. When footer or menu is published, public pages should move to the new
 snapshot rebuilds, not by creating separate footer/menu versions per page and not by reading live global
 tables at render time.
 
-Footer content is intentionally split by data ownership. `site_footer` should not become a hybrid
-container for all visual footer data. The visual footer is represented by two fixed global sections:
-`site_footer_practices` for the upper practice block and `site_footer` for footer-owned settings. The
-practice block resolves its rendered items from practice reference data instead of storing them directly
-in section version content. The public phone is temporarily frontend-owned and should not be stored in
-backend snapshots or footer sections until a dedicated `site_public_settings`/`site_contacts_settings`
-authoring unit is introduced. The current footer workbench contract is fixed in
-`docs/site-footer-section-workbench.md`.
+Footer content is intentionally split by data ownership. Header/footer/contact data are layout-level
+data and should not be copied into every page snapshot. The visual footer is represented by
+`site_footer_practices` for the upper practice block, `site_footer` for footer-owned settings, and
+`site_contact_settings` for public phone/work time. The practice block resolves rendered items from
+practice reference data instead of storing them directly in section version content. The current layout
+contract is fixed in `docs/site-layout-and-header-requirements.md`; the footer workbench contract is
+fixed in `docs/site-footer-section-workbench.md`.
 
 In the first footer contract, `site_footer_practices` is read-only in CMS and uses practice `menuTitle`
-plus public routes for the active locale. `site_footer` edits only structured work time, social URLs, and
-legal PDF media refs. Legal PDF files are stored through the media contour, while labels, sitemap route,
-navigation, and copyright remain code-owned/read-only.
+plus public routes for the active locale. `site_footer` edits only social URLs and legal PDF media refs.
+Legal PDF files are stored through the media contour, while labels, sitemap route, navigation, contact
+data, and copyright remain code-owned/read-only or `site_contact_settings`-owned.
 
 Saving a draft of a shared fixed global section must not change public pages, current page snapshots, or
 page authoring state. Footer/menu draft changes must not mark dependent pages `draft_stale`; affected

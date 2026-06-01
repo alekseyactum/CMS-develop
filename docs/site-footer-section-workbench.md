@@ -10,7 +10,7 @@ It is assembled from three ownership layers:
 
 - `site_footer_practices`: a read-only global section for the upper footer practice block;
 - `site_footer`: a global CMS section for footer-owned editable settings and legal document refs;
-- frontend-owned temporary contact constants for the public phone.
+- `site_contact_settings`: simple site settings for the public phone and work time.
 
 The frontend may render these pieces as one visual `<Footer />`, but backend data ownership must stay
 separate.
@@ -145,7 +145,6 @@ The first editable `site_footer` content is intentionally narrow.
 
 Editors may edit only:
 
-- work time;
 - social network URLs;
 - legal PDF document media refs for privacy policy and offer contract.
 
@@ -155,10 +154,6 @@ Suggested editable shape:
 type SocialType = 'telegram' | 'youtube' | 'instagram' | 'facebook' | 'whatsapp';
 
 {
-  workTime: {
-    from: string | null;
-    to: string | null;
-  };
   socialUrls: Partial<Record<SocialType, string | null>>;
   legalDocuments: {
     privacyPolicyMediaId: string | null;
@@ -177,10 +172,8 @@ Important:
 - duplicates are impossible by contract because social URLs are keyed by social type;
 - unknown social type from frontend is an error.
 
-`workTime` is semantically common for all locales. The API must not present it as independently
-translatable text. Implementation may mirror the same structured value into locale-specific section
-versions or store it behind a shared footer settings boundary, but the product contract is one shared
-`from/to` time pair.
+`workTime` is not owned by `site_footer`. It is stored in `site_contact_settings` and reused by header,
+footer, contacts, and forms as one shared `from/to` time pair.
 
 Social URLs are also locale-neutral. Legal PDF documents are locale-specific because documents may differ
 by language.
@@ -192,7 +185,7 @@ release:
 
 - practice links, owned by `site_footer_practices`;
 - first-level site navigation links;
-- contact label and public phone, while phone is frontend-owned;
+- contact label, public phone, and work time, which are owned by `site_contact_settings`;
 - legal link labels;
 - sitemap route;
 - copyright format.
@@ -200,40 +193,13 @@ release:
 This keeps the first footer workflow reliable and avoids turning the footer into a free-form HTML/menu
 builder.
 
-## Temporary Phone Decision
+## Contact Settings
 
-The public phone is temporarily frontend-owned.
+The public phone and work time are owned by `site_contact_settings`.
 
-Backend does not store, version, validate, or publish the phone in `site_footer`.
-Backend must not introduce a parallel phone constant while this decision is active.
-
-Reason:
-
-- phone is used in multiple places: header/menu, footer, contacts, forms;
-- a full `site_public_settings` authoring unit would require versioning, dependency tracking, snapshot
-  rebuild policy, preview rules, rollback, and UI;
-- this is too much architecture for the current footer step.
-
-Temporary rule:
-
-```text
-public phone -> single frontend config/constant
-```
-
-Changing the phone requires:
-
-- frontend code/config change;
-- frontend deploy;
-- frontend/CDN cache revalidation where cached HTML can contain the phone.
-
-It does not require backend snapshot rebuild because backend snapshots should not contain the phone while
-this temporary decision is active.
-
-Future migration condition:
-
-If phone/contact data becomes CMS-managed, introduce a dedicated `site_public_settings` or
-`site_contacts_settings` authoring unit with its own draft/published lifecycle and explicit affected
-page rebuild/revalidation policy. Do not silently add phone to unrelated section payloads.
+Backend does not store, version, validate, or publish them in `site_footer`.
+They are simple site settings without draft/publish/snapshot lifecycle and are reused by header, footer,
+contacts, and forms.
 
 ## Site Navigation Links
 
@@ -331,10 +297,6 @@ failures that prevent building the section at all.
 Errors:
 
 - invalid content object;
-- invalid `workTime` shape;
-- only one of `workTime.from` / `workTime.to` is filled;
-- invalid time format, expected `HH:mm`;
-- `workTime.from >= workTime.to`;
 - invalid `socialUrls` shape;
 - unknown social type;
 - social URL has a non-HTTP(S) format;
@@ -344,14 +306,13 @@ Errors:
 
 Warnings:
 
-- both `workTime.from` and `workTime.to` are empty;
 - social URL uses `http://` instead of `https://`;
 - privacy policy PDF is missing;
 - offer contract PDF is missing.
 
 No warning is needed for an empty social URL. Empty URL simply means the social network is hidden.
 
-Phone is not validated by backend while it is frontend-owned.
+Phone and work time are validated by the `site_contact_settings` API, not by `site_footer`.
 
 ## Frontend CMS Behavior
 
@@ -360,7 +321,7 @@ The footer workbench should:
 - load the locale-specific `site_footer_practices` editor for read-only practice preview and diagnostics;
 - load the locale-specific `site_footer` editor for editable lower-footer settings;
 - show read-only preview/info for non-editable footer parts;
-- edit only `workTime`, social URLs, and legal PDF media refs;
+- edit only social URLs and legal PDF media refs;
 - use the media upload/picker flow for legal PDF files;
 - save the full editable `site_footer` draft through the global sections API;
 - use history/rollback/publish from the same global section workflow as other globals.

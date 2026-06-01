@@ -242,11 +242,14 @@ Supported editable section keys now:
 - `site_footer`;
 - `global_price`.
 
-`site_header` is the shared header/menu source. Its current minimal content contract is an object with
-required `menu: []`. Extra header fields can be added later without changing the global-section lifecycle.
+`site_header` is the layout-level header/menu source. Its first editable content contract is
+`{ searchEnabled: boolean, contactButtonEnabled: boolean }`. System navigation, the about dropdown,
+the services mega menu, phone, work time, language links, and mobile layout are read-only/runtime data.
 
-`site_footer` is the shared footer source. Its detailed first-release workbench contract is fixed in
-`docs/site-footer-section-workbench.md`.
+`site_footer` and `site_footer_practices` are layout-level footer sources. They are exposed through the
+global section workbench for authoring/diagnostics and through public layout payload for frontend
+rendering. Their detailed first-release contract is fixed in `docs/site-footer-section-workbench.md` and
+`docs/site-layout-and-header-requirements.md`.
 
 For the footer screen:
 
@@ -254,16 +257,15 @@ For the footer screen:
   powered global section `site_footer_practices`, built from practice reference data;
 - `site_footer_practices` shows all active practices that have a locale `menuTitle` and public route;
   missing `menuTitle` or route omits the practice and adds a warning;
-- `site_footer` edits only footer-owned settings for now: structured `workTime`, social URLs, and legal
-  PDF media refs;
+- `site_footer` edits only footer-owned settings for now: social URLs and legal PDF media refs;
+- public phone and work time are read from `site_contact_settings`, not from `site_footer`;
 - allowed social network types and order are code-owned; the editor changes only URLs, and an empty URL
   hides the social network without warning;
 - privacy/offer legal documents are uploaded through the media contour as PDF files up to 5 MB; missing
   document refs are warnings and invalid media refs are errors;
 - first-level navigation links, contact label, legal link labels, sitemap route, and copyright are shown
   as read-only/code-owned;
-- the public phone is temporarily frontend-owned and must come from one frontend config/constant, not from
-  `site_footer` API responses.
+- `site_contact_settings` is a simple settings API, not a draft/publish section.
 
 `global_price` uses the same global section lifecycle, but its detailed workbench contract is fixed in
 `docs/global-price-section-workbench.md`.
@@ -320,7 +322,6 @@ Save draft:
 ```json
 {
   "content": {
-    "workTime": { "from": "08:00", "to": "22:00" },
     "socialUrls": {
       "telegram": "https://t.me/example",
       "youtube": null,
