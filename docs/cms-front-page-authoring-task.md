@@ -282,6 +282,19 @@ Supported editable section keys now:
 the services mega menu, phone, work time, language policy, and mobile layout are read-only/runtime data.
 It is not part of any page authoring section list.
 
+Preferred startup endpoint for the dedicated header screen:
+
+```text
+GET /api/admin/site-layout/header-workbench?locale=uk&historyLimit=20&historyOffset=0
+```
+
+Use it when the user clicks `site_header` in the CMS sidebar. It returns the
+normal `site_header` editor response, the current admin layout preview for the
+header, contact settings, version history, grouped diagnostics, and exact
+action endpoints. This lets the screen render the editable flags, read-only
+navigation/services menu, phone/work-time panel, and history list without
+manually stitching several initial requests together.
+
 When opening `GET /api/admin/global-sections/site_header/editor?locale=uk`, use:
 
 - `editableContent` for the form values that may be saved back to
@@ -294,6 +307,18 @@ When opening `GET /api/admin/global-sections/site_header/editor?locale=uk`, use:
 
 The header editor should not save phone/work-time values through the global section draft endpoint.
 Those values belong to `site_contact_settings`.
+
+In the workbench response:
+
+- save only the object referenced by `workbench.editableSource`, currently
+  `section.editableContent`;
+- display navigation from `layoutPreview.header.navigation`;
+- display services mega menu from `layoutPreview.header.servicesMenu.items`;
+- display phone/work time from `contactSettings.settings`;
+- show screen indicators from `diagnostics.header`, `diagnostics.navigation`,
+  `diagnostics.servicesMenu`, and `diagnostics.contactSettings`;
+- use `endpoints.*` for save/validate/publish/history/rollback/contact settings
+  rather than hardcoding URLs in the component.
 
 For display, an empty/legacy `site_header` may be shown with backend defaults
 `searchEnabled: true` and `contactButtonEnabled: true`. This does not weaken saving:

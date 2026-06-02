@@ -29,6 +29,17 @@ Admin preview returns the same layout shape, but uses the latest global section
 editor state where a draft exists. It is intended for the CMS interface, not for
 public rendering.
 
+For the CMS header editor there is also a screen-level workbench endpoint:
+
+```http
+GET /api/admin/site-layout/header-workbench?locale=uk&historyLimit=20&historyOffset=0
+```
+
+It is a convenience startup payload for the header screen. It does not replace
+the draft/publish/history endpoints; it groups the current `site_header` editor
+state, layout preview, relevant diagnostics, contact settings, history, and
+action endpoints in one response.
+
 Page snapshots remain the source of truth for page-specific content: SEO, title,
 body sections, page price, FAQ, lawyers/reviews/runtime blocks, and other page
 sections.
@@ -166,6 +177,34 @@ Editor/public display may apply backend defaults for missing legacy values
 can still render as a valid default header. Draft saving remains strict: the
 frontend must send both boolean fields explicitly, and invalid/missing saved
 values are rejected with diagnostics.
+
+### Header Workbench API
+
+The CMS frontend should open the header screen with:
+
+```http
+GET /api/admin/site-layout/header-workbench?locale=uk
+```
+
+The response uses `schemaVersion = "cms.header-workbench.v1"` and contains:
+
+- `section`: the normal `site_header` editor response;
+- `layoutPreview.header`: rendered preview data for navigation, services menu,
+  language policy, contact button, and enabled header flags;
+- `contactSettings`: current phone/work-time settings and their diagnostics;
+- `history`: `site_header` version history for the right-side version list;
+- `workbench`: frontend hints that say which response parts are editable and
+  which are read-only;
+- `endpoints`: exact API endpoints for save draft, validate, publish, rollback,
+  draft-from-version, layout preview, and contact settings;
+- `diagnostics`: header, navigation, services menu, and contact settings
+  diagnostics grouped for screen-level indicators.
+
+The frontend must treat `workbench.editableSource = "section.editableContent"`
+as the only payload that can be sent to the header draft endpoint. The services
+menu, system navigation, language policy, phone, and work time are displayed
+from read-only/runtime sources and are edited through their own flows if
+applicable.
 
 ### Top-Level Navigation
 
