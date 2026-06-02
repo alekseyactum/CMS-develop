@@ -335,6 +335,7 @@ lightweight published/total counters where meaningful.
 Practice/service/problem publication coverage must be split into:
 
 - `own`: whether the base non-regional page itself is published;
+- `regional`: published/total regional variants of the same node only;
 - `rollup`: published/total regional variants of the same node plus child service/problem pages below this
   node, including their regional variants where relevant.
 
@@ -343,6 +344,10 @@ and lower service-tree children into one number. The object tree itself remains 
 practice -> service -> problem. Regional pages are shown inside the selected workbench screen, not as
 separate sidebar nodes. For backward compatibility the backend may also expose `descendants` with the same
 rollup values, but `rollup` is the canonical field for new UI code.
+
+When the CMS sidebar needs a pure regional coverage counter, it must use `publication.regional`, not
+`publication.rollup`. This matters because `rollup` is intentionally broader: it includes regional variants
+and lower practice/service/problem descendants.
 
 Global section indicators must expose only real publish impact. For `global_price`, affected pages are
 pages whose current public snapshot would change because they inherit or append from the global source.
@@ -378,6 +383,11 @@ authoring payloads.
 
 In the `practices` group, the complete tree is nested under the `practice_collection_page` root item. The
 collection and practice nodes are not separate sibling roots.
+
+Reference-data list/detail endpoints remain dictionary endpoints, not the source of the CMS sidebar. They
+may still expose nested lightweight relation summaries for convenience. For example, a practice can return
+`children.services[]`, and those service summaries can return `children.problems[]`. This helps dictionary
+screens show dependencies, but navigation should still be built from `/api/admin/navigation`.
 
 Reference list endpoints such as `/api/admin/reference/practices`, `/api/admin/reference/services`, and
 `/api/admin/reference/problems` are flat dictionary management APIs. They must not be used as the source

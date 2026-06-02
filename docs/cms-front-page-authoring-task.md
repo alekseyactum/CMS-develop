@@ -165,6 +165,12 @@ Example menu item:
         "publishedCount": 1,
         "totalCount": 1
       },
+      "regional": {
+        "publishedCount": 15,
+        "totalCount": 17,
+        "notCreatedCount": 2,
+        "notPublishedCount": 0
+      },
       "rollup": {
         "publishedCount": 200,
         "totalCount": 1329
@@ -189,11 +195,24 @@ the frontend can show a tooltip or details, but the primary sidebar signal shoul
 base, regional, and descendant pages are already published from the expected total:
 
 - `publication.own.published`: whether the base non-regional page for this node is currently published;
+- `publication.regional.publishedCount/totalCount`: regional variants only for the same node. Use this
+  for the "regional inheritors published from all enabled regions" column;
 - `publication.rollup.publishedCount/totalCount`: regional variants for the same node plus child
   service/problem pages below this node, including their regional variants where they exist.
 
 For a `problem_page` node, `rollup` usually means regional variants only, because there are no deeper
 practice/service/problem descendants.
+
+Sidebar formulas for the statistical addon:
+
+- errors: `diagnostics.own.errors [diagnostics.rollup.errors]`;
+- warnings: `diagnostics.own.warnings [diagnostics.rollup.warnings]`;
+- stale marker: `attention.own.staleCount [attention.rollup.staleCount]`;
+- published count: `publication.own.publishedCount/publication.rollup.publishedCount`;
+- published ratio: if `publication.rollup.totalCount > 0`, show
+  `publication.rollup.publishedCount/publication.rollup.totalCount`;
+- regional ratio for practice/service/problem nodes: if `publication.regional.totalCount > 0`, show
+  `publication.regional.publishedCount/publication.regional.totalCount`.
 
 Group-specific indicator rules:
 
@@ -231,6 +250,11 @@ remains a lower-level helper for the service tree without the full CMS sidebar g
 Do not build the practice/service/problem sidebar from `/api/admin/reference/problems` or other reference
 list endpoints. Reference endpoints are flat dictionary screens. They are useful after the editor opens
 the ERP-data area, not as the source of the CMS navigation hierarchy.
+
+Reference-data detail/list responses may expose nested lightweight summaries for dictionary editing. For
+example, a practice record can include `children.services[]`, and a service summary inside that list can
+include `children.problems[]`. This is a convenience for reference screens only. The main CMS sidebar
+still uses `/api/admin/navigation`.
 
 ## Global Sections
 
