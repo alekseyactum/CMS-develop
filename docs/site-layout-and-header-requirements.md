@@ -40,6 +40,18 @@ the draft/publish/history endpoints; it groups the current `site_header` editor
 state, layout preview, relevant diagnostics, contact settings, history, and
 action endpoints in one response.
 
+For the CMS footer editor there is a matching screen-level workbench endpoint:
+
+```http
+GET /api/admin/site-layout/footer-workbench?locale=uk&historyLimit=20&historyOffset=0
+```
+
+It is a convenience startup payload for the footer screen. It does not replace
+the global section draft/publish/history endpoints; it groups the editable
+`site_footer` editor state, the read-only `site_footer_practices` diagnostics
+state, layout preview footer payload, contact settings, legal document media
+policy, footer history, and action endpoints in one response.
+
 Page snapshots remain the source of truth for page-specific content: SEO, title,
 body sections, page price, FAQ, lawyers/reviews/runtime blocks, and other page
 sections.
@@ -334,6 +346,37 @@ Its editor `readonlyContent` exposes:
   }
 }
 ```
+
+### Footer Workbench API
+
+The CMS frontend should open the dedicated footer screen with:
+
+```http
+GET /api/admin/site-layout/footer-workbench?locale=uk&historyLimit=20&historyOffset=0
+```
+
+The response uses `schemaVersion = "cms.footer-workbench.v1"` and contains:
+
+- `footerSection`: the normal editable `site_footer` editor response;
+- `footerPracticesSection`: the read-only `site_footer_practices` editor response;
+- `layoutPreview.footer`: rendered footer preview data using latest available
+  draft/editor state;
+- `contactSettings`: current public phone/work-time settings;
+- `mediaPolicy`: legal PDF constraints and media endpoints from the footer registry;
+- `history`: `site_footer` version history for the right-side version list;
+- `workbench`: frontend hints that identify editable and read-only response parts;
+- `endpoints`: exact API endpoints for footer save draft, validate, publish,
+  rollback, draft-from-version, footer practices view, layout preview, contact
+  settings, media list, and media upload;
+- `diagnostics`: footer, footer practices, and contact settings diagnostics
+  grouped for screen-level indicators.
+
+The frontend must treat `workbench.editableSource =
+"footerSection.editableContent"` as the only object that can be sent to the
+`site_footer` draft endpoint. Footer practices, footer navigation, phone,
+work time, labels, copyright, sitemap route, and media policy are displayed
+from read-only/runtime/settings sources and must not be posted as footer draft
+content.
 
 ## `site_footer`
 

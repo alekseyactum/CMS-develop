@@ -331,6 +331,8 @@ rendering. Their detailed first-release contract is fixed in `docs/site-footer-s
 
 For the footer screen:
 
+- prefer the screen-level startup endpoint
+  `GET /api/admin/site-layout/footer-workbench?locale=uk&historyLimit=20&historyOffset=0`;
 - practices in the footer are not edited through `site_footer`; they are a separate read-only/runtime
   powered global section `site_footer_practices`, built from practice reference data;
 - `site_footer_practices` shows all active practices that have a locale `menuTitle` and public route;
@@ -344,6 +346,27 @@ For the footer screen:
 - first-level navigation links, contact label, legal link labels, sitemap route, and copyright are shown
   as read-only/code-owned;
 - `site_contact_settings` is a simple settings API, not a draft/publish section.
+
+The footer workbench response contains the initial data for the whole screen:
+
+- `footerSection`: render editable form values from `footerSection.editableContent`;
+- `footerPracticesSection`: render the read-only upper practice list preview from
+  `footerPracticesSection.workingContent`;
+- `layoutPreview.footer`: render/check the combined footer payload that the public layout would use in
+  admin preview mode;
+- `contactSettings.settings`: show phone/work-time as read-only footer context and link to the separate
+  contact settings editor when needed;
+- `mediaPolicy`: use PDF mime/size rules and media endpoints for privacy policy / offer contract picker;
+- `history`: render the footer version/history panel;
+- `diagnostics.footer`, `diagnostics.footerPractices`, and `diagnostics.contactSettings`: render screen
+  badges and warnings;
+- `endpoints.*`: use backend-provided URLs for save, validate, publish, rollback, history, media, layout
+  preview, and contact settings actions.
+
+When saving the footer draft from the workbench screen, send only the object referenced by
+`workbench.editableSource`, currently `footerSection.editableContent`, to
+`endpoints.footerSaveDraft.path`. Do not send `footerPracticesSection`, `layoutPreview`,
+`contactSettings`, or `mediaPolicy` as footer content.
 
 When opening `GET /api/admin/global-sections/site_footer_practices/editor?locale=uk`, use:
 

@@ -317,10 +317,33 @@ Phone and work time are validated by the `site_contact_settings` API, not by `si
 
 ## Frontend CMS Behavior
 
+The dedicated footer screen should start from one aggregated endpoint:
+
+```http
+GET /api/admin/site-layout/footer-workbench?locale=uk&historyLimit=20&historyOffset=0
+```
+
+This endpoint is a screen convenience API. It does not replace the normal global
+section lifecycle endpoints. It returns:
+
+- `footerSection`: editable `site_footer` editor state;
+- `footerPracticesSection`: read-only `site_footer_practices` preview and diagnostics;
+- `layoutPreview.footer`: combined admin-preview footer payload;
+- `contactSettings`: phone/work-time settings used by the footer;
+- `mediaPolicy`: legal PDF constraints and media endpoints;
+- `history`: `site_footer` version rows;
+- `workbench`: frontend hints for editable/read-only response sources;
+- `endpoints`: exact action endpoints for the screen.
+
+The only editable footer draft payload is `footerSection.editableContent`.
+Everything else in the workbench response is read-only context, a related
+settings flow, or an action endpoint.
+
 The footer workbench should:
 
-- load the locale-specific `site_footer_practices` editor for read-only practice preview and diagnostics;
-- load the locale-specific `site_footer` editor for editable lower-footer settings;
+- use the aggregated workbench endpoint for the first screen load;
+- show the locale-specific `site_footer_practices` state for read-only practice preview and diagnostics;
+- show the locale-specific `site_footer` state for editable lower-footer settings;
 - show read-only preview/info for non-editable footer parts;
 - edit only social URLs and legal PDF media refs;
 - use the media upload/picker flow for legal PDF files;
