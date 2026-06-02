@@ -34,10 +34,11 @@ Both sections are:
 - `global_owned`;
 - independent;
 - fixed at page end;
-- inherited directly by pages;
 - not page-owned;
 - not overridden per page;
-- published through affected snapshot rebuild.
+- layout-level payload sources;
+- not copied into page snapshots;
+- published without affected page snapshot rebuild.
 
 The frontend may render them as one visual footer, but the backend must keep them as separate section
 slots and separate section histories.
@@ -49,8 +50,9 @@ Use the normal global section rules unless this document explicitly says otherwi
 - errors block draft save and publish;
 - warnings do not block draft save or publish, but must be visible in diagnostics, history, and global
   menu indicators;
-- draft changes do not change public snapshots;
-- publish creates/reuses a published section version and rebuilds affected page snapshots;
+- draft changes do not change the public layout payload;
+- publish creates/reuses a published section version and affects the public layout payload;
+- publish does not rebuild page snapshots;
 - rollback creates a new draft copied from an old published version.
 
 ## `site_footer_practices`
@@ -114,10 +116,9 @@ Rules:
 
 Open implementation note:
 
-When practice reference data changes, affected published pages that include `site_footer_practices` may
-need snapshot rebuild/revalidation even if the `site_footer_practices` version itself did not change.
-The first implementation may start with publish-driven rebuild for the section, but reference-data ->
-footer-practice snapshot invalidation must be handled before release-grade use.
+When practice reference data changes, `site_footer_practices` layout diagnostics and public layout cache
+may need revalidation. This must not be treated as a page snapshot rebuild because footer practices are
+served from the layout payload, not from page payloads.
 
 ## `site_footer`
 
@@ -129,7 +130,7 @@ It uses the normal global section lifecycle:
 - history;
 - validation;
 - rollback by creating a new draft from an old version;
-- publish with affected snapshot rebuild.
+- publish into the shared layout payload.
 
 The footer section is a shared fixed global section:
 
@@ -137,7 +138,7 @@ The footer section is a shared fixed global section:
 - not page-owned;
 - not overridden per page;
 - ordinary drafts do not make page editors stale;
-- publishing rebuilds affected public snapshots.
+- publishing changes the layout payload and does not rebuild page snapshots.
 
 ## Editable Fields
 
@@ -255,7 +256,7 @@ Rules:
 - max PDF size: 5 MB;
 - missing privacy/offer file is a warning and the link is omitted from public payload;
 - invalid mime/size is an error at upload/save;
-- a media file used by a published footer version or public snapshot cannot be deleted;
+- a media file used by a published footer version/layout payload cannot be deleted;
 - rollback of `site_footer` restores the old media ids, so old published footer versions keep their
   original documents.
 

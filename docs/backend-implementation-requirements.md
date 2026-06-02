@@ -258,10 +258,10 @@ Section schemas must also support:
 - page-owned parent section publish must not automatically publish inherited child/regional pages;
 - inherited child/regional pages should expose unapplied parent published changes and be updated through
   an explicit CMS action such as `Republish regional pages`;
-- schema-defined inherit/override/append restrictions, so protected sections such as footer can remain
-  inherit-only without a separate first-release parent/source lock policy;
+- schema-defined inherit/override/append restrictions, so source-backed page sections can remain
+  inherit-only where needed without a separate first-release parent/source lock policy;
 - dependent draft policy, so price-like inherited/appended sections can require `draft_stale` review while
-  footer/menu-like shared globals do not require page-by-page draft stale review;
+  layout globals such as header/footer do not require page-by-page draft stale review;
 - dependency metadata or equivalent diagnostics that show when inherited drafts require revalidation;
 - layout placement policy, distinguishing fixed sections from editor-movable sections;
 - layout slots or zones, including article/case pages where editor-added sections are allowed only between

@@ -288,6 +288,30 @@ For the footer screen:
   as read-only/code-owned;
 - `site_contact_settings` is a simple settings API, not a draft/publish section.
 
+When opening `GET /api/admin/global-sections/site_footer_practices/editor?locale=uk`, use:
+
+- `workingContent.title` and `workingContent.items` for the read-only footer practice preview;
+- `diagnostics` for omitted practices, missing `menuTitle`, or missing route/slug warnings;
+- `readonlyContent.practiceSource` to show where the list comes from;
+- `readonlyContent.layoutPreview.endpoint` to refresh the full layout preview.
+
+The frontend must not send draft/save/publish actions for `site_footer_practices`; its `actions.canSaveDraft`
+is false.
+
+When opening `GET /api/admin/global-sections/site_footer/editor?locale=uk`, use:
+
+- `editableContent.socialUrls` for social links;
+- `editableContent.legalDocuments.privacyPolicyMediaId`;
+- `editableContent.legalDocuments.offerContractMediaId`;
+- `readonlyContent.legalDocumentsPolicy` for the legal PDF media picker/upload constraints;
+- `readonlyContent.contactSettings.endpoint` and `readonlyContent.contactSettings.target` to open the
+  separate contact settings editor when the user wants to change phone/work-time;
+- `readonlyContent.layoutPreview.endpoint` to refresh the full admin layout preview after draft changes.
+
+The footer editor should save only the `site_footer` editable content through
+`POST /api/admin/global-sections/site_footer/draft?locale=uk`. Phone/work-time values belong to
+`site_contact_settings`, and footer practices belong to `site_footer_practices`.
+
 `global_price` uses the same global section lifecycle, but its detailed workbench contract is fixed in
 `docs/global-price-section-workbench.md`.
 

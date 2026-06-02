@@ -138,11 +138,16 @@ All three page types are localized for `uk`, `ru`, and `en`, but they are not re
 iteration. Ukrainian routes have no locale prefix; `ru` and `en` use locale prefixes through the routing
 module.
 
-Shared required slots for all three schemas:
+Shared layout data for all three schemas is loaded outside the page schema:
 
-- `site_header`: global-owned, independent, inherit-only, fixed at the start of the page;
-- `seo`: page-owned metadata section, published with the page;
-- `site_footer`: global-owned, independent, inherit-only, fixed at the end of the page.
+- `site_header`: global-owned layout section, read through the layout payload;
+- `site_footer_practices`: global-owned layout section, read through the layout payload;
+- `site_footer`: global-owned layout section, read through the layout payload;
+- `site_contact_settings`: non-versioned settings, read through the layout payload.
+
+Shared required page-owned slots for all three schemas:
+
+- `seo`: page-owned metadata section, published with the page.
 
 Page-specific content/runtime slots:
 
@@ -309,12 +314,11 @@ Shared fixed global sections, such as footer and main navigation/menu, should no
 - inherit-only composition;
 - no page-local section versions;
 - no page-level draft stale review for ordinary global draft changes;
-- affected page snapshot rebuild after a new global version is published.
+- layout payload/cache revalidation after a new global version is published.
 
-All pages for the same locale may reference the same published footer/menu section version in their
-snapshots. When footer or menu is published, public pages should move to the new version through affected
-snapshot rebuilds, not by creating separate footer/menu versions per page and not by reading live global
-tables at render time.
+Header and footer are no longer copied into page snapshots in the first release model. The public
+frontend reads them through the separate layout payload. When footer or menu is published, the layout
+payload and layout cache/revalidation are affected, not page snapshots.
 
 Footer content is intentionally split by data ownership. Header/footer/contact data are layout-level
 data and should not be copied into every page snapshot. The visual footer is represented by
@@ -330,42 +334,17 @@ Legal PDF files are stored through the media contour, while labels, sitemap rout
 data, and copyright remain code-owned/read-only or `site_contact_settings`-owned.
 
 Saving a draft of a shared fixed global section must not change public pages, current page snapshots, or
-page authoring state. Footer/menu draft changes must not mark dependent pages `draft_stale`; affected
-pages can be calculated for diagnostics or preview, but ordinary page editors should not see thousands of
-pages as dirty just because global navigation has an unpublished draft.
+page authoring state. Footer/menu draft changes must not mark dependent pages `draft_stale`; ordinary page
+editors should not see thousands of pages as dirty just because global navigation has an unpublished draft.
 
-Publishing shared fixed global sections uses a patch-based snapshot rebuild, not full recomposition from
-authoring state:
-
-```text
-current public page snapshot + new footer/menu payload/ref -> new public page snapshot
-```
-
-The rebuild must preserve all other section refs and payloads from the current public snapshot. Draft
-versions of page-owned sections must not be read or included. Runtime/read-model sections should not make
-footer/menu patch rebuild fail because the page is not rebuilt from scratch.
-
-Footer/menu rebuild policy is best-effort:
-
-- the new footer/menu version may become the current published section version after section validation
-  passes;
-- affected pages that rebuild successfully switch to new page snapshots;
-- affected pages that fail for technical reasons go to diagnostics/retry;
-- one failed page must not block already valid rebuilt pages.
-
-Expected footer/menu patch rebuild failures are technical or state-integrity failures, for example:
-
-- missing current page snapshot;
-- missing expected footer/menu ref in current snapshot;
-- missing published section version payload;
-- database/transaction error;
-- concurrent rebuild or publish conflict;
-- timeout.
+Publishing shared layout global sections validates and switches the current published section version. The
+follow-up action is frontend/CDN layout revalidation, not affected page snapshot rebuild. Page snapshots
+remain untouched.
 
 Footer/menu rollback is implemented as a new draft/publish flow, not by moving the current pointer back to
 an old published version. If the current footer is `v3` and the editor chooses to roll back to old `v1`,
 the system creates a new draft `v4` with content copied from `v1`. If `v4` passes current validation, it
-is published and affected snapshots rebuild normally. If it fails validation, `v4` remains the latest
+is published into the layout payload normally. If it fails validation, `v4` remains the latest
 draft with validation diagnostics so an editor can fix it.
 
 To support this audit trail, section versions should record their source where applicable, for example:
@@ -375,8 +354,8 @@ source_section_version_id
 change_reason: manual_edit | rollback
 ```
 
-Price sections must support a shared source for base service prices, but unlike footer/menu they may
-require composition instead of a simple payload replacement when inherited or appended content is used.
+Price sections must support a shared source for base service prices. Unlike header/footer layout globals,
+they may require page snapshot rebuild and composition when inherited or appended content is used.
 
 The intended model:
 
@@ -428,9 +407,9 @@ field-aware:
   policy;
 - overridden fields keep the local value.
 
-Footer and menu are global section examples with a different policy from price: they should normally be
-inherit-only, not overridable by pages, and published as one shared version that triggers affected snapshot
-rebuilds.
+Footer and menu are global section examples with a different policy from price: they are layout-level,
+not page-owned, not overridable by pages, and published as shared layout payload sources without affected
+page snapshot rebuilds.
 
 Global price sections use automatic affected snapshot rebuild for dependent pages that still depend on
 the global source.
@@ -449,7 +428,7 @@ The rebuild is not a full page republish from draft authoring state. It must pre
 snapshot and replace only the resolved price block plus the relevant price section refs. Draft versions of
 other page sections must not be read or included.
 
-Unlike footer/menu, price rebuild may require content recomposition and validation:
+Price rebuild may require content recomposition and validation:
 
 ```text
 new global published price + current published local append/override delta -> resolved price payload
@@ -458,7 +437,7 @@ new global published price + current published local append/override delta -> re
 If a dependent page's recomposed price payload fails validation, the global price version may still remain
 published, valid affected pages may still switch to new snapshots, and the failed page should go to
 diagnostics/retry or manual repair. This is still a best-effort affected snapshot rebuild, but with
-price-specific recomposition rather than footer/menu-style direct replacement.
+price-specific recomposition.
 
 Saving a new global price draft does not change public snapshots. It may mark dependent enabled bindings
 as stale for authoring diagnostics when they use `inherit`, `append`, or field-level inherited/appended
@@ -682,8 +661,8 @@ Two first-release policies are required:
 
 - `mark_stale`: upstream draft changes mark dependent inherit/append bindings as `draft_stale` until the
   page or regional authoring state is reviewed;
-- `none`: upstream draft changes do not create page-level stale review, used for shared fixed globals such
-  as footer/menu where pages always inherit one shared published section.
+- `none`: upstream draft changes do not create page-level stale review, used for layout globals such as
+  header/footer where pages do not own local section versions.
 
 If a parent/source/base draft changes:
 
@@ -859,10 +838,10 @@ Global section activation is policy-driven:
 - large affected sets must be processed in batches with diagnostics;
 - failed page rebuilds must not block already valid rebuilt pages unless policy requires all-or-nothing.
 
-Shared fixed global sections such as footer/menu should default to affected snapshot rebuild without
-page-by-page manual draft review. Shared price-like sections may still require draft-stale review before
-affected page snapshots are considered ready, because local override/append content can depend on changed
-base values.
+Layout global sections such as header/footer should default to layout revalidation without page-by-page
+manual draft review and without page snapshot rebuild. Shared price-like sections may still require
+draft-stale review before affected page snapshots are considered ready, because local override/append
+content can depend on changed base values.
 
 All-or-nothing behavior is also policy-driven. The default should be partial success with diagnostics,
 while high-risk sections may require all-or-nothing or manual approval.

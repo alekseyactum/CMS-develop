@@ -267,6 +267,30 @@ It is powered by practice reference data and public page availability.
 It does not store or version the rendered practice list. Public layout contains
 only valid/published links. Admin diagnostics explain omitted practice links.
 
+Its editor `readonlyContent` exposes:
+
+```ts
+{
+  layoutPreview: {
+    endpoint: "/api/admin/site-layout/preview?locale=uk",
+    usesLatestDrafts: true
+  },
+  publicLayout: {
+    endpoint: "/api/public/layout?locale=uk",
+    usesPublishedVersions: true
+  },
+  practiceSource: {
+    source: "reference_data",
+    resource: "practices",
+    endpoint: "/api/admin/reference/practices",
+    filters: { showOnSite: true },
+    labelField: "translations.{locale}.menuTitle",
+    routeField: "sourceFields.sourceSlug",
+    editable: false
+  }
+}
+```
+
 ## `site_footer`
 
 `site_footer` is a layout-level editable global section for footer-owned
@@ -295,3 +319,37 @@ Editable content:
 
 Footer legal PDF files use media records with `usageType = "legal_document"`.
 Missing legal files are warnings. Invalid media records are errors.
+
+Its editor `readonlyContent` exposes:
+
+```ts
+{
+  layoutPreview: {
+    endpoint: "/api/admin/site-layout/preview?locale=uk",
+    usesLatestDrafts: true
+  },
+  publicLayout: {
+    endpoint: "/api/public/layout?locale=uk",
+    usesPublishedVersions: true
+  },
+  contactSettings: {
+    owner: "site_contact_settings",
+    editable: false,
+    endpoint: "/api/admin/site-settings/contact",
+    target: {
+      kind: "site_settings_editor",
+      settingsKey: "contact"
+    },
+    fields: ["phonePrimary", "phoneDisplay", "workTime"]
+  },
+  legalDocumentsPolicy: {
+    usageType: "legal_document",
+    mediaMetaEndpoint: "/api/admin/media/meta",
+    mediaListEndpoint: "/api/admin/media?usageType=legal_document&lifecycleState=active&uploadState=uploaded",
+    mediaUploadEndpoint: "/api/admin/media/upload",
+    allowedMimeTypes: ["application/pdf"],
+    maxSizeBytes: 5242880,
+    fields: ["privacyPolicyMediaId", "offerContractMediaId"]
+  }
+}
+```
