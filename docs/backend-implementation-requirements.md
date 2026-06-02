@@ -270,9 +270,10 @@ Section schemas must also support:
 The first concrete page schema registry must be code-defined in Nest, not editable database configuration.
 Initial page types include `practice_collection_page`, `practice_page`, `service_page`, `problem_page`,
 `lawyers_page`, `lawyer_page`, and `contacts_page`. Service-tree page types are localized and regional;
-lawyers and contacts are localized but not regional in the first iteration. All page types use required
-global-owned header/footer slots, required page-owned SEO, and explicit runtime/reference slots where
-needed.
+lawyers and contacts are localized but not regional in the first iteration. Page schemas contain
+page-owned content sections, required page-owned SEO, and explicit runtime/reference slots where needed.
+Header, footer, footer practices, and contact settings are layout-level data read through the layout
+payload and must not be copied into every page schema or page snapshot.
 
 This preserves editor flexibility without breaking snapshot-first public rendering, rollback, cache
 revalidation, route diagnostics, SEO validation, or release readiness.
@@ -304,7 +305,9 @@ Required top-level groups:
 - `lawyer_pages`: generated public lawyer profile pages for visible lawyers. This is not the lawyers
   reference-data editor; it opens the page/workbench area for individual lawyer public pages.
 - `publications`: publication collections such as articles, cases, and media mentions.
-- `global_sections`: `site_header`, `site_footer_practices`, `site_footer`, and `global_price`.
+- `global_sections`: the shared layout/global area. It contains versioned global sections
+  `site_header`, `site_footer_practices`, `site_footer`, `global_price`, plus the non-versioned
+  `site_contact_settings` settings item.
 - `reference_data`: practices, services, problems, lawyers, regions, offices, and reviews. Competencies
   stay internal/read-model data and are not a regular standalone editor item.
 - `single_pages`: home, about, career, lawyer license, and contacts.
@@ -343,8 +346,9 @@ rollup values, but `rollup` is the canonical field for new UI code.
 
 Global section indicators must expose only real publish impact. For `global_price`, affected pages are
 pages whose current public snapshot would change because they inherit or append from the global source.
-Fully overridden or disabled price sections should not be counted. For `site_header` and `site_footer`,
-affected pages are pages whose published snapshot includes the shared global slot.
+Fully overridden or disabled price sections should not be counted. For layout-level globals such as
+`site_header`, `site_footer_practices`, and `site_footer`, page snapshot impact should be empty/zero
+because public pages read them through the layout payload, not through page snapshot refs.
 The first implementation returns this as `publishImpact.affectedPages.count` and
 `publishImpact.affectedBindings.count`; it is a menu summary, not a detailed rebuild plan.
 
@@ -361,7 +365,9 @@ Current implementation coverage:
   indicators. This is the source for the CMS service hierarchy in the sidebar;
 - `lawyer_pages` returns generated lawyer profile page coverage based on visible lawyers;
 - `single_pages` returns indicators for currently implemented standalone page types;
-- `global_sections` returns draft/published status plus lightweight publish impact;
+- `global_sections` returns draft/published status for versioned global sections, layout/settings
+  diagnostics for `site_contact_settings`, and lightweight publish impact only where the item can affect
+  page snapshots;
 - `reference_data` returns aggregate diagnostics plus visible/total counts;
 - `users` returns active/total counts.
 
@@ -604,10 +610,11 @@ Implementation note, 2026-05-23: `cms-back` now exposes the first direct global 
 `POST /api/admin/global-sections/{sectionKey}/rollback`. The first keys are `site_header`,
 `site_footer_practices` (read-only diagnostics/runtime payload), `site_footer`, and `global_price`.
 Global sections are locale-specific, reuse the existing
-`SectionLifecycleService`, and publish with `rebuild_affected_snapshots` so affected page snapshots can be
-refreshed without touching unrelated page-owned drafts. `global_price` is available as the first shared
-price source for generated practice/service/problem pages. Its detailed editor/API contract is defined in
-`docs/global-price-section-workbench.md`.
+`SectionLifecycleService`. `site_header`, `site_footer_practices`, and `site_footer` are layout-level
+globals and publish with propagation `none`: they update the current global section version but do not
+rebuild page snapshots. `global_price` is available as the first shared price source for generated
+practice/service/problem pages and publishes with affected page snapshot rebuild. Its detailed editor/API
+contract is defined in `docs/global-price-section-workbench.md`.
 
 Implementation note, 2026-05-27: global-section editor DTOs expose `schema.fields`, and global-section
 publish responses document the lifecycle publish result instead of an opaque `unknown`: affected pages,

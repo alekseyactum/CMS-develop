@@ -44,6 +44,22 @@ Layout payload is the source of truth for:
 Changing layout-level data must not republish all pages. Later the backend will
 trigger frontend/CDN revalidation for layout tags or layout HTML cache.
 
+## Admin Menu Placement
+
+The CMS sidebar should show layout/global items in the `global_sections` group
+("Глобальные" in the UI), but the group is mixed by design:
+
+- `site_header`: versioned global section;
+- `site_footer_practices`: versioned/read-only global diagnostics workbench;
+- `site_footer`: versioned global section;
+- `global_price`: versioned global section and page snapshot source;
+- `site_contact_settings`: non-versioned site settings item.
+
+`site_contact_settings` must use `kind = "site_settings"` and target
+`site_settings_editor`, not `global_section_editor`. It is placed next to
+header/footer because it affects the same public layout, but frontend must not
+show draft/publish/history controls for it.
+
 ## `site_contact_settings`
 
 `site_contact_settings` is not a section.

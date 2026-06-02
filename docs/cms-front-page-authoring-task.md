@@ -76,10 +76,12 @@ The response contains `groups`:
 - `publications`: content-like publication collections, initially articles, cases, and media mentions.
   This group opens publication lists, not operational queues. Queues such as "requires review" can be
   added later as a dashboard, not mixed into the content tree.
-- `global_sections`: shared sections: `site_header`, `site_footer_practices`, `site_footer`, and
-  `global_price`. They are backed by `/api/admin/global-sections`. The global price editor manages the
-  upper shared source; concrete generated pages expose their own page `price` slot when the page is opened
-  in the workbench.
+- `global_sections`: shared layout/global area. It contains versioned global sections
+  `site_header`, `site_footer_practices`, `site_footer`, `global_price`, and the non-versioned settings
+  item `site_contact_settings`. The versioned sections are backed by `/api/admin/global-sections`.
+  `site_contact_settings` is backed by `/api/admin/site-settings/contact`. The global price editor manages
+  the upper shared source; concrete generated pages expose their own page `price` slot when the page is
+  opened in the workbench.
 - `reference_data`: editable CMS reference resources from ERP-owned source objects: practices, services,
   problems, lawyers, regions, offices, reviews. Competencies are intentionally not exposed as a separate
   regular editor menu item.
@@ -195,8 +197,9 @@ Group-specific indicator rules:
   `publishImpact.affectedPages.count` and `publishImpact.affectedBindings.count` count only pages/bindings
   whose public snapshot would actually change after publishing the global section. For `global_price`, count
   pages using inherit/append or field-level inherit/append; do not count full override, fully independent
-  overridden fields, or disabled price sections. For `site_header` and `site_footer`, count pages whose
-  current published snapshot includes the shared global slot.
+  overridden fields, or disabled price sections. For `site_header`, `site_footer_practices`, and
+  `site_footer`, snapshot impact should be zero/empty because they are layout payload sources, not page
+  snapshot section refs.
 - `reference_data`: use only `diagnostics.own.errors/warnings` and `records.visibleCount/totalCount`.
   Do not add a separate `attention` layer for dictionaries; the frontend can treat non-zero diagnostics as
   the signal.
@@ -248,7 +251,8 @@ Supported editable section keys now:
 
 `site_header` is the layout-level header/menu source. Its first editable content contract is
 `{ searchEnabled: boolean, contactButtonEnabled: boolean }`. System navigation, the about dropdown,
-the services mega menu, phone, work time, language links, and mobile layout are read-only/runtime data.
+the services mega menu, phone, work time, language policy, and mobile layout are read-only/runtime data.
+It is not part of any page authoring section list.
 
 `site_footer` and `site_footer_practices` are layout-level footer sources. They are exposed through the
 global section workbench for authoring/diagnostics and through public layout payload for frontend
@@ -347,21 +351,27 @@ Validate and publish may omit `sectionVersionId`; backend then uses the latest d
 {}
 ```
 
-Publishing `site_header`, `site_footer_practices`, `site_footer`, or `global_price` uses
-`rebuild_affected_snapshots`: backend creates the new published section version and plans/rebuilds
-affected page snapshots without touching unrelated page-owned draft sections.
+Publishing `site_header`, `site_footer_practices`, or `site_footer` creates the new published global
+section version but does not rebuild page snapshots. These are layout-level sources, so frontend preview
+and public rendering read them through the layout payload.
+
+Publishing `global_price` uses affected page snapshot rebuild: backend creates the new published price
+source and plans/rebuilds affected page snapshots without touching unrelated page-owned draft sections.
 
 The publish response contains:
 
 - `publish.publishedVersionId`: the new published section version;
-- `publish.affectedPages`: pages that depend on this global section;
-- `publish.affectedBindings`: exact page-section bindings affected by the new section version;
+- `publish.affectedPages`: pages that depend on this global section; for layout globals this may be empty;
+- `publish.affectedBindings`: exact page-section bindings affected by the new section version; for layout
+  globals this may be empty;
 - `publish.rebuiltSnapshots`: rebuild result per affected page, with `status = rebuilt | skipped | failed`;
+  for layout globals this may be empty;
 - `editor`: fresh global-section editor state after publish.
 
-For the UI this means: show publish success from `publishedVersionId`, then show rebuild impact from
-`rebuiltSnapshots`. `failed` or `skipped` rebuilds are page/snapshot follow-up work, not a missing section
-publication.
+For the UI this means: show publish success from `publishedVersionId`. Show rebuild impact from
+`rebuiltSnapshots` only when the section actually uses snapshot rebuild, currently `global_price`.
+For `site_header`/`site_footer_practices`/`site_footer`, the important follow-up is layout preview/public
+layout refresh, not page workbench rebuild.
 
 For `global_price`, affected rebuilds apply to pages that directly depend on the global source, normally
 the base non-regional generated pages. Regional pages depend on the base page price layer and should be
