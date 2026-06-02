@@ -254,6 +254,19 @@ Supported editable section keys now:
 the services mega menu, phone, work time, language policy, and mobile layout are read-only/runtime data.
 It is not part of any page authoring section list.
 
+When opening `GET /api/admin/global-sections/site_header/editor?locale=uk`, use:
+
+- `editableContent` for the form values that may be saved back to
+  `POST /api/admin/global-sections/site_header/draft?locale=uk`;
+- `readonlyContent.navigation`, `readonlyContent.aboutDropdown`, and
+  `readonlyContent.servicesMenu` to explain/show the read-only header contract;
+- `readonlyContent.layoutPreview.endpoint` to refresh the full admin layout preview after draft changes;
+- `readonlyContent.contactSettings.endpoint` and `readonlyContent.contactSettings.target` to open the
+  separate contact settings editor for phone/work-time fields.
+
+The header editor should not save phone/work-time values through the global section draft endpoint.
+Those values belong to `site_contact_settings`.
+
 `site_footer` and `site_footer_practices` are layout-level footer sources. They are exposed through the
 global section workbench for authoring/diagnostics and through public layout payload for frontend
 rendering. Their detailed first-release contract is fixed in `docs/site-footer-section-workbench.md` and

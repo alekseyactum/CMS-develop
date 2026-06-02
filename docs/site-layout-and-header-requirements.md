@@ -134,6 +134,32 @@ The global section editor response must expose three clear content layers:
 - `editableContent`: only the saved/draft values that frontend may send back;
 - `workingContent`: merged content for current editor display.
 
+`readonlyContent` also exposes explicit related endpoints so the CMS frontend
+does not have to hardcode hidden relationships:
+
+```ts
+{
+  layoutPreview: {
+    endpoint: "/api/admin/site-layout/preview?locale=uk",
+    usesLatestDrafts: true
+  },
+  publicLayout: {
+    endpoint: "/api/public/layout?locale=uk",
+    usesPublishedVersions: true
+  },
+  contactSettings: {
+    source: "site_contact_settings",
+    editableIn: "site_contact_settings",
+    endpoint: "/api/admin/site-settings/contact",
+    target: {
+      kind: "site_settings_editor",
+      settingsKey: "contact"
+    },
+    fields: ["phonePrimary", "phoneDisplay", "workTime"]
+  }
+}
+```
+
 The frontend must save only `editableContent` fields for `site_header`.
 
 ### Top-Level Navigation
