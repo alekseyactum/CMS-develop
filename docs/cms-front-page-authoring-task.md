@@ -65,11 +65,11 @@ see where there are validation issues, unpublished/stale changes, and incomplete
 
 The response contains `groups`:
 
-- `practices`: the entry item `practice_collection_page` ("Услуги" on the public site) plus the complete
-  non-regional practice -> service -> problem page tree. The collection item opens the page/workbench for
-  the public list of all practices. Practice/service/problem nodes open the matching generated page
-  workbench. Regional page variants are not expanded in the left menu; they are shown inside the selected
-  page workbench.
+- `practices`: one root item `practice_collection_page` ("Услуги" on the public site). This root opens
+  the page/workbench for the public list of all practices and contains the complete non-regional
+  practice -> service -> problem page tree in `children`. Practice/service/problem child nodes open the
+  matching generated page workbench. Regional page variants are not expanded in the left menu; they are
+  shown inside the selected page workbench.
 - `lawyer_pages`: generated public lawyer profile pages. This is separate from the lawyers reference
   dictionary: the menu item opens the page/workbench area for lawyer profile pages that should exist for
   visible lawyers, while `reference_data/lawyers` opens the ERP/CMS lawyer record editor.
@@ -96,6 +96,10 @@ navigation response. This keeps the frontend simple and lets the menu work as a 
 must still keep the payload lightweight: no full section content, no full diagnostics lists, and no page
 version history in the menu response. If the tree becomes too heavy later, the same contract may grow a
 lazy-loading mode without changing the meaning of menu nodes.
+
+For the practices group, the frontend should render `groups[].items[0]` as the services/practice
+collection root and then recursively render its `children`. Do not render the collection and practices as
+separate sibling roots.
 
 The endpoint should return only menu items that can be opened now. Target-state items from the long-term
 requirements may stay documented, but unfinished entries should not be returned as disabled/planned nodes
@@ -501,11 +505,14 @@ summary-only and must not replace the section editor.
 GET /api/admin/page-workbench/service-tree?locale=uk
 ```
 
-The response is nested:
+The response has a collection root plus practice nodes:
 
-- practice node;
-- child service nodes;
-- child problem nodes.
+- `collection`: the `practice_collection_page` root ("services"/"all practices" public page);
+- `collection.children`: practice nodes;
+- practice node children: service nodes;
+- service node children: problem nodes;
+- `nodes`: the top-level practice nodes kept as a backward-compatible shortcut. New sidebar/workbench UI
+  code should prefer `collection`.
 
 Each node contains:
 

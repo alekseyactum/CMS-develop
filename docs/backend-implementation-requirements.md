@@ -298,10 +298,10 @@ editor, global section, reference data, publication, or user-management APIs.
 
 Required top-level groups:
 
-- `practices`: the public services/practice collection entry plus the full non-regional practice ->
-  service -> problem tree. The collection entry opens `practice_collection_page`; tree nodes open the
-  matching generated page workbench. Regional variants are not expanded in the sidebar and belong to the
-  selected workbench screen.
+- `practices`: one public services/practice collection root item. It opens `practice_collection_page` and
+  contains the full non-regional practice -> service -> problem tree in `children`. Practice/service/problem
+  child nodes open the matching generated page workbench. Regional variants are not expanded in the
+  sidebar and belong to the selected workbench screen.
 - `lawyer_pages`: generated public lawyer profile pages for visible lawyers. This is not the lawyers
   reference-data editor; it opens the page/workbench area for individual lawyer public pages.
 - `publications`: publication collections such as articles, cases, and media mentions.
@@ -375,6 +375,9 @@ The navigation response should return the complete practice/service/problem tree
 because current expected volumes are small enough and a full tree keeps the UI simple. The response must
 remain summary-only: no full section content, no full validation history, no snapshot history, and no
 authoring payloads.
+
+In the `practices` group, the complete tree is nested under the `practice_collection_page` root item. The
+collection and practice nodes are not separate sibling roots.
 
 Reference list endpoints such as `/api/admin/reference/practices`, `/api/admin/reference/services`, and
 `/api/admin/reference/problems` are flat dictionary management APIs. They must not be used as the source
