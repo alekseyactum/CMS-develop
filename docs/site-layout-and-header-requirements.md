@@ -161,6 +161,11 @@ does not have to hardcode hidden relationships:
 ```
 
 The frontend must save only `editableContent` fields for `site_header`.
+Editor/public display may apply backend defaults for missing legacy values
+(`searchEnabled: true`, `contactButtonEnabled: true`) so an empty stored header
+can still render as a valid default header. Draft saving remains strict: the
+frontend must send both boolean fields explicitly, and invalid/missing saved
+values are rejected with diagnostics.
 
 ### Top-Level Navigation
 

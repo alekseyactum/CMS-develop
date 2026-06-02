@@ -295,6 +295,10 @@ When opening `GET /api/admin/global-sections/site_header/editor?locale=uk`, use:
 The header editor should not save phone/work-time values through the global section draft endpoint.
 Those values belong to `site_contact_settings`.
 
+For display, an empty/legacy `site_header` may be shown with backend defaults
+`searchEnabled: true` and `contactButtonEnabled: true`. This does not weaken saving:
+when the frontend creates or updates a draft, it must submit both boolean fields explicitly.
+
 `site_footer` and `site_footer_practices` are layout-level footer sources. They are exposed through the
 global section workbench for authoring/diagnostics and through public layout payload for frontend
 rendering. Their detailed first-release contract is fixed in `docs/site-footer-section-workbench.md` and
