@@ -136,31 +136,30 @@ Example menu item:
   "indicators": {
     "diagnostics": {
       "own": { "errors": 0, "warnings": 2 },
-      "descendants": { "errors": 1, "warnings": 42 }
+      "rollup": { "errors": 1, "warnings": 42 }
     },
     "attention": {
       "own": {
         "required": true,
+        "count": 1,
+        "staleCount": 0,
         "reasons": {
           "draftChanges": true,
           "staleDependencies": false
         }
       },
-      "descendants": {
+      "rollup": {
         "count": 14,
-        "byReason": {
-          "draftChanges": 5,
-          "staleDependencies": 9
-        }
+        "staleCount": 9
       }
     },
     "publication": {
-      "own": { "published": true },
-      "regional": {
-        "publishedCount": 15,
-        "totalCount": 17
+      "own": {
+        "published": true,
+        "publishedCount": 1,
+        "totalCount": 1
       },
-      "descendants": {
+      "rollup": {
         "publishedCount": 200,
         "totalCount": 1329
       }
@@ -169,9 +168,11 @@ Example menu item:
 }
 ```
 
-`diagnostics.own` means errors/warnings for the current node itself. `diagnostics.descendants` means
-aggregated issues below this node: child service/problem pages and/or regional descendants that belong to
-the opened workbench context.
+`diagnostics.own` means errors/warnings for the current node itself. `diagnostics.rollup` means the
+bracket value for the sidebar: all regional variants of this node plus child service/problem pages below
+this node, including their regional variants. The backend may also return `descendants` as a compatibility
+alias for this same rollup value, but the frontend should treat `rollup` as the canonical field for the
+`own [rollup]` UI.
 
 For menu display, `attention` intentionally combines draft changes and stale dependencies into one
 editor-facing signal: "this node needs attention". Internally backend must keep draft and stale states
@@ -179,14 +180,13 @@ separate, because they require different publish/review behavior. The menu aggre
 the frontend can show a tooltip or details, but the primary sidebar signal should stay simple.
 
 `publication` is a short coverage counter. For practice/service/problem nodes it should help show how many
-base/regional or descendant pages are already published from the expected total:
+base, regional, and descendant pages are already published from the expected total:
 
 - `publication.own.published`: whether the base non-regional page for this node is currently published;
-- `publication.regional.publishedCount/totalCount`: published regional variants for this same node;
-- `publication.descendants.publishedCount/totalCount`: child service/problem pages below this node,
-  including their regional variants where they exist.
+- `publication.rollup.publishedCount/totalCount`: regional variants for the same node plus child
+  service/problem pages below this node, including their regional variants where they exist.
 
-For a `problem_page` node, `descendants` may be omitted or zero because there are no deeper
+For a `problem_page` node, `rollup` usually means regional variants only, because there are no deeper
 practice/service/problem descendants.
 
 Group-specific indicator rules:
@@ -217,9 +217,13 @@ Current backend implementation note:
   page workbench for detailed actions.
 
 Important: `GET /api/admin/page-workbench/tree` remains the page-type workbench tree, not the whole CMS
-sidebar. For the actual practice/service/problem hierarchy use
-`GET /api/admin/page-workbench/service-tree?locale=uk`. Use `/api/admin/navigation` for the sidebar entry
-points, then use page-workbench/reference/users endpoints for the selected area.
+sidebar. Use `/api/admin/navigation?locale=uk&includeIndicators=true` for the sidebar entry points and the
+practice/service/problem hierarchy with menu indicators. `GET /api/admin/page-workbench/service-tree`
+remains a lower-level helper for the service tree without the full CMS sidebar groups.
+
+Do not build the practice/service/problem sidebar from `/api/admin/reference/problems` or other reference
+list endpoints. Reference endpoints are flat dictionary screens. They are useful after the editor opens
+the ERP-data area, not as the source of the CMS navigation hierarchy.
 
 ## Global Sections
 

@@ -323,18 +323,23 @@ only the navigation tree. The first backend slice does not need server-side menu
 filter locally from the aggregate indicators if needed.
 
 The menu should support a compact statistical addon through aggregate `indicators`. Diagnostics must be
-split into `own` and `descendants`, so editors can distinguish a problem on the current page from problems
-below it. For menu purposes, draft changes and stale inherited dependencies can be combined into an
-editor-facing `attention` aggregate, but the underlying domain model must keep them separate because they
-have different publish/review workflows. Publication coverage should be exposed as lightweight
-published/total counters where meaningful.
+split into `own` and `rollup`, so editors can distinguish a problem on the current page from problems in
+the bracket value below it. For menu purposes, draft changes and stale inherited dependencies can be
+combined into an editor-facing `attention` aggregate, but the underlying domain model must keep them
+separate because they have different publish/review workflows. Publication coverage should be exposed as
+lightweight published/total counters where meaningful.
 
 Practice/service/problem publication coverage must be split into:
 
 - `own`: whether the base non-regional page itself is published;
-- `regional`: published/total regional variants of the same node;
-- `descendants`: published/total child service/problem pages below this node, including regional variants
-  where relevant.
+- `rollup`: published/total regional variants of the same node plus child service/problem pages below this
+  node, including their regional variants where relevant.
+
+The frontend may display this as `own [rollup]`. The bracket value intentionally combines regional variants
+and lower service-tree children into one number. The object tree itself remains non-regional:
+practice -> service -> problem. Regional pages are shown inside the selected workbench screen, not as
+separate sidebar nodes. For backward compatibility the backend may also expose `descendants` with the same
+rollup values, but `rollup` is the canonical field for new UI code.
 
 Global section indicators must expose only real publish impact. For `global_price`, affected pages are
 pages whose current public snapshot would change because they inherit or append from the global source.
@@ -353,7 +358,7 @@ first slice.
 Current implementation coverage:
 
 - `practices` returns the services collection entry and the full practice/service/problem tree with page
-  indicators;
+  indicators. This is the source for the CMS service hierarchy in the sidebar;
 - `lawyer_pages` returns generated lawyer profile page coverage based on visible lawyers;
 - `single_pages` returns indicators for currently implemented standalone page types;
 - `global_sections` returns draft/published status plus lightweight publish impact;
@@ -364,6 +369,10 @@ The navigation response should return the complete practice/service/problem tree
 because current expected volumes are small enough and a full tree keeps the UI simple. The response must
 remain summary-only: no full section content, no full validation history, no snapshot history, and no
 authoring payloads.
+
+Reference list endpoints such as `/api/admin/reference/practices`, `/api/admin/reference/services`, and
+`/api/admin/reference/problems` are flat dictionary management APIs. They must not be used as the source
+for the CMS sidebar hierarchy. Use them only after opening the `reference_data` group.
 
 ## Porting Rules From notstrapitest
 
