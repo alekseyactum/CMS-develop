@@ -19,6 +19,16 @@ GET /api/public/layout?locale=uk
 GET /api/public/pages/by-route?route=/contacts
 ```
 
+CMS admin also has a layout preview endpoint:
+
+```http
+GET /api/admin/site-layout/preview?locale=uk
+```
+
+Admin preview returns the same layout shape, but uses the latest global section
+editor state where a draft exists. It is intended for the CMS interface, not for
+public rendering.
+
 Page snapshots remain the source of truth for page-specific content: SEO, title,
 body sections, page price, FAQ, lawyers/reviews/runtime blocks, and other page
 sections.
@@ -100,6 +110,15 @@ payload:
 - phone and work time from `site_contact_settings`;
 - language policy;
 - mobile actions derived by frontend.
+
+The global section editor response must expose three clear content layers:
+
+- `readonlyContent`: navigation contract, services menu policy, labels, contact
+  settings source, and editable field descriptions;
+- `editableContent`: only the saved/draft values that frontend may send back;
+- `workingContent`: merged content for current editor display.
+
+The frontend must save only `editableContent` fields for `site_header`.
 
 ### Top-Level Navigation
 
@@ -234,4 +253,3 @@ Editable content:
 
 Footer legal PDF files use media records with `usageType = "legal_document"`.
 Missing legal files are warnings. Invalid media records are errors.
-
