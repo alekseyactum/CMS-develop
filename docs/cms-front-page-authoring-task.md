@@ -842,6 +842,8 @@ the user opens a matrix/table for one page type and needs base/regional page row
   regional route;
 - row-level `actions`: whether the UI can open, bootstrap, preview, publish, rollback, or view the
   current snapshot for the page;
+- row-level `endpoints`: backend-owned action URLs for the row. Use them together with `actions`; if an
+  action is not available, the matching endpoint is `null`;
 - row-level `diagnostics`: publish blockers and warnings for the whole page;
 - `cells`: one summary cell per section/runtime slot;
 - `summary`: counters for the whole opened matrix. `summary.errors` and `summary.warnings` are row-level
@@ -921,6 +923,19 @@ Rows contain `sourceRecord`:
 
 If the generated page is not created yet, `row.page = null` and `actions.canBootstrap = true` when
 `row.pagePath` and `row.publicPath` are available and there are no critical route/source diagnostics.
+Use `row.endpoints.bootstrap` for creation. For regional generated rows this endpoint includes a default
+body with `regionId`, so the frontend should send that body instead of reconstructing it locally:
+
+```json
+{
+  "method": "POST",
+  "path": "/api/admin/page-workbench/generated-sources/practice_page/practice-1/bootstrap?locale=uk",
+  "body": {
+    "regionId": "region-kyiv"
+  }
+}
+```
+
 Use row-level route fields for UI display. `sourceRecord.pagePath` / `sourceRecord.publicPath` still
 describe the base source route; regional rows may have a different `row.publicPath`. Prefer backend-owned
 generated bootstrap:
@@ -1023,6 +1038,48 @@ payload as the lower-level authoring endpoint, and `response.workbench.row` is t
 the current matrix row after the action. This removes the need for the frontend to manually call
 `GET /pages/{pageId}/row` after every save, validation, publish, rollback, enable, or disable action.
 
+The matrix also exposes these URLs directly on every editable section cell:
+
+```json
+{
+  "slotKey": "seo",
+  "actions": {
+    "canOpen": true,
+    "canSaveDraft": true,
+    "canPublish": false,
+    "canViewHistory": true
+  },
+  "endpoints": {
+    "editor": {
+      "method": "GET",
+      "path": "/api/admin/page-workbench/pages/page-contacts-uk/sections/seo/editor"
+    },
+    "history": {
+      "method": "GET",
+      "path": "/api/admin/page-workbench/pages/page-contacts-uk/sections/seo/editor/history?limit=20&offset=0"
+    },
+    "saveDraft": {
+      "method": "POST",
+      "path": "/api/admin/page-workbench/pages/page-contacts-uk/sections/seo/editor/draft"
+    },
+    "validateDraft": {
+      "method": "POST",
+      "path": "/api/admin/page-workbench/pages/page-contacts-uk/sections/seo/editor/validate"
+    },
+    "publishDraft": null,
+    "rollback": {
+      "method": "POST",
+      "path": "/api/admin/page-workbench/pages/page-contacts-uk/sections/seo/editor/rollback"
+    }
+  }
+}
+```
+
+Frontend rule: show controls from `actions`, call URLs from `endpoints`. Do not hardcode
+`/pages/{pageId}/sections/{slotKey}/...` in UI components. Runtime cells may have `actions.canOpen=true`
+for local inspection, but they do not have section editor endpoints until a dedicated runtime detail API is
+introduced.
+
 The workbench page action endpoints wrap the same lifecycle logic as `POST /api/admin/pages/{pageId}/...`,
 but they also return `workbench`, a fresh row-refresh payload for the affected page:
 
@@ -1033,6 +1090,31 @@ but they also return `workbench`, a fresh row-refresh payload for the affected p
 Use these endpoints for page buttons on the matrix screen. The request bodies are the same as the existing
 page lifecycle endpoints. After a successful action, replace the row with `response.workbench.row` and keep
 using backend-provided `actions`/`diagnostics`.
+
+The matrix exposes page action URLs directly on `row.endpoints`:
+
+```json
+{
+  "endpoints": {
+    "refresh": {
+      "method": "GET",
+      "path": "/api/admin/page-workbench/pages/page-contacts-uk/row"
+    },
+    "bootstrap": null,
+    "preview": {
+      "method": "POST",
+      "path": "/api/admin/page-workbench/pages/page-contacts-uk/preview"
+    },
+    "publish": null,
+    "rollback": null,
+    "snapshots": {
+      "method": "GET",
+      "path": "/api/admin/page-workbench/pages/page-contacts-uk/snapshots"
+    },
+    "currentSnapshot": null
+  }
+}
+```
 
 For generated service-tree pages, the backend now resolves missing runtime/read-model payloads during
 preview and publish. The frontend does not need to manually send payloads for these slots:

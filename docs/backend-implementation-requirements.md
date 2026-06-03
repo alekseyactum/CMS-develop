@@ -443,6 +443,35 @@ bootstrap/open endpoints.
 (`id`, `resource`, `title`, `sourceSlug`, route fields, parent refs, diagnostics). Frontend screens must
 use this object as the selected sidebar context instead of inferring the selected entity from the first row.
 
+Workbench matrix rows and cells must expose backend-owned action endpoints in addition to boolean action
+flags. The frontend uses `actions` to decide what control can be shown and `endpoints` to know what URL to
+call. UI components must not manually assemble workbench URLs from `pageId`, `slotKey`, `sourceId`, or
+`regionId`.
+
+Row endpoint contract:
+
+- `row.endpoints.refresh`: `GET /api/admin/page-workbench/pages/{pageId}/row`, only for created pages;
+- `row.endpoints.bootstrap`: page creation endpoint for not-created rows; generated regional rows include
+  a default `body.regionId`;
+- `row.endpoints.preview`: page preview endpoint when `actions.canPreview`;
+- `row.endpoints.publish`: page publish endpoint when `actions.canPublish`;
+- `row.endpoints.rollback`: page rollback endpoint when `actions.canRollback`;
+- `row.endpoints.snapshots`: snapshot history endpoint for created pages;
+- `row.endpoints.currentSnapshot`: current snapshot detail endpoint when a current snapshot exists.
+
+Cell endpoint contract:
+
+- `cell.endpoints.editor`: section editor read endpoint when the section can be opened;
+- `cell.endpoints.history`: section history endpoint when history is available;
+- `cell.endpoints.updateState`: section enable/disable endpoint when visibility can change;
+- `cell.endpoints.saveDraft`: section draft save endpoint when draft saving is allowed;
+- `cell.endpoints.validateDraft`: section draft validation endpoint when a draft exists;
+- `cell.endpoints.publishDraft`: independent section publish endpoint when allowed;
+- `cell.endpoints.rollback`: section rollback endpoint when history is available.
+
+Unavailable actions must have `null` endpoints, not guessed or disabled-looking URLs. Runtime cells may stay
+without editor endpoints until a separate runtime detail API is introduced.
+
 Reference-data list/detail endpoints remain dictionary endpoints, not the source of the CMS sidebar. They
 may still expose nested lightweight relation summaries for convenience. For example, a practice can return
 `children.services[]`, and those service summaries can return `children.problems[]`. This helps dictionary

@@ -1489,6 +1489,11 @@ and source-scoped practice/service/problem matrices use `{ "kind": "generated_so
 with the selected source registry record. Frontend screens use `scope.source` for the opened object
 title/context and use `rows` only for base/regional page variants.
 
+Workbench matrix payloads also expose backend-owned `endpoints` on rows and cells. The frontend uses
+`actions` as availability flags and calls the matching `endpoints` entry instead of constructing workbench
+URLs manually. Generated regional bootstrap endpoints may include a default request body with `regionId`.
+Actions that are not currently available must expose `null` endpoints.
+
 The menu may expose lightweight aggregate indicators for the statistical addon:
 
 - own and descendant validation diagnostics;
