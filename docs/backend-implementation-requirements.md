@@ -298,18 +298,21 @@ editor, global section, reference data, publication, or user-management APIs.
 
 Required top-level groups:
 
-- `practices`: one public services/practice collection root item. It opens `practice_collection_page` and
-  contains the full non-regional practice -> service -> problem tree in `children`. Practice/service/problem
-  child nodes open the matching generated page workbench. Regional variants are not expanded in the
-  sidebar and belong to the selected workbench screen.
+- `practices`: a clickable root group for the public services/practice collection page. The group itself
+  opens `practice_collection_page`; its `items` contain only the full non-regional practice -> service ->
+  problem tree. Practice/service/problem child nodes open the matching generated page workbench. The
+  collection page must not be duplicated as a first child item of its own group. Regional variants are not
+  expanded in the sidebar and belong to the selected workbench screen.
 - `lawyer_pages`: generated public lawyer profile pages for visible lawyers. This is not the lawyers
   reference-data editor; it opens the page/workbench area for individual lawyer public pages.
 - `publications`: publication collections such as articles, cases, and media mentions.
 - `global_sections`: the shared layout/global area. It contains versioned global sections
   `site_header`, `site_footer_practices`, `site_footer`, `global_price`, plus the non-versioned
   `site_contact_settings` settings item.
-- `reference_data`: practices, services, problems, lawyers, regions, offices, and reviews. Competencies
-  stay internal/read-model data and are not a regular standalone editor item.
+- `reference_data`: ERP/CMS dictionaries. The service/practice/problem dictionaries are exposed in the
+  sidebar as one `service_hierarchy` item, not as separate top-level `practices`, `services`, and
+  `problems` items. Other regular dictionary items are lawyers, regions, offices, and reviews.
+  Competencies stay internal/read-model data and are not a regular standalone editor item.
 - `single_pages`: home, about, career, lawyer license, and contacts.
 - `users`: CMS users list, filtered by future access permissions. Roles/permissions are not shown as a
   separate item until that workflow is implemented.
@@ -325,29 +328,43 @@ should appear in the API only when they have a real opening target.
 only the navigation tree. The first backend slice does not need server-side menu filters; the frontend may
 filter locally from the aggregate indicators if needed.
 
-The menu should support a compact statistical addon through aggregate `indicators`. Diagnostics must be
-split into `own` and `rollup`, so editors can distinguish a problem on the current page from problems in
-the bracket value below it. For menu purposes, draft changes and stale inherited dependencies can be
-combined into an editor-facing `attention` aggregate, but the underlying domain model must keep them
-separate because they have different publish/review workflows. Publication coverage should be exposed as
-lightweight published/total counters where meaningful.
+The menu should support a compact statistical addon through aggregate `indicators`. For the `practices`
+page tree, indicators must be split into semantic scopes:
+
+- `own`: the base non-regional page of this node. For the `practices` group itself this is the public
+  services/practice collection page; for a practice/service/problem item this is the matching Ukraine-wide
+  generated page.
+- `regional`: regional inheritors of the same page node only.
+- `children`: child practice/service/problem descendants below this node, including their regional
+  inheritors where relevant. If the node has no child page nodes, this scope must be `null`.
+
+For menu purposes, draft changes and stale inherited dependencies can be combined into an editor-facing
+`attention` aggregate, but the underlying domain model must keep them separate because they have different
+publish/review workflows. The navigation API must not expose a separate `requiresReview` axis for the
+sidebar; `attention.own.stale` is calculated as `draftChanges OR staleDependencies`.
+Publication coverage should be exposed as lightweight published/total counters where meaningful.
 
 Practice/service/problem publication coverage must be split into:
 
 - `own`: whether the base non-regional page itself is published;
 - `regional`: published/total regional variants of the same node only;
-- `rollup`: published/total regional variants of the same node plus child service/problem pages below this
-  node, including their regional variants where relevant.
+- `children`: published/total child service/problem pages below this node, including their regional
+  variants where relevant, or `null` when the node has no child page nodes.
 
-The frontend may display this as `own [rollup]`. The bracket value intentionally combines regional variants
-and lower service-tree children into one number. The object tree itself remains non-regional:
-practice -> service -> problem. Regional pages are shown inside the selected workbench screen, not as
-separate sidebar nodes. For backward compatibility the backend may also expose `descendants` with the same
-rollup values, but `rollup` is the canonical field for new UI code.
+The object tree itself remains non-regional: practice -> service -> problem. Regional pages are shown
+inside the selected workbench screen, not as separate sidebar nodes. The menu may display regional and
+children scopes separately or combine them visually in brackets, but the API must keep them separate.
 
-When the CMS sidebar needs a pure regional coverage counter, it must use `publication.regional`, not
-`publication.rollup`. This matters because `rollup` is intentionally broader: it includes regional variants
-and lower practice/service/problem descendants.
+Regional totals must count only expected regional pages. A regional page is expected only when the region is
+visible and the node is applicable for that region through the region competence model. Disabled regions and
+non-applicable region/node pairs must not increase `regional.totalCount` and must not be treated as missing
+pages. Children totals must likewise count only visible/applicable ERP objects and expected regional
+inheritors.
+
+The navigation API should avoid derived fields that the current CMS menu does not use. For the `practices`
+tree it should not return `status`, `availability`, `notCreatedCount`, or `notPublishedCount`. The frontend
+can derive row color/priority from errors, warnings, and attention values. `requiredPermission` stays useful
+for debugging and permission-aware UI, even though the backend filters groups by permissions.
 
 Global section indicators must expose only real publish impact. For `global_price`, affected pages are
 pages whose current public snapshot would change because they inherit or append from the global source.
@@ -359,6 +376,14 @@ The first implementation returns this as `publishImpact.affectedPages.count` and
 
 Reference-data menu indicators should stay simple: dictionary-level validation errors/warnings and
 visible/total record counts. Do not add a separate reference-data `attention` wrapper in the first slice.
+For `service_hierarchy`, indicators use `own` and `children` scopes:
+
+- root `service_hierarchy`: `own` means practices; `children` means services and problems;
+- practice node: `own` means this practice; `children` means its services and their problems;
+- service node: `own` means this service; `children` means its problems.
+
+Reference-data hierarchy indicators do not use `regional`, because this is an ERP/CMS dictionary tree, not a
+page regional-inheritance tree.
 Single pages should expose own diagnostics, own attention, and own publication state, with regional
 coverage only if the page type becomes regional. Lawyer pages should use generated-page indicators driven
 by visible lawyer records, without service-tree descendants. Users should expose active/total counts in the
@@ -366,14 +391,16 @@ first slice.
 
 Current implementation coverage:
 
-- `practices` returns the services collection entry and the full practice/service/problem tree with page
-  indicators. This is the source for the CMS service hierarchy in the sidebar;
+- `practices` returns the clickable services collection group and the full practice/service/problem tree
+  with page indicators. This is the source for the CMS service hierarchy in the sidebar;
 - `lawyer_pages` returns generated lawyer profile page coverage based on visible lawyers;
 - `single_pages` returns indicators for currently implemented standalone page types;
 - `global_sections` returns draft/published status for versioned global sections, layout/settings
   diagnostics for `site_contact_settings`, and lightweight publish impact only where the item can affect
   page snapshots;
-- `reference_data` returns aggregate diagnostics plus visible/total counts;
+- `reference_data` returns aggregate diagnostics plus visible/total counts. It includes one full
+  `service_hierarchy` tree down to service nodes; problem nodes are not shown in the sidebar and are loaded
+  in the central screen after selecting a service;
 - `users` returns active/total counts.
 
 The navigation response should return the complete practice/service/problem tree in the first release slice
@@ -381,8 +408,10 @@ because current expected volumes are small enough and a full tree keeps the UI s
 remain summary-only: no full section content, no full validation history, no snapshot history, and no
 authoring payloads.
 
-In the `practices` group, the complete tree is nested under the `practice_collection_page` root item. The
-collection and practice nodes are not separate sibling roots.
+In the `practices` group, the group itself is the `practice_collection_page` root. The complete
+practice/service/problem tree is returned directly in `group.items`. The collection page and practice nodes
+must not be rendered as separate sibling roots, and the collection page must not appear inside its own
+children collection.
 
 Reference-data list/detail endpoints remain dictionary endpoints, not the source of the CMS sidebar. They
 may still expose nested lightweight relation summaries for convenience. For example, a practice can return
@@ -391,7 +420,24 @@ screens show dependencies, but navigation should still be built from `/api/admin
 
 Reference list endpoints such as `/api/admin/reference/practices`, `/api/admin/reference/services`, and
 `/api/admin/reference/problems` are flat dictionary management APIs. They must not be used as the source
-for the CMS sidebar hierarchy. Use them only after opening the `reference_data` group.
+for the CMS sidebar hierarchy. Use them only after opening the `reference_data` group or after selecting a
+`service_hierarchy` context. The hierarchy click endpoints are:
+
+```text
+GET /api/admin/reference/practices
+GET /api/admin/reference/services?parentPracticeId=<cms-practice-id>
+GET /api/admin/reference/problems?parentServiceId=<cms-service-id>
+```
+
+`parentPracticeId` and `parentServiceId` use CMS record IDs, not ERP external IDs. `externalId` remains in
+the `source` object for display and debugging.
+
+The `service_hierarchy` sidebar tree must be returned eagerly in the first slice: all practices and their
+services are returned in one navigation response. Problems are intentionally not rendered as sidebar nodes.
+Objects with `show_on_site = false` are still shown in the dictionary hierarchy; `flags.showOnSite` tells
+the frontend how to style them. `records.visibleCount` counts `show_on_site = true`, while
+`records.totalCount` counts all records. If a disabled parent has enabled children, keep the children
+visible and report a warning rather than an error.
 
 ## Porting Rules From notstrapitest
 

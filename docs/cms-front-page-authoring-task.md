@@ -65,11 +65,11 @@ see where there are validation issues, unpublished/stale changes, and incomplete
 
 The response contains `groups`:
 
-- `practices`: one root item `practice_collection_page` ("Услуги" on the public site). This root opens
-  the page/workbench for the public list of all practices and contains the complete non-regional
-  practice -> service -> problem page tree in `children`. Practice/service/problem child nodes open the
-  matching generated page workbench. Regional page variants are not expanded in the left menu; they are
-  shown inside the selected page workbench.
+- `practices`: the group itself is the clickable root for `practice_collection_page` ("Услуги"/services on
+  the public site). It opens the page/workbench for the public list of all practices. Its `items` contain
+  only the complete non-regional practice -> service -> problem page tree. Practice/service/problem child
+  nodes open the matching generated page workbench. Regional page variants are not expanded in the left
+  menu; they are shown inside the selected page workbench.
 - `lawyer_pages`: generated public lawyer profile pages. This is separate from the lawyers reference
   dictionary: the menu item opens the page/workbench area for lawyer profile pages that should exist for
   visible lawyers, while `reference_data/lawyers` opens the ERP/CMS lawyer record editor.
@@ -82,9 +82,10 @@ The response contains `groups`:
   `site_contact_settings` is backed by `/api/admin/site-settings/contact`. The global price editor manages
   the upper shared source; concrete generated pages expose their own page `price` slot when the page is
   opened in the workbench.
-- `reference_data`: editable CMS reference resources from ERP-owned source objects: practices, services,
-  problems, lawyers, regions, offices, reviews. Competencies are intentionally not exposed as a separate
-  regular editor menu item.
+- `reference_data`: editable CMS reference resources from ERP-owned source objects. The
+  practice/service/problem dictionaries are represented by one `service_hierarchy` item, not by separate
+  top-level `practices`, `services`, and `problems` items. Other regular items are lawyers, regions,
+  offices, and reviews. Competencies are intentionally not exposed as a separate regular editor menu item.
 - `single_pages`: fixed standalone pages, initially home, about, career, lawyer license, and contacts.
   Each node opens the matching page workbench.
 - `users`: CMS users list. Role and permission management is intentionally not shown as a separate menu
@@ -97,9 +98,10 @@ must still keep the payload lightweight: no full section content, no full diagno
 version history in the menu response. If the tree becomes too heavy later, the same contract may grow a
 lazy-loading mode without changing the meaning of menu nodes.
 
-For the practices group, the frontend should render `groups[].items[0]` as the services/practice
-collection root and then recursively render its `children`. Do not render the collection and practices as
-separate sibling roots.
+For the practices group, the frontend should render the group row itself as the services/practice
+collection root. Use the group's own `route`, `target`, `endpoint`, and `indicators` for click/open and
+stats. Then recursively render `group.items` as the practice/service/problem children. Do not render a
+separate `practice_collection_page` item inside the group.
 
 The endpoint should return only menu items that can be opened now. Target-state items from the long-term
 requirements may stay documented, but unfinished entries should not be returned as disabled/planned nodes
@@ -123,9 +125,13 @@ Each item can include:
 - `endpoint`: backend endpoint that should be used to load the main data for that menu item, when it is
   useful to expose directly;
 - `children`: nested entries, for example the service tree page collections;
-- `availability`: `available` when the backend wants to expose availability explicitly. Planned/unopenable
-  nodes should normally be omitted from the response;
+- `source`: source object identity for generated tree nodes. This is not an indicator and should be read
+  from the item root, not from `indicators`;
 - `indicators`: optional lightweight stats for the menu/statistical addon.
+
+For clickable root groups such as `practices`, the group can include the same `route`, `target`, and
+`endpoint` fields as an item. Planned/unopenable nodes should normally be omitted from the response.
+The `availability` field is intentionally not part of the current navigation contract.
 
 Example menu item:
 
@@ -133,6 +139,11 @@ Example menu item:
 {
   "key": "practice:10",
   "title": "Військовий адвокат",
+  "source": {
+    "resource": "practices",
+    "id": "practice-cms-id",
+    "externalId": "10"
+  },
   "target": {
     "kind": "page_workbench",
     "pageType": "practice_page",
@@ -142,36 +153,29 @@ Example menu item:
   "indicators": {
     "diagnostics": {
       "own": { "errors": 0, "warnings": 2 },
-      "rollup": { "errors": 1, "warnings": 42 }
+      "regional": { "errors": 1, "warnings": 4 },
+      "children": { "errors": 0, "warnings": 38 }
     },
     "attention": {
       "own": {
-        "required": true,
-        "count": 1,
-        "staleCount": 0,
+        "stale": true,
         "reasons": {
           "draftChanges": true,
           "staleDependencies": false
         }
       },
-      "rollup": {
-        "count": 14,
-        "staleCount": 9
-      }
+      "regional": { "staleCount": 3 },
+      "children": { "staleCount": 6 }
     },
     "publication": {
       "own": {
-        "published": true,
-        "publishedCount": 1,
-        "totalCount": 1
+        "published": true
       },
       "regional": {
         "publishedCount": 15,
-        "totalCount": 17,
-        "notCreatedCount": 2,
-        "notPublishedCount": 0
+        "totalCount": 17
       },
-      "rollup": {
+      "children": {
         "publishedCount": 200,
         "totalCount": 1329
       }
@@ -180,16 +184,21 @@ Example menu item:
 }
 ```
 
-`diagnostics.own` means errors/warnings for the current node itself. `diagnostics.rollup` means the
-bracket value for the sidebar: all regional variants of this node plus child service/problem pages below
-this node, including their regional variants. The backend may also return `descendants` as a compatibility
-alias for this same rollup value, but the frontend should treat `rollup` as the canonical field for the
-`own [rollup]` UI.
+`diagnostics.own` means errors/warnings for the base non-regional page of the current node.
+`diagnostics.regional` means regional inheritors of the same node only. `diagnostics.children` means child
+practice/service/problem nodes below this node, including their regional inheritors where relevant. If the
+node has no child page nodes, `diagnostics.children` is `null`.
 
 For menu display, `attention` intentionally combines draft changes and stale dependencies into one
-editor-facing signal: "this node needs attention". Internally backend must keep draft and stale states
-separate, because they require different publish/review behavior. The menu aggregate may expose reasons so
-the frontend can show a tooltip or details, but the primary sidebar signal should stay simple.
+editor-facing signal: "this node needs attention". For the sidebar:
+
+```text
+attention.own.stale = attention.own.reasons.draftChanges OR attention.own.reasons.staleDependencies
+```
+
+Internally backend must keep draft and stale states separate, because they require different publish/review
+behavior. The menu aggregate may expose reasons so the frontend can show a tooltip or details, but the
+primary sidebar signal should stay simple. Regional and children attention scopes use only `staleCount`.
 
 `publication` is a short coverage counter. For practice/service/problem nodes it should help show how many
 base, regional, and descendant pages are already published from the expected total:
@@ -197,22 +206,33 @@ base, regional, and descendant pages are already published from the expected tot
 - `publication.own.published`: whether the base non-regional page for this node is currently published;
 - `publication.regional.publishedCount/totalCount`: regional variants only for the same node. Use this
   for the "regional inheritors published from all enabled regions" column;
-- `publication.rollup.publishedCount/totalCount`: regional variants for the same node plus child
-  service/problem pages below this node, including their regional variants where they exist.
+- `publication.children.publishedCount/totalCount`: child service/problem pages below this node, including
+  their regional variants where they exist. If the node has no child page nodes, `publication.children` is
+  `null`.
 
-For a `problem_page` node, `rollup` usually means regional variants only, because there are no deeper
-practice/service/problem descendants.
+Regional totals must include only expected regional pages: visible regions where the node is applicable by
+the region competence model. Disabled regions and non-applicable region/node pairs do not count as missing
+pages. Children totals must likewise include only visible/applicable ERP objects and expected regional
+inheritors.
 
 Sidebar formulas for the statistical addon:
 
-- errors: `diagnostics.own.errors [diagnostics.rollup.errors]`;
-- warnings: `diagnostics.own.warnings [diagnostics.rollup.warnings]`;
-- stale marker: `attention.own.staleCount [attention.rollup.staleCount]`;
-- published count: `publication.own.publishedCount/publication.rollup.publishedCount`;
-- published ratio: if `publication.rollup.totalCount > 0`, show
-  `publication.rollup.publishedCount/publication.rollup.totalCount`;
+- errors: `diagnostics.own.errors`, with regional/children values shown separately or combined visually in
+  brackets by the frontend;
+- warnings: `diagnostics.own.warnings`, with regional/children values shown separately or combined visually
+  in brackets by the frontend;
+- stale marker: `attention.own.stale`, plus `attention.regional.staleCount` and
+  `attention.children.staleCount` where present;
+- own published state: `publication.own.published`;
+- children published ratio: if `publication.children.totalCount > 0`, show
+  `publication.children.publishedCount/publication.children.totalCount`;
 - regional ratio for practice/service/problem nodes: if `publication.regional.totalCount > 0`, show
   `publication.regional.publishedCount/publication.regional.totalCount`.
+
+The navigation API should not return `status`, `availability`, `publication.*.notCreatedCount`, or
+`publication.*.notPublishedCount` for the practice tree. The frontend derives row color/priority from
+errors, warnings, and attention values. Detailed reasons for missing publication belong to the opened page
+workbench, not to the menu.
 
 Group-specific indicator rules:
 
@@ -223,9 +243,10 @@ Group-specific indicator rules:
   overridden fields, or disabled price sections. For `site_header`, `site_footer_practices`, and
   `site_footer`, snapshot impact should be zero/empty because they are layout payload sources, not page
   snapshot section refs.
-- `reference_data`: use only `diagnostics.own.errors/warnings` and `records.visibleCount/totalCount`.
-  Do not add a separate `attention` layer for dictionaries; the frontend can treat non-zero diagnostics as
-  the signal.
+- `reference_data`: the group itself uses simple aggregate `diagnostics.own.errors/warnings` and
+  `records.visibleCount/totalCount`. The `service_hierarchy` item uses `own/children` scopes for
+  diagnostics and records. Do not add a separate `attention` layer for dictionaries; the frontend can treat
+  non-zero diagnostics as the signal.
 - `single_pages`: use `diagnostics.own`, `attention.own`, and `publication.own`. If a single page later
   becomes regional, include `publication.regional`; otherwise omit it.
 - `lawyer_pages`: use the same generated-page indicator model as other generated collections, but without
@@ -233,6 +254,127 @@ Group-specific indicator rules:
   shown on the public site.
 - `users`: use `users.activeCount/totalCount` for the first implementation. More user states such as
   pending invites, locked users, or missing roles belong to the later user/permissions workflow.
+
+### Reference Data Hierarchy
+
+The `reference_data` group contains one hierarchy item for the practice/service/problem dictionaries:
+
+```json
+{
+  "key": "service_hierarchy",
+  "title": "Иерархия услуг",
+  "kind": "reference_tree_root",
+  "route": "/reference/service-hierarchy",
+  "target": {
+    "kind": "reference_list",
+    "referenceResource": "practices"
+  },
+  "endpoint": {
+    "method": "GET",
+    "path": "/api/admin/reference/practices"
+  },
+  "indicators": {
+    "diagnostics": {
+      "own": { "errors": 2, "warnings": 5 },
+      "children": { "errors": 10, "warnings": 35 }
+    },
+    "records": {
+      "own": { "visibleCount": 8, "totalCount": 10 },
+      "children": { "visibleCount": 112, "totalCount": 170 }
+    }
+  },
+  "children": []
+}
+```
+
+This root opens the central screen with the list of all practices. It also contains the full sidebar tree
+down to service nodes:
+
+```text
+Иерархия услуг -> central list of practices
+  Practice -> central list of this practice services
+    Service -> central list of this service problems
+```
+
+Problems are not rendered as left-menu nodes. They are edited only in the central screen after selecting a
+service. Clicking a menu node changes the central screen context; it does not open object detail directly.
+Object detail/editing belongs to the central list/table UI.
+
+Practice node example:
+
+```json
+{
+  "key": "reference:practice:practice-id",
+  "title": "Військовий адвокат",
+  "kind": "reference_tree_node",
+  "source": {
+    "resource": "practices",
+    "id": "practice-id",
+    "externalId": "10"
+  },
+  "flags": {
+    "showOnSite": false
+  },
+  "target": {
+    "kind": "reference_children_list",
+    "parentResource": "practices",
+    "parentId": "practice-id",
+    "childrenResource": "services"
+  },
+  "endpoint": {
+    "method": "GET",
+    "path": "/api/admin/reference/services?parentPracticeId=practice-id"
+  },
+  "indicators": {
+    "diagnostics": {
+      "own": { "errors": 0, "warnings": 1 },
+      "children": { "errors": 3, "warnings": 12 }
+    },
+    "records": {
+      "own": { "visibleCount": 0, "totalCount": 1 },
+      "children": { "visibleCount": 20, "totalCount": 31 }
+    }
+  },
+  "children": []
+}
+```
+
+Service node example:
+
+```json
+{
+  "key": "reference:service:service-id",
+  "title": "Оскарження рішення ВЛК",
+  "kind": "reference_tree_node",
+  "source": {
+    "resource": "services",
+    "id": "service-id",
+    "externalId": "25"
+  },
+  "flags": {
+    "showOnSite": true
+  },
+  "target": {
+    "kind": "reference_children_list",
+    "parentResource": "services",
+    "parentId": "service-id",
+    "childrenResource": "problems"
+  },
+  "endpoint": {
+    "method": "GET",
+    "path": "/api/admin/reference/problems?parentServiceId=service-id"
+  },
+  "children": []
+}
+```
+
+Use CMS record IDs in `parentPracticeId` and `parentServiceId`, not ERP external IDs. ERP IDs remain in
+`source.externalId` for display/debugging.
+
+The tree intentionally includes objects with `show_on_site = false`. Use `flags.showOnSite` to render them
+as disabled/muted, but keep them expandable. `records.visibleCount` counts only `show_on_site = true`;
+`records.totalCount` counts all records. If a disabled parent has enabled children, backend reports a
+warning and still returns the children.
 
 Current backend implementation note:
 
@@ -248,8 +390,10 @@ practice/service/problem hierarchy with menu indicators. `GET /api/admin/page-wo
 remains a lower-level helper for the service tree without the full CMS sidebar groups.
 
 Do not build the practice/service/problem sidebar from `/api/admin/reference/problems` or other reference
-list endpoints. Reference endpoints are flat dictionary screens. They are useful after the editor opens
-the ERP-data area, not as the source of the CMS navigation hierarchy.
+list endpoints. The sidebar hierarchy itself comes from `/api/admin/navigation`. Reference endpoints are
+used after the editor opens an ERP-data context, including the hierarchy contexts
+`/api/admin/reference/services?parentPracticeId=...` and
+`/api/admin/reference/problems?parentServiceId=...`.
 
 Reference-data detail/list responses may expose nested lightweight summaries for dictionary editing. For
 example, a practice record can include `children.services[]`, and a service summary inside that list can
