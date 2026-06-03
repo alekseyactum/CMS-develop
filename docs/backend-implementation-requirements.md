@@ -425,6 +425,18 @@ practice/service/problem tree is returned directly in `group.items`. The collect
 must not be rendered as separate sibling roots, and the collection page must not appear inside its own
 children collection.
 
+Generated practice/service/problem menu nodes should open a source-scoped page workbench matrix through a
+safe `GET` endpoint:
+
+```text
+GET /api/admin/page-workbench/page-types/<pageType>?locale=<locale>&sourceId=<cms-source-id>
+```
+
+The response shape is the normal `PageWorkbenchMatrixResponse`, but `rows` are limited to the selected
+base non-regional page and its expected regional variants. This endpoint must not create authoring state by
+itself. Creating a missing generated page remains an explicit editor action through the generated-source
+bootstrap/open endpoints.
+
 Reference-data list/detail endpoints remain dictionary endpoints, not the source of the CMS sidebar. They
 may still expose nested lightweight relation summaries for convenience. For example, a practice can return
 `children.services[]`, and those service summaries can return `children.problems[]`. This helps dictionary

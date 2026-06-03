@@ -1475,6 +1475,16 @@ Every menu node should expose a backend-owned `target` telling the frontend what
 page workbench, global section editor, reference list, publication list, or users list. The frontend should
 not infer business routing rules from titles or hardcoded page-type lists.
 
+Generated practice/service/problem nodes should open their main screen through the normal page-type matrix
+API with `sourceId`:
+
+```text
+GET /api/admin/page-workbench/page-types/<pageType>?locale=<locale>&sourceId=<cms-source-id>
+```
+
+This returns only the selected base generated page and its regional variants. The navigation click is
+read-only; creating missing generated page authoring state remains an explicit bootstrap/open action.
+
 The menu may expose lightweight aggregate indicators for the statistical addon:
 
 - own and descendant validation diagnostics;

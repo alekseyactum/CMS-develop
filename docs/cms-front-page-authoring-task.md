@@ -103,6 +103,19 @@ collection root. Use the group's own `route`, `target`, `endpoint`, and `indicat
 stats. Then recursively render `group.items` as the practice/service/problem children. Do not render a
 separate `practice_collection_page` item inside the group.
 
+For practice/service/problem child nodes, `endpoint` now opens a source-scoped matrix:
+
+```text
+GET /api/admin/page-workbench/page-types/practice_page?locale=uk&sourceId=<practice-id>
+GET /api/admin/page-workbench/page-types/service_page?locale=uk&sourceId=<service-id>
+GET /api/admin/page-workbench/page-types/problem_page?locale=uk&sourceId=<problem-id>
+```
+
+Use this endpoint for the main screen after a sidebar click. It returns the usual `PageWorkbenchMatrixResponse`
+with `columns`, `summary`, and `rows`, but only for the selected source: the base Ukraine-wide row plus
+regional rows. The call is read-only and should not create missing pages. If a row has `page: null` and
+`actions.canBootstrap: true`, show a create/bootstrap action instead of silently creating the page on click.
+
 The endpoint should return only menu items that can be opened now. Target-state items from the long-term
 requirements may stay documented, but unfinished entries should not be returned as disabled/planned nodes
 in the runtime menu. This keeps the CMS sidebar a working tool rather than a map of promises.
