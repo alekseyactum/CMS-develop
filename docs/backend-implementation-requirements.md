@@ -296,6 +296,10 @@ GET /api/admin/navigation?locale=uk&includeIndicators=true
 This endpoint is a navigation and prioritization contract. It must not replace page workbench, section
 editor, global section, reference data, publication, or user-management APIs.
 
+The response must include `generatedAt`, an ISO timestamp of when the navigation tree and indicators were
+assembled. Frontend should use this as freshness metadata for the sidebar/statistical addon; it is not a
+cache key and not a domain version.
+
 Required top-level groups:
 
 - `practices`: a clickable root group for the public services/practice collection page. The group itself
@@ -407,6 +411,14 @@ The navigation response should return the complete practice/service/problem tree
 because current expected volumes are small enough and a full tree keeps the UI simple. The response must
 remain summary-only: no full section content, no full validation history, no snapshot history, and no
 authoring payloads.
+
+Navigation indicators are dynamic and may become stale while an editor works. Frontend must refresh
+`/api/admin/navigation?locale=<locale>&includeIndicators=true` after successful actions that can change
+page, section, publication, reference-data, media, global-section, settings, or user indicators. A rare
+background refresh, for example every 60-120 seconds while the CMS tab is active, is acceptable. The
+frontend must not call the indicator endpoint on every render, hover, or field keystroke. Realtime
+push/SSE/WebSocket updates are intentionally out of the first slice. When refreshing, the frontend should
+preserve expanded menu keys, selected node, and scroll position.
 
 In the `practices` group, the group itself is the `practice_collection_page` root. The complete
 practice/service/problem tree is returned directly in `group.items`. The collection page and practice nodes

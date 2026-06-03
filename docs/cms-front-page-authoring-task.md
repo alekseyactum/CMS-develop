@@ -112,9 +112,21 @@ Indicators are optional and should be included only when requested:
 - `GET /api/admin/navigation?locale=uk` may return the tree without stats;
 - `GET /api/admin/navigation?locale=uk&includeIndicators=true` returns the same tree with lightweight
   `indicators`;
+- the response includes `generatedAt`, an ISO timestamp showing when the backend assembled the menu and
+  indicators;
 - the first implementation does not need backend menu filters such as `filter=errors` or
   `filter=attention`; if the frontend needs quick filters, it can derive them locally from the returned
   indicators.
+
+Refresh policy for the sidebar:
+
+- load navigation when the CMS shell opens;
+- reload it after changing locale;
+- reload it after successful save, publish, rollback, reference-data update, localization update,
+  global-section/settings update, media change that affects diagnostics, or user-management change;
+- optional background refresh is allowed every 60-120 seconds while the tab is active;
+- do not reload navigation on every render, hover, or input keystroke;
+- when replacing the tree after refresh, preserve expanded menu keys, selected node, and scroll position.
 
 Each item can include:
 

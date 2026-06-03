@@ -1450,6 +1450,12 @@ as disabled menu nodes. The first release slice does not require backend-side me
 errors", "attention", or "unpublished"; those can be derived locally by the frontend from aggregate
 indicators if needed.
 
+The navigation response includes `generatedAt`, an ISO timestamp for when the tree and indicators were
+assembled. Navigation is dynamic: after successful page/section/reference/global/settings/media/user
+mutations the frontend should request navigation again, and it may also refresh the active tab every
+60-120 seconds. Realtime push is not required for the first slice, and the frontend must not call the heavy
+indicator response on every render or field input.
+
 Required first-level groups:
 
 - `practices`: the public services/practice collection entry plus the complete non-regional practice ->
