@@ -339,6 +339,34 @@ The only editable footer draft payload is `footerSection.editableContent`.
 Everything else in the workbench response is read-only context, a related
 settings flow, or an action endpoint.
 
+The workbench also exposes:
+
+```ts
+workbench.refreshAfterActions = {
+  strategy: 'reload_workbench',
+  method: 'GET',
+  path: '/api/admin/site-layout/footer-workbench?locale=uk&historyLimit=20&historyOffset=0',
+  appliesTo: [
+    'footerSaveDraft',
+    'footerValidateDraft',
+    'footerPublishDraft',
+    'footerRollback',
+    'footerDraftFromVersion',
+    'contactSettings',
+    'mediaUpload'
+  ]
+}
+```
+
+This is the preferred first-release action flow. The frontend does not need
+special wrapper endpoints for footer actions: after an action succeeds or
+returns diagnostics, reload the workbench and replace the full screen state.
+
+The global section validate response for `site_footer` returns both generic
+`validation` and footer-specific `diagnostics`. The visible CMS form should use
+`diagnostics` for field indicators, because it includes social URL checks and
+legal PDF media checks.
+
 The footer workbench should:
 
 - use the aggregated workbench endpoint for the first screen load;

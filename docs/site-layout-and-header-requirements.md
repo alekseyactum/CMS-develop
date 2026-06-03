@@ -378,6 +378,12 @@ work time, labels, copyright, sitemap route, and media policy are displayed
 from read-only/runtime/settings sources and must not be posted as footer draft
 content.
 
+For the first release, footer actions do not need screen-specific wrapper
+endpoints. The workbench response exposes `workbench.refreshAfterActions` with
+the same footer workbench URL. After save draft, validate, publish, rollback,
+draft-from-version, contact settings update, or legal media upload, the CMS
+frontend should reload this workbench and replace the full screen state.
+
 ## `site_footer`
 
 `site_footer` is a layout-level editable global section for footer-owned

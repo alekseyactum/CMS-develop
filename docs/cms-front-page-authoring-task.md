@@ -368,6 +368,25 @@ When saving the footer draft from the workbench screen, send only the object ref
 `endpoints.footerSaveDraft.path`. Do not send `footerPracticesSection`, `layoutPreview`,
 `contactSettings`, or `mediaPolicy` as footer content.
 
+After footer actions, prefer a simple full workbench refresh instead of stitching partial responses:
+
+- call the action endpoint from `endpoints.*`;
+- process the immediate result and show operation diagnostics/messages;
+- then call `workbench.refreshAfterActions.path` and replace the whole screen state with the returned
+  workbench payload.
+
+`workbench.refreshAfterActions.appliesTo` lists the action keys that should trigger this reload:
+`footerSaveDraft`, `footerValidateDraft`, `footerPublishDraft`, `footerRollback`,
+`footerDraftFromVersion`, `contactSettings`, and `mediaUpload`.
+
+`POST /api/admin/global-sections/site_footer/validate?locale=uk` returns both:
+
+- `validation`: blocking publish/save validation result suitable for operation result state;
+- `diagnostics`: footer-specific diagnostics including social URL errors and legal PDF warnings/errors.
+
+Use `diagnostics` for the visible footer form indicators. Missing privacy/offer PDFs are warnings. Invalid
+social URLs or invalid/missing selected media records are errors.
+
 When opening `GET /api/admin/global-sections/site_footer_practices/editor?locale=uk`, use:
 
 - `workingContent.title` and `workingContent.items` for the read-only footer practice preview;
