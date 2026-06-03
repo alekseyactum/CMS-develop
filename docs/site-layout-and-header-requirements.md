@@ -218,6 +218,16 @@ menu, system navigation, language policy, phone, and work time are displayed
 from read-only/runtime sources and are edited through their own flows if
 applicable.
 
+For the first release, header actions do not need screen-specific wrapper
+endpoints. The workbench response exposes `workbench.refreshAfterActions` with
+the same header workbench URL. After save draft, validate, publish, rollback,
+draft-from-version, or contact settings update, the CMS frontend should reload
+this workbench and replace the full screen state.
+
+The global section validate response for `site_header` returns both generic
+`validation` and header-specific `diagnostics`. The visible CMS form should use
+`diagnostics` for field indicators.
+
 ### Top-Level Navigation
 
 Top-level header navigation is system-owned and not editable in the first

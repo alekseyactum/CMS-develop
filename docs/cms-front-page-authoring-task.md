@@ -320,6 +320,21 @@ In the workbench response:
 - use `endpoints.*` for save/validate/publish/history/rollback/contact settings
   rather than hardcoding URLs in the component.
 
+After header actions, use the same simple refresh rule as the footer screen:
+
+- call the action endpoint from `endpoints.*`;
+- process the immediate result and show operation diagnostics/messages;
+- then call `workbench.refreshAfterActions.path` and replace the whole screen state with the returned
+  workbench payload.
+
+`workbench.refreshAfterActions.appliesTo` lists the action keys that should trigger this reload:
+`saveDraft`, `validateDraft`, `publishDraft`, `rollback`, `draftFromVersion`, and `contactSettings`.
+
+`POST /api/admin/global-sections/site_header/validate?locale=uk` returns both:
+
+- `validation`: blocking validation result suitable for operation result state;
+- `diagnostics`: header-specific diagnostics for visible form indicators.
+
 For display, an empty/legacy `site_header` may be shown with backend defaults
 `searchEnabled: true` and `contactButtonEnabled: true`. This does not weaken saving:
 when the frontend creates or updates a draft, it must submit both boolean fields explicitly.
