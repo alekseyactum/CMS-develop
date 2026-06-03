@@ -437,6 +437,12 @@ base non-regional page and its expected regional variants. This endpoint must no
 itself. Creating a missing generated page remains an explicit editor action through the generated-source
 bootstrap/open endpoints.
 
+`PageWorkbenchMatrixResponse` must include a top-level `scope` object. For normal page-type screens:
+`scope.kind = "page_type"` and `scope.source = null`. For source-scoped practice/service/problem screens:
+`scope.kind = "generated_source"` and `scope.source` contains the selected source registry record
+(`id`, `resource`, `title`, `sourceSlug`, route fields, parent refs, diagnostics). Frontend screens must
+use this object as the selected sidebar context instead of inferring the selected entity from the first row.
+
 Reference-data list/detail endpoints remain dictionary endpoints, not the source of the CMS sidebar. They
 may still expose nested lightweight relation summaries for convenience. For example, a practice can return
 `children.services[]`, and those service summaries can return `children.problems[]`. This helps dictionary

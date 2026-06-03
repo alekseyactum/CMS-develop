@@ -1484,6 +1484,10 @@ GET /api/admin/page-workbench/page-types/<pageType>?locale=<locale>&sourceId=<cm
 
 This returns only the selected base generated page and its regional variants. The navigation click is
 read-only; creating missing generated page authoring state remains an explicit bootstrap/open action.
+The response includes a top-level `scope`: normal matrices use `{ "kind": "page_type", "source": null }`,
+and source-scoped practice/service/problem matrices use `{ "kind": "generated_source", "source": ... }`
+with the selected source registry record. Frontend screens use `scope.source` for the opened object
+title/context and use `rows` only for base/regional page variants.
 
 The menu may expose lightweight aggregate indicators for the statistical addon:
 

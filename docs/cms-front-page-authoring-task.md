@@ -115,6 +115,28 @@ Use this endpoint for the main screen after a sidebar click. It returns the usua
 with `columns`, `summary`, and `rows`, but only for the selected source: the base Ukraine-wide row plus
 regional rows. The call is read-only and should not create missing pages. If a row has `page: null` and
 `actions.canBootstrap: true`, show a create/bootstrap action instead of silently creating the page on click.
+Use `response.scope` for the screen context:
+
+```json
+{
+  "scope": {
+    "kind": "generated_source",
+    "source": {
+      "id": "service-cms-id",
+      "resource": "services",
+      "title": "Divorce support",
+      "sourceSlug": "divorce-support",
+      "pagePath": "services/family-law/divorce-support",
+      "publicPath": "/services/family-law/divorce-support",
+      "diagnostics": []
+    }
+  }
+}
+```
+
+For fixed page-type matrices `scope.kind` is `page_type` and `scope.source` is `null`. Do not derive the
+currently opened practice/service/problem from `rows[0]`; rows are page variants, while `scope.source`
+is the selected sidebar object.
 
 The endpoint should return only menu items that can be opened now. Target-state items from the long-term
 requirements may stay documented, but unfinished entries should not be returned as disabled/planned nodes
