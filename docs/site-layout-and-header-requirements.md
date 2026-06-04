@@ -201,6 +201,8 @@ GET /api/admin/site-layout/header-workbench?locale=uk
 The response uses `schemaVersion = "cms.header-workbench.v1"` and contains:
 
 - `section`: the normal `site_header` editor response;
+- `publishedContent`: current published `site_header` public-content payload for comparing draft/admin
+  preview with the version active on the public side;
 - `layoutPreview.header`: rendered preview data for navigation, services menu,
   language policy, contact button, and enabled header flags;
 - `contactSettings`: current phone/work-time settings and their diagnostics;
@@ -208,7 +210,7 @@ The response uses `schemaVersion = "cms.header-workbench.v1"` and contains:
 - `workbench`: frontend hints that say which response parts are editable and
   which are read-only;
 - `endpoints`: exact API endpoints for save draft, validate, publish, rollback,
-  draft-from-version, layout preview, and contact settings;
+  draft-from-version, public-content, layout preview, and contact settings;
 - `diagnostics`: header, navigation, services menu, and contact settings
   diagnostics grouped for screen-level indicators.
 
@@ -217,6 +219,10 @@ as the only payload that can be sent to the header draft endpoint. The services
 menu, system navigation, language policy, phone, and work time are displayed
 from read-only/runtime sources and are edited through their own flows if
 applicable.
+
+Use `publishedContent.workingContent` only for the "current site" comparison
+state. Do not use it as form state; the editable form still comes from
+`section.editableContent`.
 
 For the first release, header actions do not need screen-specific wrapper
 endpoints. The workbench response exposes `workbench.refreshAfterActions` with
@@ -369,6 +375,9 @@ The response uses `schemaVersion = "cms.footer-workbench.v1"` and contains:
 
 - `footerSection`: the normal editable `site_footer` editor response;
 - `footerPracticesSection`: the read-only `site_footer_practices` editor response;
+- `footerPublishedContent`: current published `site_footer` public-content payload;
+- `footerPracticesPublishedContent`: current published/runtime `site_footer_practices` public-content
+  payload;
 - `layoutPreview.footer`: rendered footer preview data using latest available
   draft/editor state;
 - `contactSettings`: current public phone/work-time settings;
@@ -376,8 +385,9 @@ The response uses `schemaVersion = "cms.footer-workbench.v1"` and contains:
 - `history`: `site_footer` version history for the right-side version list;
 - `workbench`: frontend hints that identify editable and read-only response parts;
 - `endpoints`: exact API endpoints for footer save draft, validate, publish,
-  rollback, draft-from-version, footer practices view, layout preview, contact
-  settings, media list, and media upload;
+  rollback, draft-from-version, footer public-content, footer practices view,
+  footer practices public-content, layout preview, contact settings, media list,
+  and media upload;
 - `diagnostics`: footer, footer practices, and contact settings diagnostics
   grouped for screen-level indicators.
 
@@ -387,6 +397,11 @@ The frontend must treat `workbench.editableSource =
 work time, labels, copyright, sitemap route, and media policy are displayed
 from read-only/runtime/settings sources and must not be posted as footer draft
 content.
+
+Use `footerPublishedContent.workingContent` and
+`footerPracticesPublishedContent.workingContent` for the "current site"
+comparison state. The editable footer form still comes only from
+`footerSection.editableContent`.
 
 For the first release, footer actions do not need screen-specific wrapper
 endpoints. The workbench response exposes `workbench.refreshAfterActions` with

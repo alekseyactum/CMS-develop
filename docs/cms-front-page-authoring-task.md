@@ -453,7 +453,9 @@ Use:
 
 ```text
 GET  /api/admin/global-sections?locale=uk
+GET  /api/admin/global-sections/{sectionKey}/locale-diagnostics
 GET  /api/admin/global-sections/{sectionKey}/editor?locale=uk
+GET  /api/admin/global-sections/{sectionKey}/public-content?locale=uk
 POST /api/admin/global-sections/{sectionKey}/draft?locale=uk
 POST /api/admin/global-sections/{sectionKey}/validate?locale=uk
 POST /api/admin/global-sections/{sectionKey}/publish?locale=uk
@@ -481,10 +483,11 @@ GET /api/admin/site-layout/header-workbench?locale=uk&historyLimit=20&historyOff
 
 Use it when the user clicks `site_header` in the CMS sidebar. It returns the
 normal `site_header` editor response, the current admin layout preview for the
-header, contact settings, version history, grouped diagnostics, and exact
-action endpoints. This lets the screen render the editable flags, read-only
-navigation/services menu, phone/work-time panel, and history list without
-manually stitching several initial requests together.
+header, current published header content, contact settings, version history,
+grouped diagnostics, and exact action endpoints. This lets the screen render
+the editable flags, read-only navigation/services menu, phone/work-time panel,
+history list, and "current site" comparison state without manually stitching
+several initial requests together.
 
 When opening `GET /api/admin/global-sections/site_header/editor?locale=uk`, use:
 
@@ -506,6 +509,8 @@ In the workbench response:
 - display navigation from `layoutPreview.header.navigation`;
 - display services mega menu from `layoutPreview.header.servicesMenu.items`;
 - display phone/work time from `contactSettings.settings`;
+- display current published header content from `publishedContent.workingContent`
+  when the design needs a "current site" comparison;
 - show screen indicators from `diagnostics.header`, `diagnostics.navigation`,
   `diagnostics.servicesMenu`, and `diagnostics.contactSettings`;
 - use `endpoints.*` for save/validate/publish/history/rollback/contact settings
@@ -558,6 +563,10 @@ The footer workbench response contains the initial data for the whole screen:
 - `footerSection`: render editable form values from `footerSection.editableContent`;
 - `footerPracticesSection`: render the read-only upper practice list preview from
   `footerPracticesSection.workingContent`;
+- `footerPublishedContent`: render the lower-footer "current site" comparison from
+  `footerPublishedContent.workingContent`;
+- `footerPracticesPublishedContent`: render the practice-footer "current site" comparison from
+  `footerPracticesPublishedContent.workingContent`;
 - `layoutPreview.footer`: render/check the combined footer payload that the public layout would use in
   admin preview mode;
 - `contactSettings.settings`: show phone/work-time as read-only footer context and link to the separate
@@ -676,6 +685,32 @@ GET /api/admin/global-sections/{sectionKey}/locale-diagnostics
 
 It returns `locales[]` for `uk`, `ru`, and `en`, each with `status`, `facts`, and `diagnostics`.
 Use the full editor endpoint only for the currently opened locale form.
+
+When the screen needs to compare the edited draft with what is currently active for public rendering, use:
+
+```http
+GET /api/admin/global-sections/{sectionKey}/public-content?locale=uk
+```
+
+This returns only the current published version merged with backend-owned readonly/runtime data:
+
+```ts
+{
+  sectionKey: 'global_price' | 'site_header' | 'site_footer_practices' | 'site_footer';
+  locale: 'uk' | 'ru' | 'en';
+  publishedVersion: SectionVersion | null;
+  readonlyContent: object | null;
+  editableContent: object;
+  workingContent: object;
+  diagnostics: Diagnostics | null;
+}
+```
+
+Do not use this endpoint as the editing form source. The editor form still comes from
+`GET /api/admin/global-sections/{sectionKey}/editor?locale=...`. Use `public-content` for "current site"
+preview/comparison panels, published-state checks, and layout-level public payload debugging. Dedicated
+header/footer workbench startup responses already include the relevant published-content blocks, so the
+frontend normally does not need an extra initial request for those screens.
 
 Save draft:
 

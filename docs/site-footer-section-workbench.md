@@ -328,6 +328,8 @@ section lifecycle endpoints. It returns:
 
 - `footerSection`: editable `site_footer` editor state;
 - `footerPracticesSection`: read-only `site_footer_practices` preview and diagnostics;
+- `footerPublishedContent`: current published lower-footer public-content payload;
+- `footerPracticesPublishedContent`: current published/runtime practices-footer public-content payload;
 - `layoutPreview.footer`: combined admin-preview footer payload;
 - `contactSettings`: phone/work-time settings used by the footer;
 - `mediaPolicy`: legal PDF constraints and media endpoints;
@@ -338,6 +340,15 @@ section lifecycle endpoints. It returns:
 The only editable footer draft payload is `footerSection.editableContent`.
 Everything else in the workbench response is read-only context, a related
 settings flow, or an action endpoint.
+
+For "current site" comparison panels, use:
+
+- `footerPublishedContent.workingContent`;
+- `footerPracticesPublishedContent.workingContent`.
+
+These fields are already included in the workbench startup response. The
+individual public-content endpoints exposed in `endpoints` are for targeted
+refresh/debug flows, not for the normal initial render.
 
 The workbench also exposes:
 

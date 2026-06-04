@@ -357,6 +357,29 @@ This endpoint is read-only and should not create missing section records for uno
 `GET /api/admin/global-sections/{sectionKey}/editor?locale=...` endpoint remains the source for the active
 locale form content.
 
+For a “current site” comparison panel, use the public-content endpoint:
+
+```http
+GET /api/admin/global-sections/global_price/public-content?locale=uk
+```
+
+It returns the current published price payload only:
+
+```ts
+{
+  sectionKey: 'global_price';
+  locale: 'uk' | 'ru' | 'en';
+  publishedVersion: SectionVersion | null;
+  readonlyContent: GlobalPriceReadonlyContent | null;
+  editableContent: GlobalPriceEditableContent;
+  workingContent: GlobalPriceReadonlyContent & GlobalPriceEditableContent;
+  diagnostics: Diagnostics | null;
+}
+```
+
+Use `editor` for the form and `public-content` for comparison with the version that is currently active
+on the public side.
+
 ## Version History
 
 The right-side history panel shows indicators for each version row only. It must not duplicate the top

@@ -720,7 +720,10 @@ preview/publish requests. Missing visible sources or unroutable visible child it
 `PAGE_RUNTIME_RESOLUTION_FAILED` before an invalid public snapshot is created.
 
 Implementation note, 2026-05-23: `cms-back` now exposes the first direct global sections workbench API:
-`GET /api/admin/global-sections`, `GET /api/admin/global-sections/{sectionKey}/editor`,
+`GET /api/admin/global-sections`,
+`GET /api/admin/global-sections/{sectionKey}/locale-diagnostics`,
+`GET /api/admin/global-sections/{sectionKey}/editor`,
+`GET /api/admin/global-sections/{sectionKey}/public-content`,
 `POST /api/admin/global-sections/{sectionKey}/draft`,
 `POST /api/admin/global-sections/{sectionKey}/validate`,
 `POST /api/admin/global-sections/{sectionKey}/publish`,
@@ -737,6 +740,12 @@ contract is defined in `docs/global-price-section-workbench.md`.
 Implementation note, 2026-05-27: global-section editor DTOs expose `schema.fields`, and global-section
 publish responses document the lifecycle publish result instead of an opaque `unknown`: affected pages,
 affected bindings, and rebuilt snapshot statuses are part of the frontend contract.
+
+Implementation note, 2026-06-04: global-section screens can read all-locale diagnostics through
+`GET /api/admin/global-sections/{sectionKey}/locale-diagnostics` and the current published/public payload
+through `GET /api/admin/global-sections/{sectionKey}/public-content?locale=...`. The editor endpoint
+remains the source for draft editing; `public-content` is for comparing/debugging what the public layout
+would use from the current published global section.
 
 Implementation note, 2026-05-23: `cms-back` now exposes the first real generated service-tree workbench
 API: `GET /api/admin/page-workbench/service-tree` and
