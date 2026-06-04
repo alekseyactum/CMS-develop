@@ -437,6 +437,11 @@ base non-regional page and its expected regional variants. This endpoint must no
 itself. Creating a missing generated page remains an explicit editor action through the generated-source
 bootstrap/open endpoints.
 
+The central workbench screen opened from the service tree must be driven by this matrix response, not by
+reference-data list endpoints. Reference-data APIs remain the editor for ERP/CMS dictionary objects; the
+page workbench owns page rows, section/runtime cells, diagnostics, actions, and exact workbench endpoints.
+Generated `open` / `open-editor` endpoints are explicit quick-edit actions, not the default sidebar click.
+
 `PageWorkbenchMatrixResponse` must include a top-level `scope` object. For normal page-type screens:
 `scope.kind = "page_type"` and `scope.source = null`. For source-scoped practice/service/problem screens:
 `scope.kind = "generated_source"` and `scope.source` contains the selected source registry record
@@ -771,6 +776,13 @@ same `sourceRecord` and add row-level `region`/`regionSlug`. The generated boots
 optional `regionId`; backend rereads the region, builds the canonical regional route, and passes
 `regionSlug` into page authoring. The service-tree endpoint remains non-regional so the left hierarchy
 stays collection -> practice -> service -> problem without multiplying every node by regions.
+
+Implementation note, 2026-06-04: generated service-tree workbench matrices now use the same expected-region
+boundary as the navigation indicators. Regional rows are emitted only for applicable visible regions:
+practice pages require an active region qualification for that practice; service/problem pages use the
+parent practice qualification; the regional practice collection uses regions with at least one active
+visible practice qualification. Non-applicable region/source pairs are not returned and must not be treated
+as missing regional pages.
 
 Implementation note, 2026-05-24: workbench matrix rows now expose row-level `pagePath` and `publicPath`.
 For existing pages these fields mirror the stored page route; for not-created generated rows they expose

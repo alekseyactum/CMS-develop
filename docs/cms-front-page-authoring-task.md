@@ -14,9 +14,12 @@ GET  /api/admin/navigation
 GET  /api/admin/page-workbench/tree
 GET  /api/admin/page-workbench/service-tree
 GET  /api/admin/page-workbench/page-types/{pageType}
+GET  /api/admin/page-workbench/generated-sources/{pageType}/{sourceId}/row
 GET  /api/admin/page-workbench/pages/{pageId}/row
 POST /api/admin/page-workbench/pages/bootstrap
 POST /api/admin/page-workbench/generated-sources/{pageType}/{sourceId}/bootstrap
+POST /api/admin/page-workbench/generated-sources/{pageType}/{sourceId}/open
+POST /api/admin/page-workbench/generated-sources/{pageType}/{sourceId}/open-editor
 GET  /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor
 PATCH /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/state
 POST /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/draft
@@ -137,6 +140,87 @@ Use `response.scope` for the screen context:
 For fixed page-type matrices `scope.kind` is `page_type` and `scope.source` is `null`. Do not derive the
 currently opened practice/service/problem from `rows[0]`; rows are page variants, while `scope.source`
 is the selected sidebar object.
+
+### Central Service-Tree Workbench Screen
+
+This is the main screen opened from the `practices` sidebar group. The frontend should treat it as a
+matrix of page variants for one selected site object.
+
+Click mapping:
+
+- click the `practices` group row itself: call its returned `endpoint`, which opens
+  `practice_collection_page` for the public services/practices collection;
+- click a practice node: call
+  `GET /api/admin/page-workbench/page-types/practice_page?locale=<locale>&sourceId=<practice-id>`;
+- click a service node: call
+  `GET /api/admin/page-workbench/page-types/service_page?locale=<locale>&sourceId=<service-id>`;
+- click a problem node: call
+  `GET /api/admin/page-workbench/page-types/problem_page?locale=<locale>&sourceId=<problem-id>`.
+
+Screen title and context:
+
+- use `response.scope.source.title` for practice/service/problem screens;
+- use the page type title for `practice_collection_page`;
+- use `response.scope.source.resource`, `sourceSlug`, `pagePath`, `publicPath`, and `diagnostics` for a
+  small read-only context panel if needed;
+- do not infer the opened object from regional rows.
+
+Rows:
+
+- `response.rows` contains page variants, not tree children;
+- `row.kind === "base"` is the Ukraine-wide/non-regional page;
+- `row.kind === "regional"` is one expected regional inheritor;
+- regional rows are already filtered by backend through region qualifications, so the frontend should not
+  add missing rows for every region from the region dictionary;
+- if `row.page === null`, the CMS page does not exist yet;
+- if `row.page !== null`, use `row.page.publishState`, `row.page.currentSnapshot`, and
+  `row.page.sectionSummary` for compact row state.
+
+Columns and cells:
+
+- `response.columns` is the canonical slot order for the table header;
+- `row.cells` are the actual cells for that row. Match cells to columns by `slotKey`;
+- `cell.kind === "section"` is an editable/versioned CMS section summary;
+- `cell.kind === "runtime"` is a read-only runtime/read-model slot;
+- `cell.status`, `cell.diagnostics`, and `cell.actions` are backend-computed. The frontend should display
+  them, not recalculate publishability locally;
+- section cell content is intentionally absent. Open the editor endpoint to read draft/published content.
+
+Actions:
+
+- show buttons from `row.actions` and `cell.actions`;
+- call URLs from `row.endpoints` and `cell.endpoints`;
+- if an action flag is false or endpoint is `null`, hide/disable that action;
+- for a not-created row, use `row.endpoints.bootstrap` exactly as returned. Regional bootstrap endpoints
+  include `body.regionId`;
+- after bootstrap/save/validate/publish/rollback/visibility changes, replace the affected row with
+  `response.workbench.row` when the action response includes it;
+- after actions that can change sidebar counters, reload
+  `GET /api/admin/navigation?locale=<locale>&includeIndicators=true`.
+
+Optional quick-open endpoints:
+
+- `POST /api/admin/page-workbench/generated-sources/{pageType}/{sourceId}/open` creates/opens the generated
+  page authoring state and returns `{ open, defaultEditorTarget, workbench }`;
+- `POST /api/admin/page-workbench/generated-sources/{pageType}/{sourceId}/open-editor` does the same and
+  also returns `editor` for the backend-selected default section;
+- do not use these endpoints for a normal sidebar click if the design expects a read-only matrix first.
+  Use them only for explicit "open editor" / "create and edit" interactions.
+
+Recommended central screen layout:
+
+- top summary: `response.summary.errors`, `warnings`, `pagesNotCreated`, `pagesNotPublished`,
+  `pagesDraftChanged`, `pagesRequireReview`;
+- first row group: base page;
+- second row group: regional pages, using `row.region.title` and `row.regionSlug`;
+- section grid: render cells in `response.columns` order;
+- editor drawer/panel: opened through `cell.endpoints.editor`;
+- page buttons: preview/publish/rollback/snapshots from `row.endpoints`;
+- page creation button: bootstrap from `row.endpoints.bootstrap` when `row.page === null`.
+
+Do not use `/api/admin/reference/...` endpoints to build this central page workbench. Reference endpoints
+are for editing ERP/CMS dictionary objects. The page workbench is driven by
+`/api/admin/page-workbench/page-types/...`.
 
 The endpoint should return only menu items that can be opened now. Target-state items from the long-term
 requirements may stay documented, but unfinished entries should not be returned as disabled/planned nodes
@@ -816,9 +900,12 @@ Use:
 GET /api/admin/page-workbench/tree?locale=uk
 GET /api/admin/page-workbench/service-tree?locale=uk
 GET /api/admin/page-workbench/page-types/{pageType}?locale=uk
+GET /api/admin/page-workbench/generated-sources/{pageType}/{sourceId}/row?locale=uk
 GET /api/admin/page-workbench/pages/{pageId}/row
 POST /api/admin/page-workbench/pages/bootstrap
 POST /api/admin/page-workbench/generated-sources/{pageType}/{sourceId}/bootstrap?locale=uk
+POST /api/admin/page-workbench/generated-sources/{pageType}/{sourceId}/open?locale=uk
+POST /api/admin/page-workbench/generated-sources/{pageType}/{sourceId}/open-editor?locale=uk
 GET /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor
 PATCH /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/state
 POST /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/draft
@@ -920,7 +1007,18 @@ For `practice_collection_page`, `practice_page`, `service_page`, and `problem_pa
 returns both:
 
 - base non-regional rows, for example `/services/family-law`;
-- regional rows for visible regions with a valid `sourceSlug`, for example `/kyiv/services/family-law`.
+- regional rows for expected visible regions with a valid `sourceSlug`, for example
+  `/kyiv/services/family-law`.
+
+Expected regional rows are not "all regions". Backend filters them through the region-competence model:
+
+- `practice_collection_page`: visible regions that have at least one active visible practice competence;
+- `practice_page`: visible regions with an active region qualification for that practice;
+- `service_page` and `problem_page`: visible regions with an active region qualification for the parent
+  practice of that service/problem.
+
+Disabled regions, regions without `sourceSlug`, and region/source pairs without an active matching
+qualification are not returned as rows and should not be counted as missing pages by the frontend.
 
 Regional rows still use the same `sourceRecord` as the base page. The region is a separate row field:
 
