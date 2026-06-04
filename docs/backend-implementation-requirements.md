@@ -709,20 +709,46 @@ through `compositeGroupKey`, for example `practice_services_block` with `practic
 `service_problems_block` with `service_problems`. The frontend may display those paired slots as one visual
 block while the backend keeps CMS-authored draft content and runtime reference-data payloads separate.
 Optional page-owned FAQ and consultation CTA sections are present for practice, service, and problem pages.
-Price sections remain a separate follow-up because their global/base/regional inheritance behavior must be
-implemented as a dedicated source-backed workflow, not as a simple page-owned block.
+Price sections are modeled as source-backed page-owned sections: base generated pages inherit from
+`global_price`, while regional generated pages inherit from the matching base page price section.
+
+Implementation note, 2026-06-04: service-tree page schemas were aligned with the first site designs.
+`breadcrumbs` are not CMS authoring sections and must not appear as editable page slots; they are generated
+runtime/public payload metadata from route/page context. `practice_collection_page` keeps an editable
+`practice_collection_intro` hero slot, a runtime `practice_collection` list, and the standard runtime
+`lead_capture` form contract. `practice_page` now has the following backend scaffold:
+
+- `seo`;
+- `practice_intro` hero, including optional `ctaLabel` and `ctaTarget`;
+- `practice_services_block` + runtime `practice_services`;
+- optional page-owned content slots `practice_intro_text`, `practice_actions`, `practice_team_cta`,
+  and `practice_optional_text`;
+- runtime placeholders `practice_cases` and `practice_reviews`;
+- inherited `price`;
+- optional `practice_faq`;
+- `practice_lawyers_block` + runtime `practice_lawyers`;
+- optional page-owned `lead_questionnaire`;
+- runtime `lead_capture`.
+
+`lead_capture` is a fixed backend/runtime contract for the service hierarchy pages, not a global section
+and not an editable page-owned section. It gives the frontend a stable form component context. The optional
+`lead_questionnaire` stores page-specific questions and can be inherited/overridden/appended regionally as
+a normal page-owned section. The same `lead_questionnaire` + `lead_capture` tail is available on
+`service_page` and `problem_page`; detailed service/problem content structure remains a separate design pass.
 
 Implementation note, 2026-05-22: `cms-back` now contains the first page runtime resolver layer. During
 preview and publish, page lifecycle asks `PageRuntimeResolverService` to fill missing runtime payloads for
 service-tree pages. The first supported slots are `practice_collection`, `practice_services`,
-`practice_lawyers`, `service_problems`, `service_lawyers`, and `problem_lawyers`. The resolver reads CMS
-reference-data tables, uses source slugs from the page path, filters visible/public records, applies lawyer
-qualification score rules (`score > 1`), and builds route-ready list items. For
+`practice_lawyers`, `practice_cases`, `practice_reviews`, `service_problems`, `service_lawyers`,
+`problem_lawyers`, and `lead_capture`. The resolver reads CMS reference-data tables, uses source slugs from
+the page path, filters visible/public records, applies lawyer qualification score rules (`score > 1`), and
+builds route-ready list items where real reference data is already available. For
 `practice_collection_page`, base rows list all visible practices and regional rows list visible practices
-that have an active region qualification for the selected visible region. Provided runtime payloads are
-still respected and are not resolved twice, which preserves backward compatibility with manual
-preview/publish requests. Missing visible sources or unroutable visible child items now fail as
-`PAGE_RUNTIME_RESOLUTION_FAILED` before an invalid public snapshot is created.
+that have an active region qualification for the selected visible region. `practice_cases` and
+`practice_reviews` currently return empty route-aware list payloads until cases/reviews read models are
+implemented. Provided runtime payloads are still respected and are not resolved twice, which preserves
+backward compatibility with manual preview/publish requests. Missing visible sources or unroutable visible
+child items now fail as `PAGE_RUNTIME_RESOLUTION_FAILED` before an invalid public snapshot is created.
 
 Implementation note, 2026-05-23: `cms-back` now exposes the first direct global sections workbench API:
 `GET /api/admin/global-sections`,

@@ -1318,6 +1318,23 @@ and may be enabled/disabled through backend-provided actions. Price sections are
 page-owned sections: base generated pages inherit from `global_price`, while regional generated pages
 inherit from the matching base page price section.
 
+2026-06-04 schema refinement for the first service-hierarchy designs:
+
+- `breadcrumbs` are not editable section cells. They are generated public/runtime metadata from route/page
+  context and should be rendered by the site frontend outside the CMS section list.
+- `practice_collection_page` exposes `practice_collection_intro`, runtime `practice_collection`, and runtime
+  `lead_capture`.
+- `practice_intro` and other `*_intro` hero slots now include optional `ctaLabel` and `ctaTarget` fields.
+- `practice_page` additionally exposes optional page-owned `practice_intro_text`, `practice_actions`,
+  `practice_team_cta`, `practice_optional_text`, optional `lead_questionnaire`, runtime `practice_cases`,
+  runtime `practice_reviews`, and runtime `lead_capture`.
+- `service_page` and `problem_page` also expose optional `lead_questionnaire` plus runtime `lead_capture`.
+- `lead_capture` is read-only runtime data for the standard service-hierarchy lead form. It is not a global
+  section and not edited through a section form.
+- `lead_questionnaire` is the page-specific questionnaire section. It is disabled by default until the
+  editor enables and fills it. A typical draft payload is
+  `{ "title": "...", "description": [...], "questions": [{ "id": "minor_children", "label": "...", "type": "single_choice", "required": false, "options": [{ "value": "yes", "label": "Так" }] }] }`.
+
 Section cells contain only metadata and status:
 
 - ids: `bindingId`, `sectionId`, `sourceSectionId`, `localSectionId`;
