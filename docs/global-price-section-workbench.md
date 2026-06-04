@@ -313,6 +313,50 @@ For status diagnostics:
 
 Other locale states may be shown near tabs, but they are supporting information only.
 
+For this cross-locale tab/header UI, the frontend should not call the full editor endpoint three times.
+The backend exposes a lightweight diagnostics endpoint for one global section:
+
+```http
+GET /api/admin/global-sections/{sectionKey}/locale-diagnostics
+```
+
+It returns all supported locales in one payload:
+
+```ts
+{
+  sectionKey: 'global_price';
+  title: string;
+  locales: Array<{
+    locale: 'uk' | 'ru' | 'en';
+    section: SectionRecord | null;
+    draftVersion: SectionVersion | null;
+    publishedVersion: SectionVersion | null;
+    status: {
+      kind: 'ok' | 'warning' | 'attention' | 'error';
+      label: string;
+      priority: number;
+    };
+    facts: {
+      hasDraft: boolean;
+      hasPublished: boolean;
+      draftVersionNo: number | null;
+      publishedVersionNo: number | null;
+      errorCount: number;
+      warningCount: number;
+      lastEditedAt: string | null;
+      lastEditedBy: string | null;
+      lastPublishedAt: string | null;
+      lastPublishedBy: string | null;
+    };
+    diagnostics: Diagnostics | null;
+  }>;
+}
+```
+
+This endpoint is read-only and should not create missing section records for unopened locales. The full
+`GET /api/admin/global-sections/{sectionKey}/editor?locale=...` endpoint remains the source for the active
+locale form content.
+
 ## Version History
 
 The right-side history panel shows indicators for each version row only. It must not duplicate the top

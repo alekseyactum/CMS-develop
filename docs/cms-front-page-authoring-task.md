@@ -667,6 +667,16 @@ Global sections are locale-specific. Opening the editor for `site_footer?locale=
 Ukrainian global footer section record. Russian and English versions are separate section records and
 separate version histories.
 
+When a global section screen needs tab/header indicators for all locales, use the lightweight diagnostics
+endpoint instead of loading three full editors:
+
+```http
+GET /api/admin/global-sections/{sectionKey}/locale-diagnostics
+```
+
+It returns `locales[]` for `uk`, `ru`, and `en`, each with `status`, `facts`, and `diagnostics`.
+Use the full editor endpoint only for the currently opened locale form.
+
 Save draft:
 
 ```json
