@@ -1438,8 +1438,13 @@ messages and codes, but should not recreate the rules. Important codes:
 - `PAGE_SECTION_DRAFT_STALE`;
 - `PAGE_SECTION_VALIDATION_FAILED`;
 - `PAGE_REQUIRED_SECTION_EMPTY`;
+- `PAGE_ENABLED_SECTION_EMPTY`;
 - `PAGE_REQUIRED_INDEPENDENT_SECTION_NOT_PUBLISHED`;
 - `PAGE_NO_CURRENT_SNAPSHOT`.
+
+`PAGE_ENABLED_SECTION_EMPTY` means the section is optional by schema, but currently enabled on the page and
+has neither a draft nor a published version. The backend treats enabled sections as part of the page, so
+preview/publish can be hidden until the section is filled or disabled by a supported action.
 
 ## Pages Catalog
 
