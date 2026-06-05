@@ -547,6 +547,22 @@ GET  /api/admin/global-sections/{sectionKey}/history?locale=uk&limit=50&offset=0
 POST /api/admin/global-sections/{sectionKey}/rollback?locale=uk
 ```
 
+`POST /api/admin/global-sections/{sectionKey}/validate?locale=...` has two modes:
+
+- stored-version mode: send `{ "sectionVersionId": "...", "recordDiagnostics": true }` or an empty
+  body to validate the latest draft. This can record diagnostics for the stored version and returns a
+  fresh `editor`;
+- unsaved-form mode: send `{ "content": { ... } }`, where `content` has the same shape as the
+  `/draft` request body. This validates the current form in memory, returns `validation`,
+  `diagnostics`, and normalized `workingContent`, but returns `editor: null` and does not create a
+  draft/version/history row.
+
+Do not send `content` together with `sectionVersionId`. `recordDiagnostics: true` is also forbidden with
+`content`, because there is no stored version to attach diagnostics to.
+
+For global sections, `actions.canValidate` means that the section editor supports validation. It may be
+`true` even when no draft exists yet, because the frontend can validate unsaved `content`.
+
 Supported editable section keys now:
 
 - `site_header`;
@@ -1334,6 +1350,28 @@ inherit from the matching base page price section.
 - `lead_questionnaire` is the page-specific questionnaire section. It is disabled by default until the
   editor enables and fills it. A typical draft payload is
   `{ "title": "...", "description": [...], "questions": [{ "id": "minor_children", "label": "...", "type": "single_choice", "required": false, "options": [{ "value": "yes", "label": "Так" }] }] }`.
+
+2026-06-05 clarification for implementation order:
+
+- `problem_page` has an approved product structure, but the backend code should not expose the full final
+  problem-page slot list yet.
+- For the next working CMS editor slice, frontend and backend should concentrate on
+  `practice_collection_page` and `practice_page`.
+- This slice must make the page matrix genuinely usable: open generated base/regional rows, see section
+  and runtime cells, open section editor, save drafts, validate, preview, publish, and refresh navigation
+  indicators.
+- `service_page` and `problem_page` should stay visible in navigation/workbench where already supported,
+  but their detailed final content structures are follow-up implementation.
+
+Approved `problem_page` concept for future implementation:
+
+- Header, footer, breadcrumbs, and the under-hero route/context navigation are not editable page sections.
+- `problem_intro` is the hero/content start.
+- The long unique advisory body should be one structured `problem_guidance` section with ordered internal
+  blocks such as `advice_cards` and `accent_text`, rather than many prematurely fixed backend slots.
+- `problem_team_cta`, `problem_faq`, `problem_lawyers_block`, optional `lead_questionnaire`, and inherited
+  `price` are editable/page-owned areas.
+- `problem_cases`, `problem_reviews`, `problem_lawyers`, and `lead_capture` are runtime/read-model areas.
 
 Section cells contain only metadata and status:
 

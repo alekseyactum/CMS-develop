@@ -380,6 +380,33 @@ It returns the current published price payload only:
 Use `editor` for the form and `public-content` for comparison with the version that is currently active
 on the public side.
 
+For the "Перевірити" button, validate the unsaved form without saving a draft:
+
+```http
+POST /api/admin/global-sections/global_price/validate?locale=uk
+```
+
+```json
+{
+  "content": {
+    "items": [
+      {
+        "id": "court",
+        "title": "Суд",
+        "price": 950,
+        "priceMode": "up_to",
+        "description": "Короткий опис послуги..."
+      }
+    ]
+  }
+}
+```
+
+This mode returns `validation`, `diagnostics`, and normalized `workingContent`, but does not create or
+update a draft version and does not add a row to history. It also returns `editor: null`; refresh the
+full editor/workbench only after save/publish/rollback actions or when the user intentionally reloads
+the screen.
+
 ## Version History
 
 The right-side history panel shows indicators for each version row only. It must not duplicate the top

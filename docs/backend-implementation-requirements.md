@@ -736,6 +736,42 @@ and not an editable page-owned section. It gives the frontend a stable form comp
 a normal page-owned section. The same `lead_questionnaire` + `lead_capture` tail is available on
 `service_page` and `problem_page`; detailed service/problem content structure remains a separate design pass.
 
+Approved direction, 2026-06-05: `problem_page` structure is approved conceptually from the current page
+design, but must not be expanded in backend code until the exact implementation slice for service/problem
+pages starts. Header/footer and breadcrumbs stay outside the editable page schema. Breadcrumbs and the
+small route/context navigation under the hero are derived from route/reference data, not from editable
+page sections.
+
+`problem_page` should be modeled as a fixed service-hierarchy page with these logical areas:
+
+- `seo`: page-owned metadata section.
+- `problem_intro`: required page-owned hero section with title, short lead/subtitle, optional CTA label,
+  and optional CTA target. Visual background and layout are frontend concerns.
+- `problem_context_navigation`: runtime/read-model area derived from the page route and parent
+  practice/service/problem references. It is read-only for the editor and is not stored as page content.
+- `problem_guidance`: page-owned structured content section for the main unique problem narrative. It
+  contains an ordered list of internal blocks, for example `advice_cards` and `accent_text`. This avoids
+  hard-coding three or more design-specific advice slots before we know whether future problem pages need
+  the same count and order. If the editor later needs independent versioning per guidance block, this can
+  be split into several page-owned sections.
+- `problem_team_cta`: optional page-owned CTA/support section. If a lawyer card is shown, the card data
+  should be resolved from the lawyers read model, while the section stores only CMS text/settings.
+- `problem_cases`: runtime/read-model list of cases for the current problem/service/practice context.
+- `problem_reviews`: runtime/read-model list of reviews for the current problem/service/practice context.
+- `price`: inherited `global_price` page-owned section using the already defined inherit/append/override
+  price model.
+- `problem_faq`: optional page-owned FAQ section.
+- `problem_lawyers_block` + `problem_lawyers`: editable block title/lead paired with runtime lawyer list.
+- optional `lead_questionnaire`: page-specific questionnaire before/in the lead form.
+- runtime `lead_capture`: standard service-hierarchy lead form contract.
+
+Implementation sequencing decision, 2026-06-05: do not implement the full `problem_page` structure as the
+next code slice. The next page-authoring slice should concentrate on `practice_collection_page` and
+`practice_page` first, because they are smaller, already represented in current schemas, and cover the
+core editor-matrix mechanics: generated base/regional rows, section cells, runtime cells, inherited price,
+optional sections, open/save/validate/preview/publish, and navigation indicator refresh. After that slice
+is stable, `service_page` and then `problem_page` should be implemented from the approved structures.
+
 Implementation note, 2026-05-22: `cms-back` now contains the first page runtime resolver layer. During
 preview and publish, page lifecycle asks `PageRuntimeResolverService` to fill missing runtime payloads for
 service-tree pages. The first supported slots are `practice_collection`, `practice_services`,

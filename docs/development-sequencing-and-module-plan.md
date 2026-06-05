@@ -265,6 +265,18 @@ Status as of 2026-05-12:
   visual section came from a published section version or a runtime/read-model source;
 - publish service orchestration and public/admin controllers remain future slices.
 
+Status as of 2026-06-05:
+
+- `problem_page` is conceptually approved from the current site design, but its detailed backend schema
+  should not be implemented before the editor matrix is stable on simpler page types;
+- the approved future direction keeps header/footer/breadcrumbs/context navigation outside editable page
+  sections and models the unique problem narrative as a structured `problem_guidance` section, with
+  runtime cases, reviews, lawyers, and lead form resolved separately;
+- the next concrete page-authoring milestone is `practice_collection_page` + `practice_page`;
+- success for that milestone means the CMS frontend can use the backend matrix to open base/regional rows,
+  inspect section/runtime cells, open section editors, save drafts, validate, preview, publish, and refresh
+  navigation indicators before we expand detailed `service_page`/`problem_page` schemas.
+
 ## Acceptance Gates
 
 Each completed slice should pass these gates:
