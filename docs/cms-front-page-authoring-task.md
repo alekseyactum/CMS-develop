@@ -1106,6 +1106,40 @@ POST /api/admin/page-workbench/generated-sources/service_page/{sourceRecord.id}/
 POST /api/admin/page-workbench/generated-sources/problem_page/{sourceRecord.id}/bootstrap?locale=uk
 ```
 
+2026-06-05 addition: generated rows also expose direct open endpoints on `row.endpoints`. Use these for
+clicking a generated base/regional row instead of hardcoding the generated-source URLs in the frontend:
+
+```json
+{
+  "endpoints": {
+    "open": {
+      "method": "POST",
+      "path": "/api/admin/page-workbench/generated-sources/practice_page/practice-1/open?locale=uk"
+    },
+    "openEditor": {
+      "method": "POST",
+      "path": "/api/admin/page-workbench/generated-sources/practice_page/practice-1/open-editor?locale=uk"
+    }
+  }
+}
+```
+
+For regional generated rows, the same endpoints include the required body:
+
+```json
+{
+  "method": "POST",
+  "path": "/api/admin/page-workbench/generated-sources/practice_page/practice-1/open-editor?locale=uk",
+  "body": {
+    "regionId": "region-kyiv"
+  }
+}
+```
+
+`open` creates/opens the page authoring state and returns the default editor target. `openEditor` does the
+same and additionally returns the default section editor payload. For the practice collection and practice
+pages this is the main path for opening the first workable editor screen from the matrix.
+
 Request body may be empty. For practice collection/practice/service/problem generated pages, backend
 creates minimal valid draft content for required page-owned sections:
 
