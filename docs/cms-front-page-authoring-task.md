@@ -1002,6 +1002,10 @@ the user opens a matrix/table for one page type and needs base/regional page row
   current snapshot for the page;
 - row-level `endpoints`: backend-owned action URLs for the row. Use them together with `actions`; if an
   action is not available, the matching endpoint is `null`;
+- row-level `readiness`: action-specific explanations for `preview` and `publish`. Use
+  `row.readiness.preview.ready` / `row.readiness.publish.ready` as the detailed state behind the button
+  and show `row.readiness.*.reasons` in tooltips, disabled-state messages, or page banners. Warnings may
+  appear in `reasons` without disabling the action; critical reasons are the blockers;
 - row-level `diagnostics`: publish blockers and warnings for the whole page;
 - `cells`: one summary cell per section/runtime slot;
 - `summary`: counters for the whole opened matrix. `summary.errors` and `summary.warnings` are row-level
@@ -1441,10 +1445,13 @@ Use row-level `actions` for page buttons:
 - `actions.canRollback`: allow rollback flow only when the page already has a current snapshot;
 - `actions.canViewCurrentSnapshot`: show current public snapshot details.
 
-Use row-level `diagnostics.blockingReasons` for page banners/tooltips. The frontend should display the
-messages and codes, but should not recreate the rules. Important codes:
+Use row-level `readiness.preview.reasons` and `readiness.publish.reasons` for action tooltips and
+disabled-state explanations. Use row-level `diagnostics.blockingReasons` for general page
+banners/status. The frontend should display messages and codes, but should not recreate the rules.
+Important codes:
 
 - `PAGE_NOT_CREATED`;
+- `PAGE_ALREADY_PUBLISHED`;
 - `PAGE_SECTION_DRAFT_STALE`;
 - `PAGE_SECTION_VALIDATION_FAILED`;
 - `PAGE_REQUIRED_SECTION_EMPTY`;
