@@ -763,6 +763,10 @@ the editor did not save a local price draft. This happens when the page price fu
 layer, so regional pages can inherit from that concrete base version. In `publish.withPageSectionCommits`,
 this case has `draftVersionId: null` and `sourceSectionVersionId` set to the upstream published version.
 
+Preview does not materialize that local version. If the page has no local price draft/published version yet,
+backend composes the source content and returns it with a virtual page-owned section provenance for preview
+only. The frontend should treat this as renderable preview content, not as a saved local section version.
+
 This means the global price screen edits the shared source, while the page section editor edits the local
 page/regional layer. Header/footer remain direct shared globals and do not create page-local section
 versions.

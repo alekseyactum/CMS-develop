@@ -387,6 +387,11 @@ resolved global-source content. This creates a concrete base page price layer fo
 inherit from. The materialized version stores `source_section_version_id` pointing to the source version
 that produced it; it is not a hidden editor draft.
 
+Preview must not materialize local price versions. If a source-backed `with_page` price section has no
+local draft/published version yet, preview should resolve the inherited source content in memory and expose
+it as renderable page-owned preview content only. The database receives a local published price version only
+when the page is actually published.
+
 If the base non-regional price section uses inherit/append/field-level inherited fields from the global
 price source, the base page can be affected by global price publication according to the global price
 rebuild policy. Regional pages then become dependent on the resulting base page price section, not on the
