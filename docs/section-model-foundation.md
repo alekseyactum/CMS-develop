@@ -381,6 +381,12 @@ for base pages.
 Regional price resolution uses the current published base page price result as its parent input, never an
 unpublished base draft.
 
+When a base non-regional page publishes a source-backed `with_page` price section that has no local draft
+or local published version yet, backend must still materialize a local published price version from the
+resolved global-source content. This creates a concrete base page price layer for regional pages to
+inherit from. The materialized version stores `source_section_version_id` pointing to the source version
+that produced it; it is not a hidden editor draft.
+
 If the base non-regional price section uses inherit/append/field-level inherited fields from the global
 price source, the base page can be affected by global price publication according to the global price
 rebuild policy. Regional pages then become dependent on the resulting base page price section, not on the
@@ -764,6 +770,9 @@ Even an independent section publish does not change the public site directly. Pu
 happens through a new complete page snapshot:
 
 - changed `with_page` sections are validated during page publish and prepared for publication;
+- source-backed `with_page` sections that contribute inherited content but have no local draft may be
+  materialized as published local versions during page publish, so downstream inheritors can point to a
+  concrete published parent section;
 - new published versions for changed `with_page` sections and the new current page snapshot must be
   committed atomically;
 - independent sections used by publish-resolution must already have a published version;

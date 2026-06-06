@@ -757,6 +757,12 @@ Generated `practice_page`, `service_page`, and `problem_page` schemas also expos
 - public snapshots store the resolved price payload and keep separate source/local section refs for
   diagnostics and rollback.
 
+On page publish, a base non-regional generated page may create a local published `price` version even when
+the editor did not save a local price draft. This happens when the page price fully inherits from
+`global_price`: backend materializes the resolved inherited price as the base page's own published price
+layer, so regional pages can inherit from that concrete base version. In `publish.withPageSectionCommits`,
+this case has `draftVersionId: null` and `sourceSectionVersionId` set to the upstream published version.
+
 This means the global price screen edits the shared source, while the page section editor edits the local
 page/regional layer. Header/footer remain direct shared globals and do not create page-local section
 versions.
