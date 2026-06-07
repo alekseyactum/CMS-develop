@@ -1386,8 +1386,8 @@ inherit from the matching base page price section.
 
 - `breadcrumbs` are not editable section cells. They are generated public/runtime metadata from route/page
   context and should be rendered by the site frontend outside the CMS section list.
-- `practice_collection_page` exposes `practice_collection_intro`, runtime `practice_collection`, and runtime
-  `lead_capture`.
+- `practice_collection_page` exposes `practice_collection_intro` and runtime `practice_collection`; it does
+  not expose `lead_capture` in the first collection-page design slice.
 - `practice_intro` and other `*_intro` hero slots now include optional `ctaLabel` and `ctaTarget` fields.
 - `practice_page` additionally exposes optional page-owned `practice_intro_text`, `practice_actions`,
   `practice_team_cta`, `practice_optional_text`, optional `lead_questionnaire`, runtime `practice_cases`,

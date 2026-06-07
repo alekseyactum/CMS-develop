@@ -714,9 +714,10 @@ Price sections are modeled as source-backed page-owned sections: base generated 
 
 Implementation note, 2026-06-04: service-tree page schemas were aligned with the first site designs.
 `breadcrumbs` are not CMS authoring sections and must not appear as editable page slots; they are generated
-runtime/public payload metadata from route/page context. `practice_collection_page` keeps an editable
-`practice_collection_intro` hero slot, a runtime `practice_collection` list, and the standard runtime
-`lead_capture` form contract. `practice_page` now has the following backend scaffold:
+runtime/public payload metadata from route/page context. `practice_collection_page` keeps only an editable
+`practice_collection_intro` hero slot and a runtime `practice_collection` list; it does not include the
+standard service-hierarchy lead form in the first design slice. `practice_page` now has the following
+backend scaffold:
 
 - `seo`;
 - `practice_intro` hero, including optional `ctaLabel` and `ctaTarget`;
@@ -734,7 +735,8 @@ runtime/public payload metadata from route/page context. `practice_collection_pa
 and not an editable page-owned section. It gives the frontend a stable form component context. The optional
 `lead_questionnaire` stores page-specific questions and can be inherited/overridden/appended regionally as
 a normal page-owned section. The same `lead_questionnaire` + `lead_capture` tail is available on
-`service_page` and `problem_page`; detailed service/problem content structure remains a separate design pass.
+`practice_page`, `service_page`, and `problem_page`; detailed service/problem content structure remains a
+separate design pass.
 
 Approved direction, 2026-06-05: `problem_page` structure is approved conceptually from the current page
 design, but must not be expanded in backend code until the exact implementation slice for service/problem
