@@ -1033,8 +1033,9 @@ GET /api/admin/page-workbench/page-types/problem_page?locale=uk
 
 Each generated row is tied to one visible reference object from the CMS database:
 
-- `practice_collection_page`: one synthetic source row, not an ERP object. It has no `practiceId` and
-  always uses `pagePath = "services"`;
+- `practice_collection_page`: one synthetic source row, not an ERP object. It has no `practiceId`, always
+  uses `pagePath = "services"`, and should be presented to editors as "Практики" even though the public
+  route stays `/services`;
 - `practice_page`: one visible practice;
 - `service_page`: one visible service with `serviceCond=true` and a resolved visible practice;
 - `problem_page`: one visible problem with resolved visible practice and service.
@@ -1437,11 +1438,27 @@ preview and publish. The frontend does not need to manually send payloads for th
 
 The resolver reads CMS reference tables, uses the page route context (`services`,
 `services/{practiceSlug}`, `services/{practiceSlug}/{serviceSlug}`, etc.), and returns list payloads with
-route-ready items. For `practice_collection_page`, the base page lists all visible practices; regional rows
-list visible practices that have an active region qualification for the selected visible region. If the
-frontend sends a `runtimePayloads` entry for one of these slots, backend keeps the provided payload and does
-not resolve that same slot again. This is mainly useful for tests or transitional UI experiments; normal CMS
-frontend code should let backend resolve service-tree runtime slots.
+route-ready items. For `practice_collection_page`, the runtime payload is a practice tree: base rows list
+all visible practices with nested visible services, while regional rows list visible practices that have an
+active region qualification for the selected visible region with nested visible services under those
+practices. Nested services use `show_on_site=true` and `service_cond=true`. Practice and service ordering is
+CMS `sort_order`, then localized/source display name, then stable id. If a practice or service has a
+missing or unpublished linked generated page, keep it visible in the admin runtime/editor context and show
+the backend warning/diagnostic rather than silently hiding it from editors. If the frontend sends a
+`runtimePayloads` entry for one of these slots, backend keeps the provided payload and does not resolve that
+same slot again. This is mainly useful for tests or transitional UI experiments; normal CMS frontend code
+should let backend resolve service-tree runtime slots.
+
+`practice_collection_page` matrix rows now include row-level diagnostics for this runtime tree. Treat
+`PAGE_RUNTIME_REQUIRED_LIST_EMPTY` as a critical publish blocker and show its `slotKey`/message near the
+`practice_collection` runtime cell. Treat `PAGE_LINKED_PAGE_NOT_CREATED` and
+`PAGE_LINKED_PAGE_NOT_PUBLISHED` as warning-level admin diagnostics; their reason payload includes
+`sourceType`, `sourceId`, and `publicPath` so the UI can point the editor to the affected practice/service.
+Warnings do not remove the item from the admin context and do not by themselves block page publish.
+
+For `practice_collection_page`, regional `seo` and `practice_collection_intro` should appear as inherited
+from the base page until the editor explicitly overrides them. Regional canonical route is self-canonical,
+for example `/kyiv/services`, not canonicalized to the base `/services`.
 
 Runtime resolution can block preview/publish with `PAGE_RUNTIME_RESOLUTION_FAILED` when the page route no
 longer matches visible reference data or a visible child item has no required source slug. Show this as a

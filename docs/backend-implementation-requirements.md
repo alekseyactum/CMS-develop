@@ -728,12 +728,33 @@ Optional page-owned FAQ and consultation CTA sections are present for practice, 
 Price sections are modeled as source-backed page-owned sections: base generated pages inherit from
 `global_price`, while regional generated pages inherit from the matching base page price section.
 
-Implementation note, 2026-06-04: service-tree page schemas were aligned with the first site designs.
+Implementation note, 2026-06-04/09: service-tree page schemas were aligned with the first site designs.
 `breadcrumbs` are not CMS authoring sections and must not appear as editable page slots; they are generated
 runtime/public payload metadata from route/page context. `practice_collection_page` keeps only an editable
-`practice_collection_intro` hero slot and a runtime `practice_collection` list; it does not include the
-standard service-hierarchy lead form in the first design slice. `practice_page` now has the following
-backend scaffold:
+`practice_collection_intro` hero slot and a runtime `practice_collection` tree; it does not include the
+standard service-hierarchy lead form in the first design slice.
+
+The `practice_collection_page` public route remains `/services`, but the CMS editor title should be
+"Практики". Its runtime `practice_collection.items` are practices with nested `services[]`, not a flat
+practice-only list:
+
+- base rows list visible practices and each practice's visible public-list services;
+- regional rows list visible practices that have an active region qualification for the selected visible
+  region, and each listed practice carries the visible public-list services that belong to that practice;
+- services use `show_on_site = true` and `service_cond = true`;
+- practice and service ordering is CMS `sort_order`, then localized/source display name, then stable id;
+- practices and services whose linked generated pages are missing or unpublished remain visible in the
+  admin/runtime editor context with diagnostics or warnings, instead of silently disappearing from the
+  editor's view;
+- source slug problems stay critical because route-ready public payloads cannot be built without them.
+
+For `practice_collection_page`, regional `seo` and `practice_collection_intro` inherit from the base page
+by default. A regional page may diverge only through an explicit override. Regional canonical URLs are
+self-canonical on the regional route, for example `/kyiv/services`; they must not canonicalize back to the
+base `/services` page. Empty or low-value required runtime collections block publish for an eligible
+regional row rather than publishing a page only because the region exists.
+
+`practice_page` now has the following backend scaffold:
 
 - `seo`;
 - `practice_intro` hero, including optional `ctaLabel` and `ctaTarget`;
@@ -797,12 +818,19 @@ service-tree pages. The first supported slots are `practice_collection`, `practi
 `problem_lawyers`, and `lead_capture`. The resolver reads CMS reference-data tables, uses source slugs from
 the page path, filters visible/public records, applies lawyer qualification score rules (`score > 1`), and
 builds route-ready list items where real reference data is already available. For
-`practice_collection_page`, base rows list all visible practices and regional rows list visible practices
-that have an active region qualification for the selected visible region. `practice_cases` and
+`practice_collection_page`, base rows list all visible practices with nested visible services, and regional
+rows list visible practices that have an active region qualification for the selected visible region with
+nested visible services for those practices. `practice_cases` and
 `practice_reviews` currently return empty route-aware list payloads until cases/reviews read models are
 implemented. Provided runtime payloads are still respected and are not resolved twice, which preserves
 backward compatibility with manual preview/publish requests. Missing visible sources or unroutable visible
 child items now fail as `PAGE_RUNTIME_RESOLUTION_FAILED` before an invalid public snapshot is created.
+The workbench matrix also surfaces `practice_collection` editor diagnostics before publish:
+`PAGE_RUNTIME_REQUIRED_LIST_EMPTY` is critical when the collection would have no practices, while
+`PAGE_LINKED_PAGE_NOT_CREATED` and `PAGE_LINKED_PAGE_NOT_PUBLISHED` are warning-level admin diagnostics for
+visible practice/service items whose generated pages are missing or unpublished. Page lifecycle enforces the
+empty `practice_collection.items` rule during publish as a backend guard; other currently-empty runtime
+slots such as practice cases/reviews remain allowed until their read models exist.
 
 Implementation note, 2026-05-23: `cms-back` now exposes the first direct global sections workbench API:
 `GET /api/admin/global-sections`,
