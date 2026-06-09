@@ -775,6 +775,17 @@ a normal page-owned section. The same `lead_questionnaire` + `lead_capture` tail
 `practice_page`, `service_page`, and `problem_page`; detailed service/problem content structure remains a
 separate design pass.
 
+Product-structure checkpoint, 2026-06-09: the current `practice_page` backend scaffold is not the final
+target structure. The next implementation pass should add a required inherited/global recognition strip
+after the hero for service-hierarchy pages except `practice_collection_page`; split text content into three
+fixed optional slots (`practice_intro_text`, `practice_reviews_text`, `practice_price_text`); add an
+optional composite `practice_related_legal_block` + runtime `practice_related_legal` for rows where
+`show_on_site=true`, `legal_cond=true`, and `service_cond=false`; and tighten `practice_actions` into an
+enabled-by-default list section with 2-8 action items. Regional `seo`, `practice_intro`, block text, and
+optional text/actions sections should inherit from the base page by default and become stale/requires-review
+when the base source changes. `practice_team_cta` and the later cases/reviews/price/FAQ/lawyers/lead tail
+still need a follow-up structure pass before code changes.
+
 Approved direction, 2026-06-05: `problem_page` structure is approved conceptually from the current page
 design, but must not be expanded in backend code until the exact implementation slice for service/problem
 pages starts. Header/footer and breadcrumbs stay outside the editable page schema. Breadcrumbs and the

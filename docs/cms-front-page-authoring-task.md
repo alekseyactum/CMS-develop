@@ -1521,6 +1521,15 @@ inherit from the matching base page price section.
   editor enables and fills it. A typical draft payload is
   `{ "title": "...", "description": [...], "questions": [{ "id": "minor_children", "label": "...", "type": "single_choice", "required": false, "options": [{ "value": "yes", "label": "Так" }] }] }`.
 
+2026-06-09 `practice_page` structure checkpoint: do not treat the current backend scaffold as the final
+screen structure. The agreed target adds a global recognition strip after the hero, keeps
+`practice_services_block` + `practice_services` as the required services list (`service_cond=true`), adds a
+separate optional "Може зацікавити" composite list for `legal_cond=true` and `service_cond=false`, splits
+generic text content into three fixed optional slots (`practice_intro_text`, `practice_reviews_text`,
+`practice_price_text`), and makes `practice_actions` an enabled-by-default action list with 2-8 items.
+Regional editable text/metadata sections inherit from the base page by default. The structure pass stopped
+before finalizing `practice_team_cta` and the later cases/reviews/price/FAQ/lawyers/lead tail.
+
 2026-06-05 clarification for implementation order:
 
 - `problem_page` has an approved product structure, but the backend code should not expose the full final

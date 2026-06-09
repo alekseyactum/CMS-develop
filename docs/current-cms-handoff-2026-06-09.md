@@ -588,6 +588,52 @@ For the first working implementation, do not try to perfect all 16 slots. The pr
 6. verify `lead_capture`;
 7. then refine optional content slots.
 
+2026-06-09 product-structure checkpoint for `practice_page`:
+
+- Regional inheritance rule: for future regional service-hierarchy pages, regional page-owned sections
+  should inherit from the matching base page by default and diverge only through an explicit override.
+  `seo` and `practice_intro` for `practice_page` should follow this rule. Base changes should mark
+  inherited regional pages stale/requires-review.
+- Canonicals are backend-owned and self-canonical for both base and regional routes.
+- `seo`: `title` and `description` start from the source practice name and remain editable. Empty required
+  fields are errors; SEO length/quality and `ogImage` media policy issues are warnings. `ogImage` is
+  optional and may use a frontend/site fallback.
+- `practice_intro`: required, fixed, not disableable, inherited regionally. Default `title` comes from the
+  practice name; default `lead` is empty. Hero CTA stays as the primary lead-flow action. `ctaLabel` and
+  `ctaTarget` must be a valid pair; UI should use controlled target choices, not free external URLs.
+- A new global/shared recognition section is required after the hero on the home page and all
+  service-hierarchy pages except `practice_collection_page`. It is one global source, not page-owned,
+  not overrideable, not appendable, not disableable, and not movable. Proposed content: required
+  `items[]` with `sourceName`, optional `sourceLogo`, and required `achievementText`. Fewer than 3 items
+  is a warning; empty `achievementText` is an error; missing both `sourceName` and `sourceLogo` is an
+  error; media issues are warning when text fallback exists.
+- `practice_services_block` + `practice_services`: required, fixed, not disableable. The editable block is
+  inherited regionally and defaults to a localized services heading, preferably "Services {practice}" when
+  a suitable grammatical form exists, otherwise "Services". Runtime source is current practice services
+  where `show_on_site=true` and `service_cond=true`; regional runtime must filter by regional competence.
+  Empty runtime list blocks publish. Missing/unpublished linked service pages are admin warnings; public
+  items should render disabled/non-link rather than active broken links. Ordering remains `sort_order`,
+  then display/source name, then stable id.
+- Add a separate optional composite section for "Може зацікавити", not part of `practice_services`.
+  Proposed names: `practice_related_legal_block` + `practice_related_legal`. Runtime source is current
+  practice rows with `show_on_site=true`, `legal_cond=true`, and `service_cond=false`; regional runtime is
+  filtered by regional competence. Items use the same service-route shape as service pages. Missing or
+  unpublished linked pages are warnings and render public items disabled/non-link. The section can be
+  disabled, is fixed, inherited regionally, and empty enabled runtime is a warning rather than a publish
+  blocker.
+- Text sections: the old single `practice_intro_text` concept should become three independent fixed
+  optional slots with the same schema: optional `title`, optional rich-text `lead`, but enabled sections
+  must contain at least one of them. Proposed slots/variants:
+  `practice_intro_text` (`accent_panel`) after related legal, `practice_reviews_text` (`proof_band`) after
+  reviews, and `practice_price_text` (`price_note`) after price. All can be enabled independently,
+  inherit regionally, can override, do not append, and are not movable.
+- `practice_actions`: confirmed as the "lawyer actions" section. It is optional/can-disable but enabled by
+  default, inherited regionally, overrideable, not appendable, not movable, and uses one fixed visual
+  style. Fields: required `title`, optional `lead`, required `items[]`. Item fields: required `title` and
+  optional `description`. Enabled empty section is an error; item count target is 2-8.
+- Discussion stopped before finalizing `practice_team_cta`, cases, reviews, price, FAQ, lawyers,
+  lead_questionnaire, and lead_capture.
+
 ### service_page And problem_page
 
 Do not expand these deeply before `practice_collection_page` and `practice_page` are stable.
