@@ -766,6 +766,29 @@ Linked-page warnings include `sourceType`, `sourceId`, and `publicPath`, stay vi
 do not by themselves block publish. Empty `practice_collection.items` is also guarded in
 `PageLifecycleService.publishPage`, so direct publish calls cannot create an invalid collection snapshot.
 
+## 2026-06-09 Frontend Feedback Response
+
+Three frontend-reported gaps were addressed in `cms-back`:
+
+1. `GET /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor` now returns
+   `workbench.row` with the same generated source-aware row shape as
+   `GET /api/admin/page-workbench/page-types/{pageType}` and
+   `GET /api/admin/page-workbench/pages/{pageId}/row`. For generated regional rows, frontend can rely on
+   consistent `rowKey`, `kind`, `sourceTitle`, `regionTitle`, `displayTitle`, `sourceRecord`, `region`,
+   `regionSlug`, `pagePath`, and `publicPath`.
+2. Page-scoped section editor history now includes `changeOrigin`, matching global section history:
+   `ME` for manual edits, `RB#<sourceVersionNo>` / `RB#<sourceVersionNo>_<repeatNo>` for rollbacks, and
+   `FV` for draft-from-version/copy rows.
+3. Legacy regional `practice_collection_page` `seo` and `practice_collection_intro` bindings are repaired
+   when authoring state is read if they were created before the base-inheritance dependency existed. The
+   backend reconnects them to the base page-owned section and marks them `draft_stale` when the base has an
+   unreviewed draft. Freshly bootstrapped regional rows already create these dependencies.
+
+Frontend note to send: remove any workaround that treats section-editor `workbench.row` as a plain catalog
+row; consume the same row shape everywhere. Use `history.items[].changeOrigin` for version-origin badges.
+If an old regional row does not look stale immediately after a base edit, refresh/open that regional
+authoring row once so the lazy repair path can attach the missing dependency.
+
 ## Known Frontend Developer Notes Already Given
 
 Recent notes to CMS frontend developer:

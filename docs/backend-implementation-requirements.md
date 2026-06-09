@@ -705,6 +705,13 @@ operation result plus a fresh workbench row, so the CMS frontend can update both
 and the matrix row after save, validate, publish, rollback, enable, or disable without reconstructing
 backend rules or making a separate row-refresh request.
 
+Implementation note, 2026-06-09: section editor wrapper responses now build `workbench.row` through the
+same generated source-aware row contract as the page-type matrix and row refresh endpoints. Generated
+regional rows therefore keep `sourceTitle`, `regionTitle`, `displayTitle`, `sourceRecord`, `region`,
+`regionSlug`, `pagePath`, and `publicPath` consistent across matrix, row refresh, and editor responses.
+Page-scoped section editor history also exposes computed `changeOrigin` metadata matching the global
+section history contract (`ME`, `RB`, `FV` labels with repeated rollback/copy suffixes).
+
 Implementation note, 2026-05-22/30: `cms-back` now registers the first generated service-tree page
 schemas: `practice_collection_page`, `practice_page`, `service_page`, and `problem_page`.
 `practice_collection_page` is the public services/root collection page. It uses the canonical base path
@@ -753,6 +760,13 @@ by default. A regional page may diverge only through an explicit override. Regio
 self-canonical on the regional route, for example `/kyiv/services`; they must not canonicalize back to the
 base `/services` page. Empty or low-value required runtime collections block publish for an eligible
 regional row rather than publishing a page only because the region exists.
+
+Implementation note, 2026-06-09: legacy regional `practice_collection_page` bindings that were created
+before `regional_base_inheritance` dependencies are repaired lazily when authoring state is read. If a
+regional `seo` or `practice_collection_intro` binding has no base `sourceSectionId`/draft dependency, the
+backend reconnects it to the base page-owned section with `composition: { strategy: "inherit" }` and marks
+it `draft_stale` when the base already has an unreviewed draft. Freshly bootstrapped regional pages keep the
+same dependency at creation time.
 
 `practice_page` now has the following backend scaffold:
 

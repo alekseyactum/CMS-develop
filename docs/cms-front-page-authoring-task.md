@@ -1670,6 +1670,12 @@ screen. The response shape is:
 Use `response.editor` to render the section editor and `response.workbench.row` to refresh the matrix row
 behind the opened editor.
 
+Implementation note, 2026-06-09: `response.workbench.row` from the section editor wrapper is source-aware
+and must match the row shape returned by the page-type matrix and row refresh endpoints. For generated
+regional rows this includes `rowKey`, `kind`, `title`, `sourceTitle`, `regionTitle`, `displayTitle`,
+`sourceRecord`, `region`, `regionSlug`, `pagePath`, and `publicPath`. The frontend should not special-case
+editor rows as plain catalog rows.
+
 `response.editor` contains:
 
 - `page`: page identity and route;
@@ -1796,9 +1802,14 @@ The response returns version rows for the section currently opened through the p
 
 - draft, published and archived versions;
 - version content for preview/review;
+- `changeReason` plus computed `changeOrigin`;
 - `createdBy`, `createdAt`, `publishedBy`, `publishedAt`;
 - `isCurrentDraft` and `isCurrentPublished`;
 - `canRollback`, which is true only for published versions.
+
+`changeOrigin` uses the same UI contract as global section history. Manual edits are marked as
+`{ code: "ME", label: null }`; rollback rows are marked as `RB#<sourceVersionNo>` and repeated rollbacks as
+`RB#<sourceVersionNo>_<repeatNo>`; draft-from-version/copy rows use `FV` with the same label pattern.
 
 Rollback:
 
