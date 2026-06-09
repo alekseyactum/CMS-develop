@@ -16,6 +16,9 @@ GET  /api/admin/page-workbench/service-tree
 GET  /api/admin/page-workbench/page-types/{pageType}
 GET  /api/admin/page-workbench/generated-sources/{pageType}/{sourceId}/row
 GET  /api/admin/page-workbench/pages/{pageId}/row
+GET  /api/admin/page-workbench/pages/{pageId}/history
+POST /api/admin/page-workbench/bulk-publish/plan
+POST /api/admin/page-workbench/bulk-publish
 POST /api/admin/page-workbench/pages/bootstrap
 POST /api/admin/page-workbench/generated-sources/{pageType}/{sourceId}/bootstrap
 POST /api/admin/page-workbench/generated-sources/{pageType}/{sourceId}/open
@@ -928,6 +931,9 @@ GET /api/admin/page-workbench/service-tree?locale=uk
 GET /api/admin/page-workbench/page-types/{pageType}?locale=uk
 GET /api/admin/page-workbench/generated-sources/{pageType}/{sourceId}/row?locale=uk
 GET /api/admin/page-workbench/pages/{pageId}/row
+GET /api/admin/page-workbench/pages/{pageId}/history?limit=50&offset=0
+POST /api/admin/page-workbench/bulk-publish/plan
+POST /api/admin/page-workbench/bulk-publish
 POST /api/admin/page-workbench/pages/bootstrap
 POST /api/admin/page-workbench/generated-sources/{pageType}/{sourceId}/bootstrap?locale=uk
 POST /api/admin/page-workbench/generated-sources/{pageType}/{sourceId}/open?locale=uk
@@ -1314,6 +1320,10 @@ The matrix exposes page action URLs directly on `row.endpoints`:
     },
     "publish": null,
     "rollback": null,
+    "history": {
+      "method": "GET",
+      "path": "/api/admin/page-workbench/pages/page-contacts-uk/history?limit=50&offset=0"
+    },
     "snapshots": {
       "method": "GET",
       "path": "/api/admin/page-workbench/pages/page-contacts-uk/snapshots"
@@ -1322,6 +1332,98 @@ The matrix exposes page action URLs directly on `row.endpoints`:
   }
 }
 ```
+
+The matrix response also exposes screen-level bulk publish actions:
+
+```json
+{
+  "endpoints": {
+    "bulkPublishPlan": {
+      "method": "POST",
+      "path": "/api/admin/page-workbench/bulk-publish/plan",
+      "body": {
+        "locale": "uk",
+        "scope": {
+          "kind": "pages",
+          "pageIds": ["page-contacts-uk"]
+        }
+      }
+    },
+    "bulkPublish": {
+      "method": "POST",
+      "path": "/api/admin/page-workbench/bulk-publish",
+      "body": {
+        "locale": "uk",
+        "scope": {
+          "kind": "pages",
+          "pageIds": ["page-contacts-uk"]
+        }
+      }
+    }
+  }
+}
+```
+
+Use `bulkPublishPlan` to show what will happen before "publish all". Use `bulkPublish` for the actual
+operation. Do not implement publish-all as frontend `Promise.all`; the backend response has one summary and
+per-page statuses.
+
+Every section/runtime cell now exposes `relationship`. This is the only field the UI should use to display
+whether a cell is self-owned, inherited, global, runtime, or not created. Do not infer that from
+`composition.strategy` alone.
+
+Examples:
+
+```json
+{
+  "slotKey": "seo",
+  "composition": { "strategy": "override" },
+  "relationship": {
+    "role": "self_owned",
+    "inheritanceStrategy": "none",
+    "isInherited": false,
+    "sourceSectionId": null,
+    "localSectionId": "section-seo"
+  }
+}
+```
+
+Here `composition.strategy = "override"` is an internal authoring strategy, not inheritance. Since
+`sourceSectionId` is `null`, this is a standalone page section.
+
+```json
+{
+  "slotKey": "price",
+  "relationship": {
+    "role": "child",
+    "inheritanceStrategy": "append",
+    "isInherited": true,
+    "sourceSectionId": "section-price-parent",
+    "localSectionId": "section-price-local"
+  }
+}
+```
+
+This is a real child section. Show inheritance only when `relationship.isInherited = true`.
+
+`draftVersion` and `publishedVersion` summaries now include audit fields:
+
+```json
+{
+  "sectionVersionId": "section-seo-published-v1",
+  "versionNo": 1,
+  "lifecycleState": "published",
+  "createdBy": "editor-1",
+  "createdAt": "2026-05-21T10:00:00.000Z",
+  "publishedBy": "publisher-1",
+  "publishedAt": "2026-05-21T11:00:00.000Z"
+}
+```
+
+Use `row.diagnostics` for page-level issues, and `cell.diagnostics` only for section-level issues. For
+example, `PAGE_NO_CURRENT_SNAPSHOT` belongs to the row, not to a section cell. If `row.endpoints.publish`
+is `null`, read `row.readiness.publish.reasons` for the user-facing reason; common cases are "already
+published" or "blocked by validation/stale sections".
 
 For generated service-tree pages, the backend now resolves missing runtime/read-model payloads during
 preview and publish. The frontend does not need to manually send payloads for these slots:
@@ -1347,10 +1449,13 @@ backend validation error and route the editor to fix the underlying reference ob
 
 Snapshot history endpoints support the rollback UI:
 
+- `GET /pages/{pageId}/history`: returns historical page snapshots as row-history items with matrix-like
+  cells;
 - `GET /pages/{pageId}/snapshots`: returns historical page snapshots, newest first;
 - `GET /pages/{pageId}/snapshots/{snapshotId}`: returns one snapshot with its public payload.
 
-Use the list endpoint to open the page history panel. Each item contains:
+Use `/history` for the row history panel because it already groups snapshot section refs by workbench
+cells. Use `/snapshots` only when the UI needs the raw snapshot list. Each snapshot item contains:
 
 - `snapshotId`, `snapshotNo`, `status`;
 - `createdBy` / `createdAt`: who created this snapshot and when;

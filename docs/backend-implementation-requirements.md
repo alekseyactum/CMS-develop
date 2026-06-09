@@ -670,6 +670,22 @@ returns the same metadata plus the stored public payload. The CMS frontend shoul
 show historical published states and pass the selected `snapshotId` as `sourceSnapshotId` to the existing
 rollback action. Historical snapshots remain immutable; rollback creates a new current snapshot.
 
+Implementation note, 2026-06-09: `cms-back` page workbench now exposes a UI-oriented row history endpoint:
+`GET /api/admin/page-workbench/pages/{pageId}/history?limit=50&offset=0`. It returns immutable snapshot
+history grouped into matrix-like cells, so the frontend can render the history panel for Ukraine/regional
+rows without reconstructing cells from raw `sectionRefs`. Matrix rows also expose `endpoints.history`, and
+matrix responses expose `endpoints.bulkPublishPlan` / `endpoints.bulkPublish` with a `pages` scope for all
+created rows currently visible in the matrix.
+
+Implementation note, 2026-06-09: workbench cells now expose a backend-computed `relationship` block. The
+frontend must use this block, not `composition.strategy` alone, to label a cell as standalone, inherited,
+global, runtime, or not created. A page-owned section with `sourceSectionId = null` and
+`composition.strategy = "override"` is still `relationship.role = "self_owned"` and
+`inheritanceStrategy = "none"`. Real inheritance is exposed only when `relationship.isInherited = true`.
+Draft/published version summaries now include `createdBy`, `createdAt`, `publishedBy`, and `publishedAt`.
+Generated matrix rows also expose `sourceTitle`, `regionTitle`, and `displayTitle` so the frontend does not
+have to parse display labels such as `Одеса / Послуги`.
+
 Implementation note, 2026-05-22: `cms-back` page workbench now exposes
 `POST /api/admin/page-workbench/pages/bootstrap`. This endpoint wraps the existing page authoring bootstrap
 workflow and returns the bootstrap result plus a fresh workbench row. It exists so the CMS frontend can
