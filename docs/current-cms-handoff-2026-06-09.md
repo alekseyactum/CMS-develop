@@ -252,6 +252,8 @@ Global section API exists for editor/history/validate/draft/publish-related work
 Important global sections:
 
 - `global_price`;
+- `global_achievements`;
+- `global_lead_form`;
 - `site_header`;
 - `site_footer`;
 - `site_footer_practices`.
@@ -578,6 +580,23 @@ Current backend slots:
     - not an editable page-owned section;
     - frontend renders the common form component from this runtime context.
 
+2026-06-10 implementation update:
+
+- `achievements_strip` is now implemented for `practice_page`, `service_page`, and `problem_page`.
+  It is intentionally absent from `practice_collection_page`.
+- The page slot uses `sourcePolicy: "global_section_inheritance"` and
+  `globalSectionKey: "global_achievements"`. Base generated pages source it from the locale global
+  section; regional pages source it from the matching base page local section.
+- `lead_form` is now implemented as the CMS-authored global form-content section for
+  `practice_page`, `service_page`, and `problem_page`. It uses
+  `globalSectionKey: "global_lead_form"` and the same generic inherited-global source policy.
+- `lead_capture` remains the runtime/read-model form slot. The frontend should render `lead_form`
+  content together with the runtime `lead_capture` context; do not treat `lead_capture` as editable.
+- Both new slots are required, fixed, and not disableable. `achievements_strip` is inherit-only at the
+  page layer. `lead_form` inherits by default and may override according to its page schema, but has no
+  append behavior. Both are materialized into base page snapshots so regional pages can review/publish
+  from the base layer, just like the price inheritance chain.
+
 For the first working implementation, do not try to perfect all 16 slots. The practical route is:
 
 1. verify `practice_intro`;
@@ -602,11 +621,12 @@ For the first working implementation, do not try to perfect all 16 slots. The pr
   practice name; default `lead` is empty. Hero CTA stays as the primary lead-flow action. `ctaLabel` and
   `ctaTarget` must be a valid pair; UI should use controlled target choices, not free external URLs.
 - A new global/shared recognition section is required after the hero on the home page and all
-  service-hierarchy pages except `practice_collection_page`. It is one global source, not page-owned,
-  not overrideable, not appendable, not disableable, and not movable. Proposed content: required
-  `items[]` with `sourceName`, optional `sourceLogo`, and required `achievementText`. Fewer than 3 items
-  is a warning; empty `achievementText` is an error; missing both `sourceName` and `sourceLogo` is an
-  error; media issues are warning when text fallback exists.
+  service-hierarchy pages except `practice_collection_page`. Backend now exposes it on
+  `practice_page`, `service_page`, and `problem_page` as `achievements_strip` backed by
+  `global_achievements`. Content is required `items[]` with `sourceName`, optional `sourceLogo`, and
+  required `achievementText`. Fewer than 3 items is a warning; empty `achievementText` is an error;
+  missing both `sourceName` and `sourceLogo` is an error; media issues are warning when text fallback
+  exists and error when no fallback exists.
 - `practice_services_block` + `practice_services`: required, fixed, not disableable. The editable block is
   inherited regionally and defaults to a localized services heading, preferably "Services {practice}" when
   a suitable grammatical form exists, otherwise "Services". Runtime source is current practice services
@@ -803,6 +823,9 @@ Recent notes to CMS frontend developer:
 - global section `/validate` can validate unsaved payload, not only saved sectionVersionId;
 - global section editor response should carry diagnostics needed by the current screen, including all
   locale diagnostics where the design shows all locales.
+- `achievements_strip` and `lead_form` are required inherited page slots on `practice_page`,
+  `service_page`, and `problem_page`; edit their shared source through global sections
+  `global_achievements` and `global_lead_form`.
 
 ## Open Questions / Risks
 

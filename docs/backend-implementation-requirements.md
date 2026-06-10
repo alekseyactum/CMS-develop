@@ -230,6 +230,11 @@ Section schemas must also support:
   schemas expose a page-owned `price` slot with `sourcePolicy = price_inheritance`; base non-regional
   pages bind that local price section to the locale `global_price` source, and regional generated pages
   bind their local price section to the base page's local price section;
+- generic inherited global section layer: generated service-hierarchy pages can expose required page-owned
+  source-backed slots backed by a locale global section. Base non-regional pages bind to the global source;
+  regional pages bind to the matching base page local section. The first slots are `achievements_strip`
+  backed by inherit-only `global_achievements` and `lead_form` backed by `global_lead_form` with
+  inherit/override but no append behavior;
 - page publish/preview must resolve `source + local` price composition before assembling the public
   payload, and page snapshots must record both source and local section refs when both contributed to the
   resolved price block;
@@ -311,7 +316,8 @@ Required top-level groups:
   reference-data editor; it opens the page/workbench area for individual lawyer public pages.
 - `publications`: publication collections such as articles, cases, and media mentions.
 - `global_sections`: the shared layout/global area. It contains versioned global sections
-  `site_header`, `site_footer_practices`, `site_footer`, `global_price`, plus the non-versioned
+  `site_header`, `site_footer_practices`, `site_footer`, `global_price`, `global_achievements`,
+  `global_lead_form`, plus the non-versioned
   `site_contact_settings` settings item.
 - `reference_data`: ERP/CMS dictionaries. The service/practice/problem dictionaries are exposed in the
   sidebar as one `service_hierarchy` item, not as separate top-level `practices`, `services`, and
@@ -772,6 +778,7 @@ same dependency at creation time.
 
 - `seo`;
 - `practice_intro` hero, including optional `ctaLabel` and `ctaTarget`;
+- required inherited `achievements_strip`;
 - `practice_services_block` + runtime `practice_services`;
 - optional page-owned content slots `practice_intro_text`, `practice_actions`, `practice_team_cta`,
   and `practice_optional_text`;
@@ -780,19 +787,22 @@ same dependency at creation time.
 - optional `practice_faq`;
 - `practice_lawyers_block` + runtime `practice_lawyers`;
 - optional page-owned `lead_questionnaire`;
+- required inherited `lead_form`;
 - runtime `lead_capture`.
 
+`lead_form` is the CMS-authored shared form content section inherited from `global_lead_form`.
 `lead_capture` is a fixed backend/runtime contract for the service hierarchy pages, not a global section
 and not an editable page-owned section. It gives the frontend a stable form component context. The optional
 `lead_questionnaire` stores page-specific questions and can be inherited/overridden/appended regionally as
-a normal page-owned section. The same `lead_questionnaire` + `lead_capture` tail is available on
-`practice_page`, `service_page`, and `problem_page`; detailed service/problem content structure remains a
-separate design pass.
+a normal page-owned section. The same `lead_form` + `lead_questionnaire` + `lead_capture` tail is available
+on `practice_page`, `service_page`, and `problem_page`; detailed service/problem content structure remains
+a separate design pass.
 
-Product-structure checkpoint, 2026-06-09: the current `practice_page` backend scaffold is not the final
-target structure. The next implementation pass should add a required inherited/global recognition strip
-after the hero for service-hierarchy pages except `practice_collection_page`; split text content into three
-fixed optional slots (`practice_intro_text`, `practice_reviews_text`, `practice_price_text`); add an
+Product-structure checkpoint, 2026-06-09/10: the current `practice_page` backend scaffold is not the final
+target structure. The required inherited/global recognition strip after the hero is implemented for
+service-hierarchy pages except `practice_collection_page`; the next implementation pass should split text
+content into three fixed optional slots (`practice_intro_text`, `practice_reviews_text`,
+`practice_price_text`); add an
 optional composite `practice_related_legal_block` + runtime `practice_related_legal` for rows where
 `show_on_site=true`, `legal_cond=true`, and `service_cond=false`; and tighten `practice_actions` into an
 enabled-by-default list section with 2-8 action items. Regional `seo`, `practice_intro`, block text, and
@@ -867,13 +877,15 @@ Implementation note, 2026-05-23: `cms-back` now exposes the first direct global 
 `POST /api/admin/global-sections/{sectionKey}/publish`,
 `GET /api/admin/global-sections/{sectionKey}/history`, and
 `POST /api/admin/global-sections/{sectionKey}/rollback`. The first keys are `site_header`,
-`site_footer_practices` (read-only diagnostics/runtime payload), `site_footer`, and `global_price`.
+`site_footer_practices` (read-only diagnostics/runtime payload), `site_footer`, `global_price`,
+`global_achievements`, and `global_lead_form`.
 Global sections are locale-specific, reuse the existing
 `SectionLifecycleService`. `site_header`, `site_footer_practices`, and `site_footer` are layout-level
 globals and publish with propagation `none`: they update the current global section version but do not
-rebuild page snapshots. `global_price` is available as the first shared price source for generated
-practice/service/problem pages and publishes with affected page snapshot rebuild. Its detailed editor/API
-contract is defined in `docs/global-price-section-workbench.md`.
+rebuild page snapshots. `global_price`, `global_achievements`, and `global_lead_form` are shared sources
+for generated practice/service/problem pages and publish with affected page snapshot rebuild.
+`global_price` remains the only one with price-specific append behavior. Its detailed editor/API contract
+is defined in `docs/global-price-section-workbench.md`.
 
 Implementation note, 2026-05-27: global-section editor DTOs expose `schema.fields`, and global-section
 publish responses document the lifecycle publish result instead of an opaque `unknown`: affected pages,

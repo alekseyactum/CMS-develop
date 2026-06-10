@@ -83,7 +83,8 @@ The response contains `groups`:
   This group opens publication lists, not operational queues. Queues such as "requires review" can be
   added later as a dashboard, not mixed into the content tree.
 - `global_sections`: shared layout/global area. It contains versioned global sections
-  `site_header`, `site_footer_practices`, `site_footer`, `global_price`, and the non-versioned settings
+  `site_header`, `site_footer_practices`, `site_footer`, `global_price`, `global_achievements`,
+  `global_lead_form`, and the non-versioned settings
   item `site_contact_settings`. The versioned sections are backed by `/api/admin/global-sections`.
   `site_contact_settings` is backed by `/api/admin/site-settings/contact`. The global price editor manages
   the upper shared source; concrete generated pages expose their own page `price` slot when the page is
@@ -374,8 +375,9 @@ Group-specific indicator rules:
   `publishImpact.affectedPages.count` and `publishImpact.affectedBindings.count` count only pages/bindings
   whose public snapshot would actually change after publishing the global section. For `global_price`, count
   pages using inherit/append or field-level inherit/append; do not count full override, fully independent
-  overridden fields, or disabled price sections. For `site_header`, `site_footer_practices`, and
-  `site_footer`, snapshot impact should be zero/empty because they are layout payload sources, not page
+  overridden fields, or disabled price sections. For `global_achievements` and `global_lead_form`, count
+  pages whose inherited page slot depends on the global source. For `site_header`, `site_footer_practices`,
+  and `site_footer`, snapshot impact should be zero/empty because they are layout payload sources, not page
   snapshot section refs.
 - `reference_data`: the group itself uses simple aggregate `diagnostics.own.errors/warnings` and
   `records.visibleCount/totalCount`. The `service_hierarchy` item uses `own/children` scopes for
@@ -571,7 +573,9 @@ Supported editable section keys now:
 - `site_header`;
 - `site_footer_practices` as a read-only/global diagnostics workbench;
 - `site_footer`;
-- `global_price`.
+- `global_price`;
+- `global_achievements`;
+- `global_lead_form`.
 
 `site_header` is the layout-level header/menu source. Its first editable content contract is
 `{ searchEnabled: boolean, contactButtonEnabled: boolean }`. System navigation, the about dropdown,
@@ -748,7 +752,7 @@ The editor response includes `schema.fields`. Use it as the current backend cont
 and simple field shapes. For `global_price`, use the dedicated workbench contract above because it adds
 read-only header content, item-level diagnostics, computed working content, and history actions.
 
-Generated `practice_page`, `service_page`, and `problem_page` schemas also expose an optional page
+Generated `practice_page`, `service_page`, and `problem_page` schemas expose a page
 `price` slot. This slot is not edited through the global section screen. It is a page-owned section with
 `sourcePolicy: "price_inheritance"`:
 
@@ -773,6 +777,21 @@ only. The frontend should treat this as renderable preview content, not as a sav
 This means the global price screen edits the shared source, while the page section editor edits the local
 page/regional layer. Header/footer remain direct shared globals and do not create page-local section
 versions.
+
+Generated `practice_page`, `service_page`, and `problem_page` schemas also expose two required inherited
+global content slots:
+
+- `achievements_strip`, `sectionType: "global_achievements"`,
+  `sourcePolicy: "global_section_inheritance"`, `globalSectionKey: "global_achievements"`;
+- `lead_form`, `sectionType: "global_lead_form"`,
+  `sourcePolicy: "global_section_inheritance"`, `globalSectionKey: "global_lead_form"`.
+
+Base non-regional generated pages source these slots from the locale global section. Regional generated
+pages source them from the matching base page local section. `achievements_strip` is inherit-only at the
+page layer. `lead_form` inherits by default and allows override where the schema exposes it, but does not
+allow append. Neither slot should show disable or drag/reorder UI. `practice_collection_page`
+intentionally does not expose either slot. `lead_form` is CMS-authored form content; `lead_capture`
+remains the read-only runtime context for the actual lead form behavior.
 
 Price preview modes are intentionally separate:
 
@@ -809,7 +828,13 @@ This returns only the current published version merged with backend-owned readon
 
 ```ts
 {
-  sectionKey: 'global_price' | 'site_header' | 'site_footer_practices' | 'site_footer';
+  sectionKey:
+    | 'global_price'
+    | 'global_achievements'
+    | 'global_lead_form'
+    | 'site_header'
+    | 'site_footer_practices'
+    | 'site_footer';
   locale: 'uk' | 'ru' | 'en';
   publishedVersion: SectionVersion | null;
   readonlyContent: object | null;
@@ -855,8 +880,9 @@ Publishing `site_header`, `site_footer_practices`, or `site_footer` creates the 
 section version but does not rebuild page snapshots. These are layout-level sources, so frontend preview
 and public rendering read them through the layout payload.
 
-Publishing `global_price` uses affected page snapshot rebuild: backend creates the new published price
-source and plans/rebuilds affected page snapshots without touching unrelated page-owned draft sections.
+Publishing `global_price`, `global_achievements`, or `global_lead_form` uses affected page snapshot
+rebuild: backend creates the new published global source and plans/rebuilds affected page snapshots without
+touching unrelated page-owned draft sections.
 
 The publish response contains:
 
@@ -869,13 +895,14 @@ The publish response contains:
 - `editor`: fresh global-section editor state after publish.
 
 For the UI this means: show publish success from `publishedVersionId`. Show rebuild impact from
-`rebuiltSnapshots` only when the section actually uses snapshot rebuild, currently `global_price`.
+`rebuiltSnapshots` only when the section actually uses snapshot rebuild, currently `global_price`,
+`global_achievements`, and `global_lead_form`.
 For `site_header`/`site_footer_practices`/`site_footer`, the important follow-up is layout preview/public
 layout refresh, not page workbench rebuild.
 
-For `global_price`, affected rebuilds apply to pages that directly depend on the global source, normally
-the base non-regional generated pages. Regional pages depend on the base page price layer and should be
-reviewed/republished through the regional page workflow when that layer changes.
+For inherited global page slots, affected rebuilds apply to pages that directly depend on the global
+source, normally the base non-regional generated pages. Regional pages depend on the matching base page
+local layer and should be reviewed/republished through the regional page workflow when that layer changes.
 
 All mutation responses return a fresh `editor` object. Use it to replace the current editor state after
 save, validate, publish, or rollback.
@@ -916,7 +943,8 @@ This is the UI metadata source for page authoring. It returns:
 - runtime slots;
 - section fields and required/optional state;
 - section ownership/publish/composition rules needed to decide which controls to show.
-- optional `sourcePolicy` for special source resolution. Currently only `price_inheritance` exists.
+- optional `sourcePolicy` for special source resolution. Current values are `price_inheritance` and
+  `global_section_inheritance`.
 
 The frontend should use this endpoint to build page creation forms and section editors. Do not hardcode
 the available page types, slots, route params, or field lists in the frontend.
@@ -1510,20 +1538,24 @@ inherit from the matching base page price section.
   context and should be rendered by the site frontend outside the CMS section list.
 - `practice_collection_page` exposes `practice_collection_intro` and runtime `practice_collection`; it does
   not expose `lead_capture` in the first collection-page design slice.
+- `practice_page`, `service_page`, and `problem_page` expose required inherited `achievements_strip` and
+  `lead_form` slots. `practice_collection_page` does not.
 - `practice_intro` and other `*_intro` hero slots now include optional `ctaLabel` and `ctaTarget` fields.
 - `practice_page` additionally exposes optional page-owned `practice_intro_text`, `practice_actions`,
   `practice_team_cta`, `practice_optional_text`, optional `lead_questionnaire`, runtime `practice_cases`,
   runtime `practice_reviews`, and runtime `lead_capture`.
-- `service_page` and `problem_page` also expose optional `lead_questionnaire` plus runtime `lead_capture`.
-- `lead_capture` is read-only runtime data for the standard service-hierarchy lead form. It is not a global
-  section and not edited through a section form.
+- `service_page` and `problem_page` also expose optional `lead_questionnaire` plus runtime `lead_capture`;
+  the required inherited `achievements_strip` and `lead_form` slots above apply to them too.
+- `lead_form` is the CMS-authored shared form content section. `lead_capture` is read-only runtime data
+  for the standard service-hierarchy lead form and is not edited through a section form.
 - `lead_questionnaire` is the page-specific questionnaire section. It is disabled by default until the
   editor enables and fills it. A typical draft payload is
   `{ "title": "...", "description": [...], "questions": [{ "id": "minor_children", "label": "...", "type": "single_choice", "required": false, "options": [{ "value": "yes", "label": "Так" }] }] }`.
 
-2026-06-09 `practice_page` structure checkpoint: do not treat the current backend scaffold as the final
-screen structure. The agreed target adds a global recognition strip after the hero, keeps
-`practice_services_block` + `practice_services` as the required services list (`service_cond=true`), adds a
+2026-06-09/10 `practice_page` structure checkpoint: do not treat the whole backend scaffold as the final
+screen structure. The global recognition strip after the hero is implemented as `achievements_strip`.
+The agreed target keeps `practice_services_block` + `practice_services` as the required services list
+(`service_cond=true`), adds a
 separate optional "Може зацікавити" composite list for `legal_cond=true` and `service_cond=false`, splits
 generic text content into three fixed optional slots (`practice_intro_text`, `practice_reviews_text`,
 `practice_price_text`), and makes `practice_actions` an enabled-by-default action list with 2-8 items.
