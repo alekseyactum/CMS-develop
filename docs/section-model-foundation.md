@@ -714,8 +714,9 @@ and upstream draft changes must not mark it stale for inherited content. Field-l
 field-aware stale behavior where only inherited/appended fields depend on the upstream draft.
 
 Editor diagnostics and publish-readiness checks must expose upstream draft changes clearly. A dependent page
-with unresolved upstream draft changes must be revalidated through preview/review before it is treated as
-ready for publish.
+with unresolved upstream draft changes should show review attention, but this state is not by itself a hard
+publish blocker. Page publish can act as the review/acceptance action by snapshotting the current
+backend-resolved source plus local composition when no critical validation/runtime blockers remain.
 
 ## Layout Policy
 

@@ -1452,7 +1452,13 @@ This is a real child section. Show inheritance only when `relationship.isInherit
 Use `row.diagnostics` for page-level issues, and `cell.diagnostics` only for section-level issues. For
 example, `PAGE_NO_CURRENT_SNAPSHOT` belongs to the row, not to a section cell. If `row.endpoints.publish`
 is `null`, read `row.readiness.publish.reasons` for the user-facing reason; common cases are "already
-published" or "blocked by validation/stale sections".
+published" or "blocked by validation errors / empty required sections".
+
+`PAGE_SECTION_DRAFT_STALE` is an attention/review notice, not a hard publish blocker. It means a
+source-backed section has inherited changes that have not yet been accepted into the current page snapshot.
+If `row.actions.canPublish` is still true, the frontend should allow page publish and show that publishing
+the page will accept the current backend-resolved section content. Do not force editors to create a child
+section draft only to clear stale state.
 
 For generated service-tree pages, the backend now resolves missing runtime/read-model payloads during
 preview and publish. The frontend does not need to manually send payloads for these slots:
@@ -1615,7 +1621,8 @@ Important codes:
 
 - `PAGE_NOT_CREATED`;
 - `PAGE_ALREADY_PUBLISHED`;
-- `PAGE_SECTION_DRAFT_STALE`;
+- `PAGE_SECTION_DRAFT_STALE` - warning/attention; page publish can accept the current resolved inherited
+  state when no critical blockers remain;
 - `PAGE_SECTION_VALIDATION_FAILED`;
 - `PAGE_REQUIRED_SECTION_EMPTY`;
 - `PAGE_ENABLED_SECTION_EMPTY`;
@@ -1653,7 +1660,9 @@ This endpoint is the source for the CMS screen "Pages". It returns one row per p
 - `createdAt` and `updatedAt`.
 
 Use `publishState` for badges in the page list. Use `sectionSummary.staleBindings > 0` to show that the
-page requires review before publish. The catalog does not replace `GET /api/admin/pages/{pageId}/authoring`;
+page has inherited changes needing attention. This does not by itself mean publish is blocked; use
+row-level `actions.canPublish` / `readiness.publish.ready` for the actual button state. The catalog does
+not replace `GET /api/admin/pages/{pageId}/authoring`;
 it only helps the frontend choose which page to open.
 
 ## Authoring State
@@ -1941,7 +1950,8 @@ temporary assumptions:
 
 ## UI Notes
 
-- Show `draft_stale` clearly: the page/section requires review before publish.
+- Show `draft_stale` clearly as inherited-change attention. Publishing the page is allowed when backend
+  row readiness has no critical blockers and acts as acceptance of the current resolved content.
 - Keep preview and published/current state visually distinct.
 - Do not allow editing runtime slots directly from the page section draft form.
 - Do not infer publishability only from visible fields. Backend publish validation is the final authority.

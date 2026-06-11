@@ -265,8 +265,10 @@ Section schemas must also support:
   an explicit CMS action such as `Republish regional pages`;
 - schema-defined inherit/override/append restrictions, so source-backed page sections can remain
   inherit-only where needed without a separate first-release parent/source lock policy;
-- dependent draft policy, so price-like inherited/appended sections can require `draft_stale` review while
-  layout globals such as header/footer do not require page-by-page draft stale review;
+- dependent draft policy, so inherited/appended sections can surface `draft_stale` review attention while
+  layout globals such as header/footer do not require page-by-page draft stale review. `draft_stale` is not
+  a hard page-publish blocker; successful page publish accepts the current backend-resolved inherited
+  content for that page;
 - dependency metadata or equivalent diagnostics that show when inherited drafts require revalidation;
 - layout placement policy, distinguishing fixed sections from editor-movable sections;
 - layout slots or zones, including article/case pages where editor-added sections are allowed only between
@@ -644,9 +646,10 @@ affected snapshot rebuild.
 
 Implementation note, 2026-05-22: `cms-back` workbench matrix rows now expose page-level `actions` and
 `diagnostics`. The CMS frontend can show page buttons for open/bootstrap/preview/publish/rollback/current
-snapshot from backend-computed flags and can display backend-computed publish blockers such as stale
-sections, validation failures, empty required sections, or required independent sections that must be
-published before page publish.
+snapshot from backend-computed flags and can display backend-computed publish blockers such as validation
+failures, empty required sections, or required independent sections that must be published before page
+publish. Stale inherited sections are warning-level review attention; they do not by themselves remove the
+publish action.
 
 Implementation note, 2026-05-22: `cms-back` section editor now exposes backend-computed visibility actions
 and `PATCH /api/admin/pages/{pageId}/sections/{slotKey}/editor/state`. The endpoint changes only the
@@ -771,8 +774,9 @@ Implementation note, 2026-06-09: legacy regional `practice_collection_page` bind
 before `regional_base_inheritance` dependencies are repaired lazily when authoring state is read. If a
 regional `seo` or `practice_collection_intro` binding has no base `sourceSectionId`/draft dependency, the
 backend reconnects it to the base page-owned section with `composition: { strategy: "inherit" }` and marks
-it `draft_stale` when the base already has an unreviewed draft. Freshly bootstrapped regional pages keep the
-same dependency at creation time.
+it `draft_stale` when the base already has an unreviewed draft. `draft_stale` is shown as attention, not as
+a hard publish blocker; publishing the regional page accepts the current resolved inherited content. Freshly
+bootstrapped regional pages keep the same dependency at creation time.
 
 `practice_page` now has the following backend scaffold:
 
@@ -807,8 +811,9 @@ optional composite `practice_related_legal_block` + runtime `practice_related_le
 `show_on_site=true`, `legal_cond=true`, and `service_cond=false`; and tighten `practice_actions` into an
 enabled-by-default list section with 2-8 action items. Regional `seo`, `practice_intro`, block text, and
 optional text/actions sections should inherit from the base page by default and become stale/requires-review
-when the base source changes. `practice_team_cta` and the later cases/reviews/price/FAQ/lawyers/lead tail
-still need a follow-up structure pass before code changes.
+when the base source changes, but page publish should remain possible when no critical validation/runtime
+blockers remain. `practice_team_cta` and the later cases/reviews/price/FAQ/lawyers/lead tail still need a
+follow-up structure pass before code changes.
 
 Approved direction, 2026-06-05: `problem_page` structure is approved conceptually from the current page
 design, but must not be expanded in backend code until the exact implementation slice for service/problem

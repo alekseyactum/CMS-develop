@@ -612,7 +612,9 @@ For the first working implementation, do not try to perfect all 16 slots. The pr
 - Regional inheritance rule: for future regional service-hierarchy pages, regional page-owned sections
   should inherit from the matching base page by default and diverge only through an explicit override.
   `seo` and `practice_intro` for `practice_page` should follow this rule. Base changes should mark
-  inherited regional pages stale/requires-review.
+  inherited regional pages stale/requires-review. Stale is editor attention, not a hard publish blocker:
+  publishing the regional page accepts the current backend-resolved inherited content when no critical
+  validation/runtime blockers remain.
 - Canonicals are backend-owned and self-canonical for both base and regional routes.
 - `seo`: `title` and `description` start from the source practice name and remain editable. Empty required
   fields are errors; SEO length/quality and `ogImage` media policy issues are warnings. `ogImage` is
