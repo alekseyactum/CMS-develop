@@ -268,7 +268,7 @@ Section schemas must also support:
 - dependent draft policy, so inherited/appended sections can surface `draft_stale` review attention while
   layout globals such as header/footer do not require page-by-page draft stale review. `draft_stale` is not
   a hard page-publish blocker; successful page publish accepts the current backend-resolved inherited
-  content for that page;
+  content for that page and clears the accepted stale review marker for the published bindings;
 - dependency metadata or equivalent diagnostics that show when inherited drafts require revalidation;
 - layout placement policy, distinguishing fixed sections from editor-movable sections;
 - layout slots or zones, including article/case pages where editor-added sections are allowed only between
@@ -649,7 +649,8 @@ Implementation note, 2026-05-22: `cms-back` workbench matrix rows now expose pag
 snapshot from backend-computed flags and can display backend-computed publish blockers such as validation
 failures, empty required sections, or required independent sections that must be published before page
 publish. Stale inherited sections are warning-level review attention; they do not by themselves remove the
-publish action.
+publish action. After a successful page publish, the backend refreshes the row with those accepted stale
+bindings marked fresh unless another newer upstream draft already made them stale again.
 
 Implementation note, 2026-05-22: `cms-back` section editor now exposes backend-computed visibility actions
 and `PATCH /api/admin/pages/{pageId}/sections/{slotKey}/editor/state`. The endpoint changes only the
@@ -775,8 +776,9 @@ before `regional_base_inheritance` dependencies are repaired lazily when authori
 regional `seo` or `practice_collection_intro` binding has no base `sourceSectionId`/draft dependency, the
 backend reconnects it to the base page-owned section with `composition: { strategy: "inherit" }` and marks
 it `draft_stale` when the base already has an unreviewed draft. `draft_stale` is shown as attention, not as
-a hard publish blocker; publishing the regional page accepts the current resolved inherited content. Freshly
-bootstrapped regional pages keep the same dependency at creation time.
+a hard publish blocker; publishing the regional page accepts the current resolved inherited content and
+clears the accepted stale marker. Freshly bootstrapped regional pages keep the same dependency at creation
+time.
 
 `practice_page` now has the following backend scaffold:
 
