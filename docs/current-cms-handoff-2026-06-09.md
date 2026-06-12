@@ -147,6 +147,10 @@ Global section workbench is locale-aware. Global section status is interpreted i
 the UI needs all locale diagnostics, backend should return all three locales in the relevant editor
 response, so the frontend does not need three separate calls for the same screen.
 
+Page workbench matrix/editor screens are also opened in one current locale, but the design shows attention
+badges for all public locales. Backend responses should therefore embed compact `localeDiagnostics` for
+`uk`/`ru`/`en` while keeping `rows`, `editor`, and `summary` scoped to the current locale only.
+
 ### Regional Pages
 
 Regional pages inherit from base/Ukraine pages only where the page type supports regional routes.

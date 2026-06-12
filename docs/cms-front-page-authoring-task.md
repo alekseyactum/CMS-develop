@@ -207,7 +207,7 @@ Optional quick-open endpoints:
 - `POST /api/admin/page-workbench/generated-sources/{pageType}/{sourceId}/open` creates/opens the generated
   page authoring state and returns `{ open, defaultEditorTarget, workbench }`;
 - `POST /api/admin/page-workbench/generated-sources/{pageType}/{sourceId}/open-editor` does the same and
-  also returns `editor` for the backend-selected default section;
+  also returns `editor` and `localeDiagnostics` for the backend-selected default section;
 - do not use these endpoints for a normal sidebar click if the design expects a read-only matrix first.
   Use them only for explicit "open editor" / "create and edit" interactions.
 
@@ -215,6 +215,9 @@ Recommended central screen layout:
 
 - top summary: `response.summary.errors`, `warnings`, `pagesNotCreated`, `pagesNotPublished`,
   `pagesDraftChanged`, `pagesRequireReview`;
+- locale attention tabs: use `response.localeDiagnostics.locales`. The opened matrix remains scoped to
+  `response.locale`; `response.rows` and `response.summary` describe only that locale. `localeDiagnostics`
+  is a compact all-locale summary for quick orientation and switching, not three embedded matrices;
 - first row group: base page;
 - second row group: regional pages, using `row.region.title` and `row.regionSlug`;
 - section grid: render cells in `response.columns` order;
@@ -1044,6 +1047,10 @@ the user opens a matrix/table for one page type and needs base/regional page row
 - `cells`: one summary cell per section/runtime slot;
 - `summary`: counters for the whole opened matrix. `summary.errors` and `summary.warnings` are row-level
   counters, so page diagnostics such as `PAGE_NOT_CREATED` are included, not only section cell diagnostics.
+- `localeDiagnostics`: counters for the same matrix scope across all public locales. For source-scoped
+  screens, the backend preserves the opened `sourceId` for every locale. Use `localeDiagnostics.locales[]`
+  for the UA/RU/EN attention badges and `item.endpoint` to switch locale; do not fetch three full matrices
+  just to build the badges.
 
 `GET /pages/{pageId}/row` returns one fresh matrix row for an already created page. Use it after section
 editor actions such as save draft, validate, publish independent section, rollback, enable, or disable.
