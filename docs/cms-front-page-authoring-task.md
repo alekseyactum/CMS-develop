@@ -1758,6 +1758,30 @@ For inherited price sections, `content.resolved.draft` is the editor's latest-dr
 `content.resolved.published` is the currently published result. Do not show draft-resolved content as if it
 were already public.
 
+Implementation note, 2026-06-13: inherited page sections now save field-level composition together with the
+section draft. When an editor changes a field that is inherited by default, the frontend must send the new
+local `content` and the intended `composition` in the same draft-save request. Example for overriding only
+`ctaLabel` while all other fields keep inheriting from the source:
+
+```json
+{
+  "content": {
+    "title": "Inherited title or local working value",
+    "ctaLabel": "Regional CTA"
+  },
+  "composition": {
+    "strategy": "inherit",
+    "fields": [
+      { "field": "ctaLabel", "strategy": "override" }
+    ]
+  }
+}
+```
+
+If a field should return to inheritance, remove that field override or send it as `inherit` according to
+the UI state. Saving a local draft does not by itself accept `draft_stale`; stale inherited changes remain
+attention until page publish accepts the current resolved content.
+
 Important boundaries:
 
 - Workbench matrix cells are summary-only.

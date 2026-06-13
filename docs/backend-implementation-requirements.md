@@ -780,6 +780,13 @@ a hard publish blocker; publishing the regional page accepts the current resolve
 clears the accepted stale marker. Freshly bootstrapped regional pages keep the same dependency at creation
 time.
 
+Implementation note, 2026-06-13: page-owned inherited section draft saves may include `composition`.
+Backend persists the local draft version and binding `composition_json` together, validates the section and
+field strategies against the registered page schema, and leaves `draft_stale` unchanged. This makes
+regional overrides explicit: local content alone does not override inherited source fields unless the
+binding composition marks the section or field as `override`. Page publish remains the point where accepted
+stale inherited changes become fresh.
+
 `practice_page` now has the following backend scaffold:
 
 - `seo`;
