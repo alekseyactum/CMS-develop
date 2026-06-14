@@ -493,6 +493,10 @@ This is a page for a specific practice, URL base `services/{practiceSlug}`.
 
 It supports regional routes.
 
+Agreed target structure for the next implementation pass is fixed in
+`docs/practice-page-structure-2026-06-13.md`. Treat the list below as the current backend scaffold unless
+the dedicated 2026-06-13 document explicitly says it is target behavior not yet implemented.
+
 Current backend slots:
 
 1. `seo`
@@ -597,9 +601,10 @@ Current backend slots:
 - `lead_capture` remains the runtime/read-model form slot. The frontend should render `lead_form`
   content together with the runtime `lead_capture` context; do not treat `lead_capture` as editable.
 - Both new slots are required, fixed, and not disableable. `achievements_strip` is inherit-only at the
-  page layer. `lead_form` inherits by default and may override according to its page schema, but has no
-  append behavior. Both are materialized into base page snapshots so regional pages can review/publish
-  from the base layer, just like the price inheritance chain.
+  page layer. `lead_form` is also page-level read-only in the practice-page implementation pass: it can be
+  opened for diagnostics/history, but the page editor does not expose save/override actions for it. Both are
+  materialized into base page snapshots so regional pages can review/publish from the base layer, just like
+  the price inheritance chain.
 
 For the first working implementation, do not try to perfect all 16 slots. The practical route is:
 
@@ -657,8 +662,11 @@ For the first working implementation, do not try to perfect all 16 slots. The pr
   default, inherited regionally, overrideable, not appendable, not movable, and uses one fixed visual
   style. Fields: required `title`, optional `lead`, required `items[]`. Item fields: required `title` and
   optional `description`. Enabled empty section is an error; item count target is 2-8.
-- Discussion stopped before finalizing `practice_team_cta`, cases, reviews, price, FAQ, lawyers,
-  lead_questionnaire, and lead_capture.
+- 2026-06-13 update: the remaining `practice_page` structure was finalized in
+  `docs/practice-page-structure-2026-06-13.md`, including `practice_team_cta`, cases, reviews,
+  `practice_reviews_text`, price, `practice_price_text`, FAQ, lawyer selection, and the composite lead
+  block. Important new general rule: section headings are locked for regional override; base/global source
+  may edit them, but regional pages inherit them.
 
 ### service_page And problem_page
 
@@ -792,6 +800,39 @@ Linked-page warnings include `sourceType`, `sourceId`, and `publicPath`, stay vi
 do not by themselves block publish. Empty `practice_collection.items` is also guarded in
 `PageLifecycleService.publishPage`, so direct publish calls cannot create an invalid collection snapshot.
 
+## 2026-06-13 Practice Page Runtime Linked Diagnostics
+
+`practice_page` matrix rows now use `PageRuntimeResolverService` to compute linked-page warnings for
+runtime cells whose items link to generated public pages:
+
+- `practice_services` warns about missing/unpublished linked `service_page` targets;
+- `practice_related_legal` warns about missing/unpublished linked legal-only `service_page` targets;
+- `practice_lawyers` warns about missing/unpublished linked `lawyer_page` targets.
+
+The detailed warnings stay in `row.diagnostics.blockingReasons` with `slotKey`, `sectionType`,
+`sourceType`, `sourceId`, and `publicPath`. The matching runtime cells also get aggregate warning counters
+in `cell.diagnostics.warnings`, so the frontend can badge the exact runtime cell without parsing content.
+These warnings do not block page publish by themselves.
+
+For CMS page workbench purposes, legal-only service rows (`legal_cond=true`, `service_cond=false`) are now
+regular `service_page` generated sources. Their public route and bootstrap/publish lifecycle are the same as
+ordinary service rows; public menus/layouts may still choose to render only `service_cond=true` rows.
+
+## 2026-06-14 Section Validation Warnings
+
+Section lifecycle validation now persists warnings alongside errors:
+
+- `cms_section_validation_runs` and `cms_section_version_validation_state` store `warning_count` and
+  `warnings_json`;
+- section validate responses include `warnings`;
+- page section editor diagnostics expose saved warnings in `diagnostics.warnings`;
+- page workbench section cells use saved `warningCount` in `cell.diagnostics.warnings`;
+- rows add `PAGE_SECTION_VALIDATION_WARNING` as a warning-level reason when an enabled section has saved
+  validation warnings.
+
+Warnings do not make validation `status=failed` and do not block page publish by themselves. They are
+editor-quality signals for long text, recommended item counts, and similar content-quality checks.
+
 ## 2026-06-09 Frontend Feedback Response
 
 Three frontend-reported gaps were addressed in `cms-back`:
@@ -832,12 +873,20 @@ Recent notes to CMS frontend developer:
 - `achievements_strip` and `lead_form` are required inherited page slots on `practice_page`,
   `service_page`, and `problem_page`; edit their shared source through global sections
   `global_achievements` and `global_lead_form`.
+- Page schema/workbench section columns can expose `defaultVisibility`. Use it as the bootstrap default
+  contract instead of inferring from `required`/`canDisable`. On `practice_page`, `practice_intro_text` and
+  `practice_actions` default to enabled; `practice_related_legal_block`, `practice_reviews_text`,
+  `practice_price_text`, `practice_faq`, and `lead_questionnaire` default to disabled.
 
 ## Open Questions / Risks
 
 Keep these visible in the next thread:
 
-- Exact field-level final content for all `practice_page` optional sections is not fully designed yet.
+- `practice_page` target structure is documented in `docs/practice-page-structure-2026-06-13.md`, and the
+  first backend schema/runtime pass has been applied. The first hard-error validation pass for structured
+  practice sections, warning-grade validation persistence/surfacing, schema default visibility for agreed
+  optional practice sections, the `practice_related_legal` service-page source policy, and linked-page
+  diagnostics for `practice_services`/`practice_related_legal`/`practice_lawyers` are already in place.
 - `service_page` and `problem_page` should not be over-expanded until practice pages are stable.
 - Cases and reviews runtime lists are placeholders/read-model contracts until their real data model is
   completed.

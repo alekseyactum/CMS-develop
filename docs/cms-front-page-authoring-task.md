@@ -791,8 +791,9 @@ global content slots:
 
 Base non-regional generated pages source these slots from the locale global section. Regional generated
 pages source them from the matching base page local section. `achievements_strip` is inherit-only at the
-page layer. `lead_form` inherits by default and allows override where the schema exposes it, but does not
-allow append. Neither slot should show disable or drag/reorder UI. `practice_collection_page`
+page layer. `lead_form` is also page-level read-only for the current implementation pass: it inherits the
+global/base content and can be opened for diagnostics/history, but page editors must not show save,
+override, append, disable, or drag/reorder UI for it. `practice_collection_page`
 intentionally does not expose either slot. `lead_form` is CMS-authored form content; `lead_capture`
 remains the read-only runtime context for the actual lead form behavior.
 
@@ -806,6 +807,18 @@ Price preview modes are intentionally separate:
 The public snapshot/publish path uses the same backend composition rule as `published` preview: the
 snapshot stores only the resolved price payload, while section refs keep the exact source/local versions
 that produced it.
+
+Regional inherited CMS text sections may expose locked section headings. The backend marks these fields in
+schema/editor payloads as `semanticRole: "section_heading"` and `regionalInheritanceLocked: true`. In
+regional editors, do not offer `override` or `append` for such fields; keep them inherited from the
+base/global source. The backend also rejects saves where a regional composition would effectively override a
+locked heading, including whole-section `strategy: "override"` without an explicit `title: inherit`.
+
+Page section validation now has a first practice-specific hard-error layer. The editor may save incomplete
+drafts, but `validate` records blocking `publish_validation` errors for empty enabled structured sections
+such as `practice_actions`, `practice_faq`, and `lead_questionnaire`; workbench readiness then blocks page
+publish through the existing section validation diagnostics. Warning-grade quality checks are still a later
+backend pass.
 
 Global sections are locale-specific. Opening the editor for `site_footer?locale=uk` reads or creates the
 Ukrainian global footer section record. Russian and English versions are separate section records and
@@ -1027,6 +1040,9 @@ the user opens a matrix/table for one page type and needs base/regional page row
 - `columns`: fixed section/runtime slots from the backend page schema;
 - `columns[].compositeGroupKey`: optional key telling the UI that several columns belong to one visual
   block, for example editable CMS block settings plus a runtime list from reference data;
+- section columns may include `defaultVisibility: "enabled" | "disabled"`. This is the backend contract for
+  bootstrap defaults. Do not infer default visibility only from `required`/`canDisable`; for example
+  `practice_intro_text` and `practice_actions` are optional and disableable but default to enabled;
 - `rows`: concrete page variants for the selected locale;
 - `rows[].pagePath` and `rows[].publicPath`: backend-computed route fields for the row. For existing
   pages they mirror `row.page.pagePath` / `row.page.publicPath`; for not-created generated rows they show
@@ -1497,6 +1513,15 @@ should let backend resolve service-tree runtime slots.
 `sourceType`, `sourceId`, and `publicPath` so the UI can point the editor to the affected practice/service.
 Warnings do not remove the item from the admin context and do not by themselves block page publish.
 
+`practice_page` matrix rows now also run a lightweight runtime linked-page diagnostic pass for
+`practice_services`, `practice_related_legal`, and `practice_lawyers`. The backend uses the same runtime
+resolver as preview/publish, then compares each runtime item `publicPath` with the generated page catalog.
+Cell warning counters are written to the matching runtime cells (`cell.diagnostics.warnings`), while the
+detailed reasons stay in `row.diagnostics.blockingReasons` with `slotKey`, `sectionType`, `sourceType`,
+`sourceId`, and `publicPath`. These warnings do not block page publish by themselves. For CMS page workbench
+purposes, legal-only service rows (`legal_cond=true`, `service_cond=false`) are regular `service_page`
+generated sources, so their page creation/publish lifecycle is the same as ordinary services.
+
 For `practice_collection_page`, regional `seo` and `practice_collection_intro` should appear as inherited
 from the base page until the editor explicitly overrides them. Regional canonical route is self-canonical,
 for example `/kyiv/services`, not canonicalized to the base `/services`.
@@ -1572,8 +1597,23 @@ The agreed target keeps `practice_services_block` + `practice_services` as the r
 separate optional "Може зацікавити" composite list for `legal_cond=true` and `service_cond=false`, splits
 generic text content into three fixed optional slots (`practice_intro_text`, `practice_reviews_text`,
 `practice_price_text`), and makes `practice_actions` an enabled-by-default action list with 2-8 items.
-Regional editable text/metadata sections inherit from the base page by default. The structure pass stopped
-before finalizing `practice_team_cta` and the later cases/reviews/price/FAQ/lawyers/lead tail.
+The backend exposes bootstrap defaults through `defaultVisibility`: `practice_intro_text` and
+`practice_actions` default to enabled, while `practice_related_legal_block`, `practice_reviews_text`,
+`practice_price_text`, `practice_faq`, and `lead_questionnaire` default to disabled. Regional editable
+text/metadata sections inherit from the base page by default.
+
+2026-06-13 update: the target `practice_page` structure is fixed in
+`docs/practice-page-structure-2026-06-13.md`. Frontend-relevant decisions:
+
+- render backend slots sharing `compositeGroupKey` as one visual block where the page design treats them as
+  one section;
+- section headings are locked for regional override, even when other section fields remain overrideable;
+- `practice_team_cta` and `practice_lawyers_block` + `practice_lawyers` are separate sections with the same
+  lawyer eligibility source but different UI behavior: showcase without URL vs selection with lawyer-page
+  links;
+- the bottom lead area is one visual block made from `lead_questionnaire`, inherited `lead_form`, and
+  runtime `lead_capture`;
+- `lead_form` is edited through global sections and is read-only inside the page section editor.
 
 2026-06-05 clarification for implementation order:
 
@@ -1631,6 +1671,7 @@ Important codes:
 - `PAGE_SECTION_DRAFT_STALE` - warning/attention; page publish can accept the current resolved inherited
   state when no critical blockers remain;
 - `PAGE_SECTION_VALIDATION_FAILED`;
+- `PAGE_SECTION_VALIDATION_WARNING`;
 - `PAGE_REQUIRED_SECTION_EMPTY`;
 - `PAGE_ENABLED_SECTION_EMPTY`;
 - `PAGE_REQUIRED_INDEPENDENT_SECTION_NOT_PUBLISHED`;
@@ -1849,7 +1890,10 @@ Validate request body:
 ```
 
 If `sectionVersionId` is omitted, the backend validates the current draft visible in the editor payload.
-The response returns `ok`, `errors`, `validationRunId`, and a reloaded `editor` payload.
+The response returns `ok`, `errors`, `warnings`, `validationRunId`, and a reloaded `editor` payload.
+Warnings are non-blocking editor-quality diagnostics: `ok` and stored validation `status` are still based
+on errors only. When `recordDiagnostics=true`, the saved warning list is visible later in
+`editor.diagnostics.warnings`; the matrix also exposes aggregate warning counts on the section cell and row.
 In the workbench wrapper, use `response.validation.editor` and `response.workbench.row`.
 
 Publish request body:
@@ -1974,8 +2018,9 @@ temporary assumptions:
   this endpoint now also supplies minimal required section drafts when the frontend sends an empty body.
 - Section action coverage for future movable/blog-like sections: add/remove/reorder will come later and
   should be a backend-owned action layer, not a frontend-only mutation.
-- Warning diagnostics: currently critical validation is the main blocker; field-level warnings will become
-  part of section/page diagnostics without blocking every save.
+- Warning diagnostics: section validation warnings are now persisted beside validation errors and returned
+  through editor validate responses, editor `diagnostics.warnings`, and workbench cell/row warning counters.
+  They are editor-quality signals and do not make validation `status=failed` by themselves.
 - Typed client generation: OpenAPI should remain the source for DTOs; frontend should prefer generated
   clients when that pipeline is connected.
 

@@ -821,8 +821,32 @@ optional composite `practice_related_legal_block` + runtime `practice_related_le
 enabled-by-default list section with 2-8 action items. Regional `seo`, `practice_intro`, block text, and
 optional text/actions sections should inherit from the base page by default and become stale/requires-review
 when the base source changes, but page publish should remain possible when no critical validation/runtime
-blockers remain. `practice_team_cta` and the later cases/reviews/price/FAQ/lawyers/lead tail still need a
-follow-up structure pass before code changes.
+blockers remain.
+
+Product-structure checkpoint, 2026-06-13: the full agreed target for `practice_page` is now documented in
+`docs/practice-page-structure-2026-06-13.md`. Use that document as the target implementation checklist for
+the next schema/runtime pass. Key backend implications:
+
+- section headings are locked for regional override, while non-heading fields may still use explicit
+  override/append where allowed by the slot schema;
+- `practice_related_legal_block` + `practice_related_legal` should be a separate optional composite from
+  `practice_services`;
+- `practice_intro_text`, `practice_reviews_text`, and `practice_price_text` replace the old generic
+  `practice_optional_text` idea with three fixed optional visual variants;
+- keep `practice_team_cta` and `practice_lawyers_block` + `practice_lawyers` as separate product sections:
+  the first is a no-URL lawyer showcase, the second is lawyer selection with lawyer-page links;
+- add/align `practice_reviews_block` so reviews have editable section text/title beside the runtime
+  `practice_reviews` list;
+- keep the bottom lead block visually composite while preserving separate lifecycles for
+  `lead_questionnaire`, inherited `lead_form`, and runtime `lead_capture`;
+- `lead_form` remains page-level read-only for this pass and should reuse the current inherited global
+  section model rather than introducing a broad direct-global-dependency refactor.
+
+Implementation update, 2026-06-14: the first `practice_page` schema/runtime pass now includes the fixed
+optional text/action slots, `practice_related_legal` composite, reviews block/runtime/text split, inherited
+global achievements/lead form slots, runtime linked-page diagnostics, section default visibility, and
+section validation warnings. Legal-only service rows (`legal_cond=true`, `service_cond=false`) are generated
+`service_page` sources for CMS page workbench creation/publish diagnostics.
 
 Approved direction, 2026-06-05: `problem_page` structure is approved conceptually from the current page
 design, but must not be expanded in backend code until the exact implementation slice for service/problem
