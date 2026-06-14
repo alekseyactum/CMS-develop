@@ -847,6 +847,32 @@ section binding rows for an already existing page. Regional practice pages use t
 where the slot is configured for regional inheritance; global-backed slots still point to the shared global
 section source.
 
+## 2026-06-14 Source-Backed Section Readiness
+
+Page workbench readiness now distinguishes local section state from source section state for inherited and
+global-backed slots. This matters for slots such as `achievements_strip`, `lead_form`, `price`, and
+regional inherited sections.
+
+New cell diagnostic flags:
+
+- `diagnostics.missingSourcePreview`: the source section has neither a latest draft nor a current published
+  version. The backend cannot compose a preview payload for this slot, so page preview and page publish are
+  blocked.
+- `diagnostics.missingSourcePublished`: the source section has no current published version. Page publish
+  is blocked. Preview may still be allowed when the source has a draft that can be resolved.
+
+New row/readiness reason codes:
+
+- `PAGE_SOURCE_SECTION_EMPTY`: critical preview/publish blocker. The source section is empty for this
+  locale/page chain.
+- `PAGE_SOURCE_SECTION_NOT_PUBLISHED`: critical publish blocker. The source exists as draft data but has
+  not been published yet.
+
+Frontend rule: use `row.actions.canPreview`, `row.actions.canPublish`, and
+`row.readiness.preview/publish.reasons` as the button authority. Do not infer readiness from the local page
+binding alone. A page can have a saved local draft and still be unpreviewable if a required inherited/global
+source is empty.
+
 ## 2026-06-09 Frontend Feedback Response
 
 Three frontend-reported gaps were addressed in `cms-back`:

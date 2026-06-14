@@ -1674,12 +1674,21 @@ Important codes:
 - `PAGE_SECTION_VALIDATION_WARNING`;
 - `PAGE_REQUIRED_SECTION_EMPTY`;
 - `PAGE_ENABLED_SECTION_EMPTY`;
+- `PAGE_SOURCE_SECTION_EMPTY`;
+- `PAGE_SOURCE_SECTION_NOT_PUBLISHED`;
 - `PAGE_REQUIRED_INDEPENDENT_SECTION_NOT_PUBLISHED`;
 - `PAGE_NO_CURRENT_SNAPSHOT`.
 
 `PAGE_ENABLED_SECTION_EMPTY` means the section is optional by schema, but currently enabled on the page and
 has neither a draft nor a published version. The backend treats enabled sections as part of the page, so
 preview/publish can be hidden until the section is filled or disabled by a supported action.
+
+Source-backed sections have their own readiness flags. `diagnostics.missingSourcePreview` means an
+inherited/global source has neither draft nor published content, so the page cannot be previewed or
+published. `diagnostics.missingSourcePublished` means the source has no published version, so page publish
+is blocked; preview can still be available if the source has a draft. The matching readiness codes are
+`PAGE_SOURCE_SECTION_EMPTY` and `PAGE_SOURCE_SECTION_NOT_PUBLISHED`. Use row actions/readiness as the
+button authority instead of checking only the local section binding.
 
 ## Pages Catalog
 
