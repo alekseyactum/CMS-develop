@@ -833,6 +833,20 @@ Section lifecycle validation now persists warnings alongside errors:
 Warnings do not make validation `status=failed` and do not block page publish by themselves. They are
 editor-quality signals for long text, recommended item counts, and similar content-quality checks.
 
+## 2026-06-14 Practice Page Legacy Slot Repair
+
+`GET /api/admin/page-workbench/pages/{pageId}` and section editor reads now reconcile existing pages with
+the current page schema before returning authoring state. This is intentionally a small authoring repair
+step: legacy `practice_page` rows created before the full section structure existed may be missing bindings
+for newer slots such as `achievements_strip`, `practice_reviews_block`, `practice_price_text`,
+`lead_form`, and the bottom lead sections. Reading authoring state creates the missing bindings from the
+schema defaults instead of leaving the matrix/editor in `missing_binding` limbo.
+
+This does not auto-create missing generated pages and does not publish content. It only fills absent
+section binding rows for an already existing page. Regional practice pages use the base page as the source
+where the slot is configured for regional inheritance; global-backed slots still point to the shared global
+section source.
+
 ## 2026-06-09 Frontend Feedback Response
 
 Three frontend-reported gaps were addressed in `cms-back`:
