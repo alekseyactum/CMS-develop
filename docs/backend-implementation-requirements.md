@@ -750,6 +750,10 @@ Implementation note, 2026-06-04/09: service-tree page schemas were aligned with 
 runtime/public payload metadata from route/page context. `practice_collection_page` keeps only an editable
 `practice_collection_intro` hero slot and a runtime `practice_collection` tree; it does not include the
 standard service-hierarchy lead form in the first design slice.
+The two collection slots are exposed to the CMS workbench as one composite group
+`practice_collection`: `practice_collection_intro` is the primary editor member and
+`practice_collection` is the readonly/runtime member. This is a UI contract only; the backend keeps their
+section/runtime lifecycles separate.
 
 The `practice_collection_page` public route remains `/services`, but the CMS editor title should be
 "Практики". Its runtime `practice_collection.items` are practices with nested `services[]`, not a flat

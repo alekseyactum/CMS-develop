@@ -452,6 +452,7 @@ Current backend slots:
 2. `practice_collection_intro`
    - base page-owned content section;
    - regional variants inherit from the base by default and may only diverge through an explicit override;
+   - composite group: `practice_collection`, primary editor slot;
    - fields:
      - `title` required;
      - `lead` optional rich text;
@@ -460,6 +461,7 @@ Current backend slots:
 
 3. `practice_collection`
    - runtime/read-model slot;
+   - composite group: `practice_collection`, readonly/runtime member;
    - field: `items` required list;
    - base/Ukraine row: visible practices with nested visible service-list services;
    - regional row: visible practices with active region qualification, with nested visible services that
@@ -920,7 +922,8 @@ Recent notes to CMS frontend developer:
 - Page workbench rows now expose `compositeGroups` for editor-facing visual groups built from several
   technical cells. The frontend should render a group as one visual section, open/save through the group's
   `primarySlotKey` and primary endpoints, and still keep the underlying `cells` as separate lifecycle
-  records. The bottom lead area is marked as `lead_block`.
+  records. `practice_collection_intro` + `practice_collection` are marked as `practice_collection`; the
+  bottom lead area is marked as `lead_block`.
 
 ## Open Questions / Risks
 

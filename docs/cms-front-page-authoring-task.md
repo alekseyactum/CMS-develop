@@ -1511,6 +1511,12 @@ the backend warning/diagnostic rather than silently hiding it from editors. If t
 same slot again. This is mainly useful for tests or transitional UI experiments; normal CMS frontend code
 should let backend resolve service-tree runtime slots.
 
+`practice_collection_page` exposes `practice_collection_intro` + runtime `practice_collection` as one
+composite workbench group with `groupKey: "practice_collection"`. In the matrix, render this pair as one
+editor-facing section/card. Open and save through the group's primary slot
+`practice_collection_intro`; show the runtime `practice_collection` diagnostics as the readonly/runtime
+part of the same visual section.
+
 `practice_collection_page` matrix rows now include row-level diagnostics for this runtime tree. Treat
 `PAGE_RUNTIME_REQUIRED_LIST_EMPTY` as a critical publish blocker and show its `slotKey`/message near the
 `practice_collection` runtime cell. Treat `PAGE_LINKED_PAGE_NOT_CREATED` and
@@ -1563,6 +1569,7 @@ problem pages.
 Generated service-tree schemas now pair editable CMS block sections with runtime/read-model slots through
 `compositeGroupKey`, so the UI can render them as one block:
 
+- `practice_collection_intro` + `practice_collection` use `practice_collection`;
 - `practice_services_block` + `practice_services` use `practice_services`;
 - `practice_related_legal_block` + `practice_related_legal` use `practice_related_legal`;
 - `practice_reviews_block` + `practice_reviews` use `practice_reviews`;
