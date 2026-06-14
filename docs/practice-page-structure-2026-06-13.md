@@ -363,8 +363,10 @@ still default to disabled.
 ### 16. Lead Block: `lead_questionnaire` + `lead_form` + `lead_capture`
 
 - Composite visual block at the bottom of `practice_page`.
+- Composite group key in workbench responses: `lead_block`.
 - Position: after `practice_lawyers`.
-- Frontend should render these backend slots as one lead/application block.
+- Frontend should render these backend slots as one lead/application block. Use `row.compositeGroups`
+  when available instead of pairing these slots locally.
 - The slots intentionally keep different lifecycles.
 
 `lead_questionnaire`:

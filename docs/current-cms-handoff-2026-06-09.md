@@ -917,6 +917,10 @@ Recent notes to CMS frontend developer:
   contract instead of inferring from `required`/`canDisable`. On `practice_page`, `practice_intro_text` and
   `practice_actions` default to enabled; `practice_related_legal_block`, `practice_reviews_text`,
   `practice_price_text`, `practice_faq`, and `lead_questionnaire` default to disabled.
+- Page workbench rows now expose `compositeGroups` for editor-facing visual groups built from several
+  technical cells. The frontend should render a group as one visual section, open/save through the group's
+  `primarySlotKey` and primary endpoints, and still keep the underlying `cells` as separate lifecycle
+  records. The bottom lead area is marked as `lead_block`.
 
 ## Open Questions / Risks
 

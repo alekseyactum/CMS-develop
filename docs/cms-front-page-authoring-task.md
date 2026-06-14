@@ -1040,6 +1040,11 @@ the user opens a matrix/table for one page type and needs base/regional page row
 - `columns`: fixed section/runtime slots from the backend page schema;
 - `columns[].compositeGroupKey`: optional key telling the UI that several columns belong to one visual
   block, for example editable CMS block settings plus a runtime list from reference data;
+- `rows[].compositeGroups`: backend-built UI grouping for cells that share `compositeGroupKey`. This is
+  the preferred contract for rendering one editor-facing visual section from several technical cells. It
+  does not merge section lifecycles or replace `cells`; it only tells the UI which cells belong together,
+  which member is the `primarySlotKey`, which members are editable/readonly/runtime, the aggregated
+  diagnostics, and the primary editor endpoints/actions for the group;
 - section columns may include `defaultVisibility: "enabled" | "disabled"`. This is the backend contract for
   bootstrap defaults. Do not infer default visibility only from `required`/`canDisable`; for example
   `practice_intro_text` and `practice_actions` are optional and disableable but default to enabled;
@@ -1559,10 +1564,13 @@ Generated service-tree schemas now pair editable CMS block sections with runtime
 `compositeGroupKey`, so the UI can render them as one block:
 
 - `practice_services_block` + `practice_services` use `practice_services`;
+- `practice_related_legal_block` + `practice_related_legal` use `practice_related_legal`;
+- `practice_reviews_block` + `practice_reviews` use `practice_reviews`;
 - `practice_lawyers_block` + `practice_lawyers` use `practice_lawyers`;
 - `service_problems_block` + `service_problems` use `service_problems`;
 - `service_lawyers_block` + `service_lawyers` use `service_lawyers`;
-- `problem_lawyers_block` + `problem_lawyers` use `problem_lawyers`.
+- `problem_lawyers_block` + `problem_lawyers` use `problem_lawyers`;
+- `lead_questionnaire` + `lead_form` + `lead_capture` use `lead_block` on service-hierarchy detail pages.
 
 The `*_block` section stores CMS-authored title/lead/settings for the block. The runtime slot stores the
 read-only list contract. Optional page-owned `*_faq` and `*_consultation_cta` sections are also present
@@ -1606,7 +1614,8 @@ text/metadata sections inherit from the base page by default.
 `docs/practice-page-structure-2026-06-13.md`. Frontend-relevant decisions:
 
 - render backend slots sharing `compositeGroupKey` as one visual block where the page design treats them as
-  one section;
+  one section. Prefer `row.compositeGroups` over client-side pairing heuristics; keep `cells` as the raw
+  technical state and use the group's `primarySlotKey`/`endpoints` for the editable part;
 - section headings are locked for regional override, even when other section fields remain overrideable;
 - `practice_team_cta` and `practice_lawyers_block` + `practice_lawyers` are separate sections with the same
   lawyer eligibility source but different UI behavior: showcase without URL vs selection with lawyer-page
