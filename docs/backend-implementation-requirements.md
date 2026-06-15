@@ -754,6 +754,10 @@ The two collection slots are exposed to the CMS workbench as one composite group
 `practice_collection`: `practice_collection_intro` is the primary editor member and
 `practice_collection` is the readonly/runtime member. This is a UI contract only; the backend keeps their
 section/runtime lifecycles separate.
+Section editor wrapper responses should also expose this UI contract: `editor` remains the ordinary section
+editor state for the opened editable section, while a nullable top-level `compositeGroup` carries sibling
+section members and runtime members with read-only payload/diagnostics. Runtime payloads must not be stored
+inside section draft content just to satisfy a combined editor screen.
 
 The `practice_collection_page` public route remains `/services`, but the CMS editor title should be
 "Практики". Its runtime `practice_collection.items` are practices with nested `services[]`, not a flat

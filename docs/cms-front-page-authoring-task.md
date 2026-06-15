@@ -1045,6 +1045,9 @@ the user opens a matrix/table for one page type and needs base/regional page row
   does not merge section lifecycles or replace `cells`; it only tells the UI which cells belong together,
   which member is the `primarySlotKey`, which members are editable/readonly/runtime, the aggregated
   diagnostics, and the primary editor endpoints/actions for the group;
+- `rows[].compositeGroups[].endpoints.editor`: open this endpoint for a composite visual section. It points
+  to the group's primary editable section. The editor response now includes a top-level `compositeGroup`
+  with full member context for that visual section;
 - section columns may include `defaultVisibility: "enabled" | "disabled"`. This is the backend contract for
   bootstrap defaults. Do not infer default visibility only from `required`/`canDisable`; for example
   `practice_intro_text` and `practice_actions` are optional and disableable but default to enabled;
@@ -1515,7 +1518,8 @@ should let backend resolve service-tree runtime slots.
 composite workbench group with `groupKey: "practice_collection"`. In the matrix, render this pair as one
 editor-facing section/card. Open and save through the group's primary slot
 `practice_collection_intro`; show the runtime `practice_collection` diagnostics as the readonly/runtime
-part of the same visual section.
+part of the same visual section. The primary editor endpoint returns the intro section in `editor` and the
+resolved runtime practice tree in `compositeGroup.members[]`, not inside `editor.section.content`.
 
 `practice_collection_page` matrix rows now include row-level diagnostics for this runtime tree. Treat
 `PAGE_RUNTIME_REQUIRED_LIST_EMPTY` as a critical publish blocker and show its `slotKey`/message near the
@@ -1584,6 +1588,13 @@ read-only list contract. Optional page-owned `*_faq` and `*_consultation_cta` se
 and may be enabled/disabled through backend-provided actions. Price sections are modeled as source-backed
 page-owned sections: base generated pages inherit from `global_price`, while regional generated pages
 inherit from the matching base page price section.
+
+For every listed composite group, the section editor endpoint keeps the normal `editor` object scoped to
+the opened primary section. If the opened slot belongs to a composite group, the same response also returns
+`compositeGroup`. Its `members[]` contain section members with `section`, `content`, `actions`,
+`diagnostics`, and `reasons`, plus runtime members with `runtimeSlot`, resolved `payload`, `diagnostics`,
+and `reasons`. Runtime and inherited read-only members are display context only; save/validate/publish
+buttons still belong to the primary section/editor actions.
 
 2026-06-04 schema refinement for the first service-hierarchy designs:
 
@@ -1664,6 +1675,19 @@ Section cells contain only metadata and status:
 
 Section cells do not contain section content. When the editor opens one cell, load the full edit state
 through `GET /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor`.
+
+The workbench editor wrapper returns:
+
+- `editor`: the ordinary section editor state for the opened section only;
+- `compositeGroup`: `null` for a standalone section, or the full visual group context when the opened slot
+  belongs to a backend `compositeGroupKey`;
+- `workbench`: the fresh row after the operation;
+- `localeDiagnostics`: compact all-locale diagnostics on editor-open responses.
+
+Do not write runtime data into `editor.section.content`. For composite UI sections, render editable fields
+from `editor.content`, then render read-only companions from `compositeGroup.members[]`. The same
+`compositeGroup` contract is returned after save draft, validate, independent section publish, rollback,
+and section state changes, so the modal can refresh without a second call.
 
 Runtime cells represent read-model data, not editable CMS drafts. They expose `source` metadata and should
 be shown as read-only blocks in the matrix.

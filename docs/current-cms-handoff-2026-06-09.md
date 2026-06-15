@@ -924,6 +924,10 @@ Recent notes to CMS frontend developer:
   `primarySlotKey` and primary endpoints, and still keep the underlying `cells` as separate lifecycle
   records. `practice_collection_intro` + `practice_collection` are marked as `practice_collection`; the
   bottom lead area is marked as `lead_block`.
+- Workbench section editor wrappers now also return `compositeGroup` when the opened slot belongs to one of
+  these groups. `editor` remains scoped to the primary editable section; runtime/read-only companions live
+  in `compositeGroup.members[]` with resolved payload/diagnostics and are not written into
+  `editor.section.content`.
 
 ## Open Questions / Risks
 
