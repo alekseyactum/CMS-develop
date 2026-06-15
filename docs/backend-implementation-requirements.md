@@ -856,54 +856,40 @@ global achievements/lead form slots, runtime linked-page diagnostics, section de
 section validation warnings. Legal-only service rows (`legal_cond=true`, `service_cond=false`) are generated
 `service_page` sources for CMS page workbench creation/publish diagnostics.
 
-Approved direction, 2026-06-05: `problem_page` structure is approved conceptually from the current page
-design, but must not be expanded in backend code until the exact implementation slice for service/problem
-pages starts. Header/footer and breadcrumbs stay outside the editable page schema. Breadcrumbs and the
-small route/context navigation under the hero are derived from route/reference data, not from editable
-page sections.
+Implementation update, 2026-06-15: the first usable `problem_page` schema/runtime slice is implemented and
+documented in [`problem-page-structure-2026-06-15.md`](problem-page-structure-2026-06-15.md). The earlier
+single `problem_guidance` idea was intentionally replaced by fixed editor slots because the current design
+requires independent lifecycle/visibility for the three advisory sections and the two accent text sections.
+Header/footer, breadcrumbs, and route/context navigation remain outside the editable page schema.
 
-`problem_page` should be modeled as a fixed service-hierarchy page with these logical areas:
+The current `problem_page` backend scaffold includes:
 
-- `seo`: page-owned metadata section.
-- `problem_intro`: required page-owned hero section with title, short lead/subtitle, optional CTA label,
-  and optional CTA target. Visual background and layout are frontend concerns.
-- `problem_context_navigation`: runtime/read-model area derived from the page route and parent
-  practice/service/problem references. It is read-only for the editor and is not stored as page content.
-- `problem_guidance`: page-owned structured content section for the main unique problem narrative. It
-  contains an ordered list of internal blocks, for example `advice_cards` and `accent_text`. This avoids
-  hard-coding three or more design-specific advice slots before we know whether future problem pages need
-  the same count and order. If the editor later needs independent versioning per guidance block, this can
-  be split into several page-owned sections.
-- `problem_team_cta`: optional page-owned CTA/support section. If a lawyer card is shown, the card data
-  should be resolved from the lawyers read model, while the section stores only CMS text/settings.
-- `problem_cases`: runtime/read-model list of cases for the current problem/service/practice context.
-- `problem_reviews`: runtime/read-model list of reviews for the current problem/service/practice context.
-- `price`: inherited `global_price` page-owned section using the already defined inherit/append/override
-  price model.
-- `problem_faq`: optional page-owned FAQ section.
-- `problem_lawyers_block` + `problem_lawyers`: editable block title/lead paired with runtime lawyer list.
-- optional `lead_questionnaire`: page-specific questionnaire before/in the lead form.
-- runtime `lead_capture`: standard service-hierarchy lead form contract.
-
-Implementation sequencing decision, 2026-06-05: do not implement the full `problem_page` structure as the
-next code slice. The next page-authoring slice should concentrate on `practice_collection_page` and
-`practice_page` first, because they are smaller, already represented in current schemas, and cover the
-core editor-matrix mechanics: generated base/regional rows, section cells, runtime cells, inherited price,
-optional sections, open/save/validate/preview/publish, and navigation indicator refresh. After that slice
-is stable, `service_page` and then `problem_page` should be implemented from the approved structures.
+- regional-base inherited `seo` and `problem_intro`;
+- required inherited `achievements_strip`;
+- required `problem_must_do`;
+- optional/default-enabled `problem_accent_text_1`, `problem_must_not_do`, `problem_accent_text_2`,
+  `problem_lawyer_actions`, and `problem_team_cta`;
+- runtime `problem_cases` placeholder;
+- composite `problem_reviews_block` + runtime `problem_reviews`, filtered by current service and region
+  for the first slice;
+- inherited `price`;
+- optional/default-enabled `problem_faq`;
+- composite `problem_lawyers_block` + runtime `problem_lawyers`;
+- composite `lead_questionnaire` + inherited `lead_form` + runtime `lead_capture`.
 
 Implementation note, 2026-05-22: `cms-back` now contains the first page runtime resolver layer. During
 preview and publish, page lifecycle asks `PageRuntimeResolverService` to fill missing runtime payloads for
 service-tree pages. The first supported slots are `practice_collection`, `practice_services`,
 `practice_lawyers`, `practice_cases`, `practice_reviews`, `service_problems`, `service_lawyers`,
-`problem_lawyers`, and `lead_capture`. The resolver reads CMS reference-data tables, uses source slugs from
+`problem_cases`, `problem_reviews`, `problem_lawyers`, and `lead_capture`. The resolver reads CMS reference-data tables, uses source slugs from
 the page path, filters visible/public records, applies lawyer qualification score rules (`score > 1`), and
 builds route-ready list items where real reference data is already available. For
 `practice_collection_page`, base rows list all visible practices with nested visible services, and regional
 rows list visible practices that have an active region qualification for the selected visible region with
-nested visible services for those practices. `practice_cases` and
-`practice_reviews` currently return empty route-aware list payloads until cases/reviews read models are
-implemented. Provided runtime payloads are still respected and are not resolved twice, which preserves
+nested visible services for those practices. `practice_cases` and `problem_cases` currently return empty
+route-aware list payloads until the cases read model is implemented. `practice_reviews` uses the current
+practice plus region filter; `problem_reviews` uses the current service plus region filter for the first
+slice. Provided runtime payloads are still respected and are not resolved twice, which preserves
 backward compatibility with manual preview/publish requests. Missing visible sources or unroutable visible
 child items now fail as `PAGE_RUNTIME_RESOLUTION_FAILED` before an invalid public snapshot is created.
 The workbench matrix also surfaces `practice_collection` editor diagnostics before publish:
@@ -911,7 +897,7 @@ The workbench matrix also surfaces `practice_collection` editor diagnostics befo
 `PAGE_LINKED_PAGE_NOT_CREATED` and `PAGE_LINKED_PAGE_NOT_PUBLISHED` are warning-level admin diagnostics for
 visible practice/service items whose generated pages are missing or unpublished. Page lifecycle enforces the
 empty `practice_collection.items` rule during publish as a backend guard; other currently-empty runtime
-slots such as practice cases/reviews remain allowed until their read models exist.
+slots such as practice/problem cases remain allowed until their read models exist.
 
 Post-release runtime freshness decision: do not add runtime-stale tracking to the first editor/workbench
 release. Runtime slots are read-model payloads, not versioned section records, so the current system cannot

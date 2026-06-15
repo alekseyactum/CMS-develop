@@ -1580,6 +1580,7 @@ Generated service-tree schemas now pair editable CMS block sections with runtime
 - `practice_lawyers_block` + `practice_lawyers` use `practice_lawyers`;
 - `service_problems_block` + `service_problems` use `service_problems`;
 - `service_lawyers_block` + `service_lawyers` use `service_lawyers`;
+- `problem_reviews_block` + `problem_reviews` use `problem_reviews`;
 - `problem_lawyers_block` + `problem_lawyers` use `problem_lawyers`;
 - `lead_questionnaire` + `lead_form` + `lead_capture` use `lead_block` on service-hierarchy detail pages.
 
@@ -1642,27 +1643,19 @@ text/metadata sections inherit from the base page by default.
   runtime `lead_capture`;
 - `lead_form` is edited through global sections and is read-only inside the page section editor.
 
-2026-06-05 clarification for implementation order:
+2026-06-15 `problem_page` implementation update:
 
-- `problem_page` has an approved product structure, but the backend code should not expose the full final
-  problem-page slot list yet.
-- For the next working CMS editor slice, frontend and backend should concentrate on
-  `practice_collection_page` and `practice_page`.
-- This slice must make the page matrix genuinely usable: open generated base/regional rows, see section
-  and runtime cells, open section editor, save drafts, validate, preview, publish, and refresh navigation
-  indicators.
-- `service_page` and `problem_page` should stay visible in navigation/workbench where already supported,
-  but their detailed final content structures are follow-up implementation.
-
-Approved `problem_page` concept for future implementation:
-
-- Header, footer, breadcrumbs, and the under-hero route/context navigation are not editable page sections.
-- `problem_intro` is the hero/content start.
-- The long unique advisory body should be one structured `problem_guidance` section with ordered internal
-  blocks such as `advice_cards` and `accent_text`, rather than many prematurely fixed backend slots.
-- `problem_team_cta`, `problem_faq`, `problem_lawyers_block`, optional `lead_questionnaire`, and inherited
-  `price` are editable/page-owned areas.
-- `problem_cases`, `problem_reviews`, `problem_lawyers`, and `lead_capture` are runtime/read-model areas.
+- The backend now exposes the first full editor slice for `problem_page`; use
+  [`problem-page-structure-2026-06-15.md`](problem-page-structure-2026-06-15.md) as the slot checklist.
+- `problem_page` uses the same regional-base inheritance philosophy as `practice_page`: base content is
+  the source, regional pages review/publish inherited stale changes, and section headings are locked on
+  regional pages.
+- The previous single `problem_guidance` concept was replaced with fixed slots because the design requires
+  independent lifecycle/visibility for `problem_must_do`, `problem_must_not_do`,
+  `problem_lawyer_actions`, and two accent text sections.
+- `problem_reviews_block` + `problem_reviews`, `problem_lawyers_block` + `problem_lawyers`, and
+  `lead_questionnaire` + `lead_form` + `lead_capture` should be rendered as composite UI blocks.
+- `problem_cases` is currently a runtime placeholder that may return an empty list by design.
 
 Section cells contain only metadata and status:
 

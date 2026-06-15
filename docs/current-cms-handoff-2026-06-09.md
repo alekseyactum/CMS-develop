@@ -672,25 +672,30 @@ For the first working implementation, do not try to perfect all 16 slots. The pr
 
 ### service_page And problem_page
 
-Do not expand these deeply before `practice_collection_page` and `practice_page` are stable.
+`practice_collection_page` and `practice_page` are stable enough for the first editor slice. `service_page`
+is still intentionally shallow, but `problem_page` received the first full backend/editor structure on
+2026-06-15. Use [`problem-page-structure-2026-06-15.md`](problem-page-structure-2026-06-15.md) as the
+current contract.
 
-`problem_page` product structure was conceptually approved, but full backend expansion should be a later
-slice. Important approved concepts:
+Important `problem_page` decisions now implemented:
 
 - header/footer/breadcrumbs/context nav are outside editable page schema;
-- `problem_intro` is hero/content start;
-- long unique advisory body should be one structured `problem_guidance` section with ordered internal
-  blocks, not many prematurely fixed backend slots;
-- `problem_team_cta`, `problem_faq`, `problem_lawyers_block`, optional `lead_questionnaire`, and inherited
-  `price` are editable/page-owned areas;
-- `problem_cases`, `problem_reviews`, `problem_lawyers`, and `lead_capture` are runtime/read-model areas.
+- `problem_page` uses regional-base inheritance like `practice_page`;
+- `problem_intro` includes `title`, optional `accentTitle`, optional `lead`, optional CTA fields;
+- three advisory sections are separate slots, not one `problem_guidance` object:
+  `problem_must_do`, `problem_must_not_do`, and `problem_lawyer_actions`;
+- two accent text sections are separate optional/default-enabled slots:
+  `problem_accent_text_1` and `problem_accent_text_2`;
+- `problem_reviews_block` + `problem_reviews`, `problem_lawyers_block` + `problem_lawyers`, and
+  `lead_questionnaire` + `lead_form` + `lead_capture` are composite groups;
+- `problem_cases` is a runtime placeholder and can be empty for now.
 
 ## Current Immediate Goal
 
 The next concrete milestone is not another global polish pass. It is:
 
 ```text
-Make the page workbench/matrix flow genuinely usable for practice_collection_page and practice_page.
+Make problem_page work through the same page workbench/editor/publish scenario as practice pages.
 ```
 
 Work through the editor scenario:
