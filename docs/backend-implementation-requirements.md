@@ -913,6 +913,15 @@ visible practice/service items whose generated pages are missing or unpublished.
 empty `practice_collection.items` rule during publish as a backend guard; other currently-empty runtime
 slots such as practice cases/reviews remain allowed until their read models exist.
 
+Post-release runtime freshness decision: do not add runtime-stale tracking to the first editor/workbench
+release. Runtime slots are read-model payloads, not versioned section records, so the current system cannot
+mark them stale through section dependency tables. After the real release, add a dedicated runtime
+freshness layer: compute a stable canonical fingerprint for each resolved runtime payload during publish,
+store it with the page snapshot metadata, compare it with the current resolved payload in the workbench, and
+surface a `runtime_stale`-style warning/state. That later stage should make bulk publish include otherwise
+published pages whose runtime payload changed. Keep fingerprints free of unstable fields such as timestamps,
+non-deterministic ordering, diagnostics, and transient media URLs.
+
 Implementation note, 2026-05-23: `cms-back` now exposes the first direct global sections workbench API:
 `GET /api/admin/global-sections`,
 `GET /api/admin/global-sections/{sectionKey}/locale-diagnostics`,

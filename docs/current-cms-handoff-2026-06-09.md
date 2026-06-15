@@ -942,6 +942,12 @@ Keep these visible in the next thread:
 - Cases and reviews runtime lists are placeholders/read-model contracts until their real data model is
   completed.
 - Public site frontend integration and cache/revalidation are later-stage work.
+- Post-release runtime freshness should be a separate improvement stage, not part of the current
+  practice/workbench stabilization. Runtime/read-model slots are not versioned sections today, so reference
+  data changes do not automatically mark a page/slot stale unless they create diagnostics. The intended
+  next-stage design is to store a stable fingerprint of each resolved runtime payload in published snapshot
+  metadata and compare it with the current resolved payload, then surface `runtime_stale`-style attention
+  in the workbench and let bulk publish republish otherwise-published pages whose runtime payload changed.
 - User/roles and admin permission gating are not the current focus, but the admin navigation already
   anticipates users/roles.
 - The CMS should stay understandable for editors; do not expose raw internal complexity where a simple
