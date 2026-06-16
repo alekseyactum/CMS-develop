@@ -672,10 +672,28 @@ For the first working implementation, do not try to perfect all 16 slots. The pr
 
 ### service_page And problem_page
 
-`practice_collection_page` and `practice_page` are stable enough for the first editor slice. `service_page`
-is still intentionally shallow, but `problem_page` received the first full backend/editor structure on
-2026-06-15. Use [`problem-page-structure-2026-06-15.md`](problem-page-structure-2026-06-15.md) as the
-current contract.
+`practice_collection_page` and `practice_page` are stable enough for the first editor slice. Both
+`service_page` and `problem_page` now have the first full backend/editor structure implemented.
+
+Use these documents as the current contracts:
+
+- [`service-page-structure-2026-06-16.md`](service-page-structure-2026-06-16.md)
+- [`problem-page-structure-2026-06-15.md`](problem-page-structure-2026-06-15.md)
+
+Important `service_page` decisions now implemented:
+
+- `service_page` uses regional-base inheritance like `practice_page` and `problem_page`;
+- `service_intro` includes `title`, optional `accentTitle`, optional `lead`, optional CTA fields;
+- `service_problems_block` + `service_problems` is the required composite list of current service
+  problems, with admin warnings for missing/unpublished linked `problem_page` targets;
+- three accent text sections are separate optional/default-enabled slots:
+  `service_accent_text_1`, `service_accent_text_2`, and `service_accent_text_3`;
+- three advisory sections are separate optional/default-enabled slots:
+  `service_lawyer_actions`, `service_must_not_do`, and `service_must_do`;
+- `service_reviews_block` + `service_reviews`, `service_lawyers_block` + `service_lawyers`, and
+  `lead_questionnaire` + `lead_form` + `lead_capture` are composite groups;
+- `service_cases` is a runtime placeholder and can be empty for now;
+- `service_price_text` is optional and disabled by default.
 
 Important `problem_page` decisions now implemented:
 

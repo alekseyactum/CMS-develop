@@ -877,6 +877,29 @@ The current `problem_page` backend scaffold includes:
 - composite `problem_lawyers_block` + runtime `problem_lawyers`;
 - composite `lead_questionnaire` + inherited `lead_form` + runtime `lead_capture`.
 
+Implementation update, 2026-06-16: the first usable `service_page` schema/runtime slice is implemented and
+documented in [`service-page-structure-2026-06-16.md`](service-page-structure-2026-06-16.md). The earlier
+shallow service-page scaffold was replaced by fixed slots because the current design requires independent
+lifecycle/visibility for three accent text sections, three advisory sections, and separate
+text-plus-runtime composites around problems, reviews, and lawyers. Header/footer, breadcrumbs, and
+route/context navigation remain outside the editable page schema.
+
+The current `service_page` backend scaffold includes:
+
+- regional-base inherited `seo` and `service_intro`;
+- required inherited `achievements_strip`;
+- required composite `service_problems_block` + runtime `service_problems`;
+- optional/default-enabled `service_accent_text_1`, `service_lawyer_actions`, `service_accent_text_2`,
+  `service_must_not_do`, `service_accent_text_3`, `service_must_do`, and `service_team_cta`;
+- runtime `service_cases` placeholder;
+- required composite `service_reviews_block` + runtime `service_reviews`, filtered by current service and
+  region for the first slice;
+- inherited `price`;
+- optional/default-disabled `service_price_text`;
+- optional/default-enabled `service_faq`;
+- required composite `service_lawyers_block` + runtime `service_lawyers`;
+- composite `lead_questionnaire` + inherited `lead_form` + runtime `lead_capture`.
+
 Implementation note, 2026-05-22: `cms-back` now contains the first page runtime resolver layer. During
 preview and publish, page lifecycle asks `PageRuntimeResolverService` to fill missing runtime payloads for
 service-tree pages. The first supported slots are `practice_collection`, `practice_services`,

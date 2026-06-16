@@ -1660,6 +1660,26 @@ text/metadata sections inherit from the base page by default.
   `lead_questionnaire` + `lead_form` + `lead_capture` should be rendered as composite UI blocks.
 - `problem_cases` is currently a runtime placeholder that may return an empty list by design.
 
+2026-06-16 `service_page` implementation update:
+
+- The backend now exposes the first full editor slice for `service_page`; use
+  [`service-page-structure-2026-06-16.md`](service-page-structure-2026-06-16.md) as the slot checklist.
+- `service_page` uses the same regional-base inheritance philosophy as `practice_page` and `problem_page`:
+  base content is the source, regional pages review/publish inherited stale changes, and section headings
+  are locked on regional pages.
+- `service_problems_block` + `service_problems`, `service_reviews_block` + `service_reviews`,
+  `service_lawyers_block` + `service_lawyers`, and `lead_questionnaire` + `lead_form` + `lead_capture`
+  should be rendered as composite UI blocks.
+- The previous shallow service-page slice is replaced by fixed slots because the design requires
+  independent lifecycle/visibility for three accent text sections, three advisory sections, and the
+  separate text/runtime composites around problems, reviews, lawyers, and lead capture.
+- `service_cases` is currently a runtime placeholder that may return an empty list by design.
+- Current default visibility:
+  - enabled: `service_accent_text_1`, `service_lawyer_actions`, `service_accent_text_2`,
+    `service_must_not_do`, `service_accent_text_3`, `service_must_do`, `service_team_cta`,
+    `service_faq`;
+  - disabled: `service_price_text`, `lead_questionnaire`.
+
 Section cells contain only metadata and status:
 
 - ids: `bindingId`, `sectionId`, `sourceSectionId`, `localSectionId`;
