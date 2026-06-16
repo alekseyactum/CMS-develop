@@ -97,6 +97,9 @@ slice. Public visual rendering is still a frontend task.
 - Keep saving/validation actions scoped to the primary editable section in the editor response.
 - Use runtime members from `compositeGroup.members[]`; do not write runtime payloads into editable
   section content.
+- Do not open raw runtime cells directly. `problem_cases`, `problem_reviews`, `problem_lawyers`, and
+  `lead_capture` expose `endpoints.editor: null` and `actions.canOpen: false`; runtime members inside
+  composite visual sections are inspected through the primary editable section editor.
 - Supported advisory `variant` names for this slice:
   - `card_grid` - default card/grid style from the current design;
   - `compact_grid` - reserved frontend variant;

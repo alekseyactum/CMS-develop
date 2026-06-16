@@ -1048,6 +1048,9 @@ the user opens a matrix/table for one page type and needs base/regional page row
 - `rows[].compositeGroups[].endpoints.editor`: open this endpoint for a composite visual section. It points
   to the group's primary editable section. The editor response now includes a top-level `compositeGroup`
   with full member context for that visual section;
+- runtime cells without an editor endpoint must not be opened directly. They return
+  `actions.canOpen: false` and `endpoints.editor: null`; when runtime data belongs to a composite visual
+  section, open the matching `rows[].compositeGroups[].endpoints.editor` instead;
 - section columns may include `defaultVisibility: "enabled" | "disabled"`. This is the backend contract for
   bootstrap defaults. Do not infer default visibility only from `required`/`canDisable`; for example
   `practice_intro_text` and `practice_actions` are optional and disableable but default to enabled;
@@ -1349,9 +1352,9 @@ The matrix also exposes these URLs directly on every editable section cell:
 ```
 
 Frontend rule: show controls from `actions`, call URLs from `endpoints`. Do not hardcode
-`/pages/{pageId}/sections/{slotKey}/...` in UI components. Runtime cells may have `actions.canOpen=true`
-for local inspection, but they do not have section editor endpoints until a dedicated runtime detail API is
-introduced.
+`/pages/{pageId}/sections/{slotKey}/...` in UI components. Runtime cells without editor endpoints are
+non-openable (`actions.canOpen=false`). Composite groups that include runtime members remain openable
+through the group's primary editable section endpoint.
 
 The workbench page action endpoints wrap the same lifecycle logic as `POST /api/admin/pages/{pageId}/...`,
 but they also return `workbench`, a fresh row-refresh payload for the affected page:
