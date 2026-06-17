@@ -56,6 +56,12 @@ is not implemented yet:
 When enabled, admin requests without identity headers still resolve to a synthetic full-access develop user.
 This is only a develop transition mechanism and must stay disabled for release auth.
 
+`GET /api/admin/me` may therefore return these `identitySource` values:
+
+- `cms_user`;
+- `dev_actor_header`;
+- `dev_anonymous`.
+
 ## Roles And Permissions
 
 Roles are fixed in backend code for now:
@@ -129,6 +135,12 @@ Body:
 ```
 
 If `roles` is omitted, backend assigns `viewer`.
+
+Create/update conflict behavior:
+
+- duplicate `email` returns HTTP `409` with code `CMS_USER_EMAIL_CONFLICT`;
+- duplicate `identityProvider + externalIdentity` returns HTTP `409` with code
+  `CMS_USER_EXTERNAL_IDENTITY_CONFLICT`.
 
 ## Update User
 

@@ -955,6 +955,14 @@ Recent notes to CMS frontend developer:
   slot `regional_offices` before the footer. It is read-only in CMS, omitted from regional rows, and lists
   only regions that are both eligible by competencies and backed by a published regional page of the same
   page type. National rows get a warning when the list is empty.
+- Users/auth backend now supports:
+  - `/api/admin/me`, `/api/admin/users/meta`, `/api/admin/users`, `/api/admin/users/{userId}`,
+    `POST /api/admin/users`, `PATCH /api/admin/users/{userId}`;
+  - shared admin auth guard for `/api/admin/**`;
+  - develop fallback by `x-cms-actor`;
+  - optional anonymous develop bypass through `CMS_DEV_AUTH_ALLOW_ANONYMOUS=true`;
+  - HTTP `409` user-management conflicts for duplicate `email` and duplicate
+    `identityProvider + externalIdentity`.
 
 ## Open Questions / Risks
 
