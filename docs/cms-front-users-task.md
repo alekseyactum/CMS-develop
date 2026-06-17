@@ -6,6 +6,21 @@ The backend now has a dedicated users foundation, but this is not yet a full log
 Cloud Run remains the outer access boundary for develop. `x-cms-actor` is still a temporary develop-only
 audit fallback and must not be treated as release authentication.
 
+## Current Backend State
+
+Backend now enforces CMS user resolution for all `/api/admin/**` routes through one shared admin auth guard.
+
+That means:
+
+- admin routes are no longer "open by accident";
+- backend resolves one `currentUser` for the request;
+- permission checks are enforced on admin endpoints by backend metadata;
+- legacy write endpoints that still read `x-cms-actor` continue to work because backend now injects the
+  resolved actor into request context for them.
+
+Frontend does not need to implement login UI yet for develop, but it must understand that release auth will
+replace this transitional mode.
+
 ## Endpoints
 
 ```text
@@ -31,6 +46,15 @@ Temporary develop fallback:
 `GET /api/admin/me` resolves the current CMS user by `x-cms-user-id` or `x-cms-user-email`. If those are not
 present, develop can still use `x-cms-actor` as a temporary fallback. This fallback returns an admin-like
 develop actor so existing development flows keep working until real CMS auth/session is wired.
+
+Additionally, backend now supports an explicit develop anonymous bypass for environments where frontend login
+is not implemented yet:
+
+- `CMS_DEV_AUTH_ALLOW_ANONYMOUS=true`
+- optional `CMS_DEV_AUTH_ANONYMOUS_ACTOR=develop-admin`
+
+When enabled, admin requests without identity headers still resolve to a synthetic full-access develop user.
+This is only a develop transition mechanism and must stay disabled for release auth.
 
 ## Roles And Permissions
 
@@ -126,6 +150,7 @@ Use `status: "disabled"` instead of deleting users. Published/draft audit histor
 
 ## Release Note
 
-This layer is only the model and API foundation. A later task must replace the temporary develop actor fallback
-with the chosen real auth/session boundary and then wire existing page, section, reference and publish actions
-to the resolved CMS user.
+This layer is now the enforced backend foundation for admin identity and permissions, but it is still not the
+final release login/session implementation. A later task must replace the temporary develop fallback and
+anonymous bypass with the chosen real auth/session boundary while keeping the same DB-backed CMS user model,
+roles, permissions, and `/api/admin/me` semantics.
