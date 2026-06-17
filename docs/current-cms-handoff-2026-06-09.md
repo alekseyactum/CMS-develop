@@ -962,7 +962,9 @@ Recent notes to CMS frontend developer:
   - develop fallback by `x-cms-actor`;
   - optional anonymous develop bypass through `CMS_DEV_AUTH_ALLOW_ANONYMOUS=true`;
   - HTTP `409` user-management conflicts for duplicate `email` and duplicate
-    `identityProvider + externalIdentity`.
+    `identityProvider + externalIdentity`;
+  - protection against disabling/demoting the last active admin
+    (`CMS_USER_LAST_ACTIVE_ADMIN_REQUIRED`).
 
 ## Open Questions / Risks
 

@@ -141,6 +141,8 @@ Create/update conflict behavior:
 - duplicate `email` returns HTTP `409` with code `CMS_USER_EMAIL_CONFLICT`;
 - duplicate `identityProvider + externalIdentity` returns HTTP `409` with code
   `CMS_USER_EXTERNAL_IDENTITY_CONFLICT`.
+- disabling or demoting the last active admin returns HTTP `409` with code
+  `CMS_USER_LAST_ACTIVE_ADMIN_REQUIRED`.
 
 ## Update User
 
@@ -159,6 +161,8 @@ Editable fields:
 - `roles`.
 
 Use `status: "disabled"` instead of deleting users. Published/draft audit history should remain readable.
+Backend also protects the contour from losing the last active admin: if the requested update would leave
+CMS without any active `admin` user, the update is rejected.
 
 ## Release Note
 
