@@ -422,6 +422,30 @@ still default to disabled.
 - Not a global section.
 - Provides the stable form submission/runtime contract for the public frontend.
 
+### 17. `regional_offices`
+
+- Type: runtime/read-model section.
+- Purpose: show eligible regional office/page links before the footer on the Ukraine/base page only.
+- Fixed position after the lead block and before the footer.
+- National-only: present on the base/Ukraine `practice_page`; regional practice pages must not have this
+  slot in the workbench/editor at all.
+- Read-only in CMS.
+- Fields in resolved payload:
+  - `title`;
+  - `accentTitle`;
+  - `titleSuffix`;
+  - `items[]`.
+- Runtime source:
+  - active/show-on-site regions;
+  - current practice regional competencies;
+  - only regions that also have a published regional `practice_page` for the same practice.
+- Item contract:
+  - region identity/localized title fields;
+  - regional public path for the linked practice page.
+- Validation/diagnostics:
+  - empty list on the national page is a warning, not a blocker;
+  - public rendering should hide the whole section when no eligible items exist.
+
 ## Implementation Notes
 
 - Keep two different lawyer sections:

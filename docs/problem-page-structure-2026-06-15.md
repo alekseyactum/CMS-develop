@@ -84,6 +84,20 @@ slice. Public visual rendering is still a frontend task.
     - `lead_form` inherits from `global_lead_form`.
     - `lead_capture` is runtime form context.
 
+16. `regional_offices`
+    - Runtime/read-model section.
+    - Fixed after the lead block and before the footer.
+    - National-only: only the Ukraine/base `problem_page` has this slot; regional problem pages do not.
+    - Read-only in CMS.
+    - Resolved payload fields: `title`, `accentTitle`, `titleSuffix`, `items`.
+    - Items are eligible regions with:
+      - active/show-on-site region visibility;
+      - active regional qualification for the current service, or practice-level fallback where service
+        qualification is absent;
+      - a published regional `problem_page` for the same route.
+    - Empty list is a warning on the national page, not a publish blocker.
+    - Public rendering should hide the whole section when no eligible items exist.
+
 ## Validation Notes
 
 - Empty enabled advisory `items` lists are validation errors.
@@ -98,8 +112,8 @@ slice. Public visual rendering is still a frontend task.
 - Use runtime members from `compositeGroup.members[]`; do not write runtime payloads into editable
   section content.
 - Do not open raw runtime cells directly. `problem_cases`, `problem_reviews`, `problem_lawyers`, and
-  `lead_capture` expose `endpoints.editor: null` and `actions.canOpen: false`; runtime members inside
-  composite visual sections are inspected through the primary editable section editor.
+  `lead_capture`, and `regional_offices` expose `endpoints.editor: null` and `actions.canOpen: false`;
+  runtime members inside composite visual sections are inspected through the primary editable section editor.
 - Supported advisory `variant` names for this slice:
   - `card_grid` - default card/grid style from the current design;
   - `compact_grid` - reserved frontend variant;

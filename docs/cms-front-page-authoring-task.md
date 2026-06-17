@@ -1680,6 +1680,19 @@ text/metadata sections inherit from the base page by default.
     `service_faq`;
   - disabled: `service_price_text`, `lead_questionnaire`.
 
+2026-06-17 runtime-regions update:
+
+- `practice_page`, `service_page`, and `problem_page` now also expose a standalone runtime slot
+  `regional_offices`.
+- This slot is national-only. The backend includes it for the Ukraine/base row and omits it completely
+  from regional rows. Frontend should treat missing regional cells as intentional, not as broken data.
+- The payload is read-only and contains `title`, `accentTitle`, `titleSuffix`, and `items[]`.
+- `items[]` contains only regions that are both eligible by active competencies and backed by an existing
+  published regional page of the same page type.
+- The matrix may show a warning with code `PAGE_RUNTIME_LIST_EMPTY` when the national page has no eligible
+  published regional targets yet. This is an editor warning, not a publish blocker.
+- Public rendering should hide this section when the runtime payload resolves to no items.
+
 Section cells contain only metadata and status:
 
 - ids: `bindingId`, `sectionId`, `sourceSectionId`, `localSectionId`;

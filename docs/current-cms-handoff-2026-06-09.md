@@ -951,6 +951,10 @@ Recent notes to CMS frontend developer:
   these groups. `editor` remains scoped to the primary editable section; runtime/read-only companions live
   in `compositeGroup.members[]` with resolved payload/diagnostics and are not written into
   `editor.section.content`.
+- `practice_page`, `service_page`, and `problem_page` now also expose a standalone national-only runtime
+  slot `regional_offices` before the footer. It is read-only in CMS, omitted from regional rows, and lists
+  only regions that are both eligible by competencies and backed by a published regional page of the same
+  page type. National rows get a warning when the list is empty.
 
 ## Open Questions / Risks
 
