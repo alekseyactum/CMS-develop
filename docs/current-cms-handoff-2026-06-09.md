@@ -33,8 +33,8 @@ Current branch rule:
 
 Latest known pushed state:
 
-- `cms-back/develop`: commit `5d83d26` (`Add page workbench row metadata`).
-- `CMS/develop`: commit `f71d2d3` (`Document page workbench matrix updates`).
+- `cms-back/develop`: commit `dd830ad` (`Protect the last active admin`).
+- `CMS/develop`: commit `f0a1bd4` (`Document last admin user guardrails`).
 
 Latest verified backend deploy after push:
 
@@ -708,44 +708,49 @@ Important `problem_page` decisions now implemented:
   `lead_questionnaire` + `lead_form` + `lead_capture` are composite groups;
 - `problem_cases` is a runtime placeholder and can be empty for now.
 
+## Structure Status Summary
+
+At this point, the agreed backend/editor structure for the service-hierarchy pages is considered done at
+the current project stage:
+
+- `practice_collection_page`:
+  - matrix/workbench flow is implemented;
+  - `practice_collection_intro` + runtime `practice_collection` composite contract is implemented;
+  - regional inheritance/readiness/preview/publish flow is implemented.
+- `practice_page`:
+  - the agreed slot order is implemented in backend schema;
+  - composite/runtime/global/inherited contracts are implemented;
+  - `achievements_strip`, lead block, related legal, reviews, price, lawyers, and `regional_offices` are in
+    place.
+- `service_page`:
+  - the agreed slot order is implemented in backend schema;
+  - composite groups for problems, reviews, lawyers, and lead block are in place;
+  - advisory sections, accent text sections, price/FAQ behavior, and `regional_offices` are in place.
+- `problem_page`:
+  - the agreed slot order is implemented in backend schema;
+  - advisory sections, accent text sections, reviews, lawyers, lead block, and `regional_offices` are in
+    place.
+
+This does not mean the whole CMS/public product is finished. It means the page structures themselves are no
+longer the main open backend topic.
+
 ## Current Immediate Goal
 
-The next concrete milestone is not another global polish pass. It is:
+The next concrete milestone is post-structure work around the already implemented page schemas, not another
+round of redefining service-hierarchy page slots.
 
 ```text
-Make problem_page work through the same page workbench/editor/publish scenario as practice pages.
+Keep page structures stable and move the project through the next layers: frontend integration, runtime
+freshness, real read models, and release-grade auth.
 ```
 
-Work through the editor scenario:
+Priority order for post-structure work:
 
-1. Open from admin navigation.
-2. Receive page matrix rows:
-   - base/Ukraine;
-   - eligible regional rows.
-3. If a generated page is missing, use bootstrap/open-editor endpoints to create/open it.
-4. Open a default editable section.
-5. Save draft.
-6. Validate draft/section/page.
-7. Preview page.
-8. Publish when backend readiness allows.
-9. Confirm row/cell data updates correctly:
-   - diagnostics;
-   - relationship;
-   - publishedAt/publishedBy;
-   - history endpoint;
-   - navigation indicators.
-
-Recommended order:
-
-1. `practice_collection_page` first because it is small.
-2. `practice_page` second because it exercises:
-   - editable sections;
-   - runtime lists;
-   - inherited price;
-   - optional sections;
-   - lead form runtime slot.
-3. After that, adapt the same mechanics to `service_page`.
-4. Only after that, implement the approved final `problem_page` structure.
+1. frontend implementation of the already agreed matrix/editor contracts;
+2. public preview/rendering integration and cache/revalidation path;
+3. real read models for placeholder runtime sections such as `*_cases`;
+4. runtime freshness detection (`runtime_stale`-style attention based on resolved runtime payload changes);
+5. release-grade CMS auth/session boundary instead of develop-only identity fallbacks.
 
 ## Useful Current APIs
 
@@ -970,12 +975,18 @@ Recent notes to CMS frontend developer:
 
 Keep these visible in the next thread:
 
-- `practice_page` target structure is documented in `docs/practice-page-structure-2026-06-13.md`, and the
-  first backend schema/runtime pass has been applied. The first hard-error validation pass for structured
-  practice sections, warning-grade validation persistence/surfacing, schema default visibility for agreed
-  optional practice sections, the `practice_related_legal` service-page source policy, and linked-page
-  diagnostics for `practice_services`/`practice_related_legal`/`practice_lawyers` are already in place.
-- `service_page` and `problem_page` should not be over-expanded until practice pages are stable.
+- The agreed page structures are now implemented in backend schema/workbench form for:
+  - `practice_collection_page`;
+  - `practice_page`;
+  - `service_page`;
+  - `problem_page`.
+- Treat further changes to these structures as product changes, not as unfinished carry-over from the first
+  backend pass.
+- `lawyer_page` target structure is now documented in `docs/lawyer-page-structure-2026-06-18.md`, but the
+  backend still exposes only a minimal lawyer-profile slice and has not been expanded to that target yet.
+  The document now also fixes the universal lawyer-profile model: one structured runtime profile block,
+  reference-data ownership for editable profile fields, a target `reference_data/lawyers` contract for
+  localized public profile data, no public contacts block, and CTA to the common lead form.
 - Cases and reviews runtime lists are placeholders/read-model contracts until their real data model is
   completed.
 - Public site frontend integration and cache/revalidation are later-stage work.
@@ -995,12 +1006,8 @@ Keep these visible in the next thread:
 Ask Codex to do this:
 
 ```text
-Начинаем с practice_collection_page. Проверь код схемы, matrix response и editor endpoints. Пройди сценарий:
-navigation -> page matrix -> generated/base/regional rows -> open/create page -> open practice_collection_intro
-section -> save draft -> validate -> preview -> publish/readiness. Если чего-то не хватает в API или docs,
-внеси точечные правки.
+The backend structures for practice_collection/practice/service/problem are already fixed. Check which
+post-structure layer matters most now: frontend matrix/editor implementation, public preview/rendering,
+runtime freshness, real read models for runtime placeholder sections, or release auth/session. After that,
+make targeted API/docs changes without reopening page-structure design.
 ```
-
-Current correction: `practice_collection_page` workbench diagnostics and publish guard were advanced on
-2026-06-09. Next, repeat the same editor/readiness flow for `practice_page`; after that, move to
-`service_page`.
