@@ -708,6 +708,41 @@ Important `problem_page` decisions now implemented:
   `lead_questionnaire` + `lead_form` + `lead_capture` are composite groups;
 - `problem_cases` is a runtime placeholder and can be empty for now.
 
+### Editorial Content Pages
+
+The next content-family architecture is now fixed at the requirements level in:
+
+- [`editorial-content-architecture-2026-06-19.md`](editorial-content-architecture-2026-06-19.md)
+- [`editorial-content-backend-roadmap-2026-06-19.md`](editorial-content-backend-roadmap-2026-06-19.md)
+- [`editorial-content-backend-execution-plan-2026-06-19.md`](editorial-content-backend-execution-plan-2026-06-19.md)
+
+This covers:
+
+- `blog_page`
+- `media_page`
+- `case_page`
+- `blog_collection_page`
+- `media_collection_page`
+- `case_collection_page`
+
+Key decisions:
+
+- do not build three unrelated subsystems for blog/media/cases;
+- do not collapse them into one weak universal page type;
+- use one shared editorial content contour with:
+  - shared `publication_meta`;
+  - shared dynamic `content_builder`;
+  - required `case_summary` on `case_page`;
+- keep separate public page types and separate collection page types;
+- do not require one mixed all-content collection in the first slice.
+
+Important status note:
+
+- this architecture is agreed and documented;
+- the preferred backend implementation path is also documented;
+- the implementation slices/order are also documented;
+- it is not yet implemented in backend page schemas/workbench form.
+
 ## Structure Status Summary
 
 At this point, the agreed backend/editor structure for the service-hierarchy pages is considered done at
@@ -751,6 +786,16 @@ Priority order for post-structure work:
 3. real read models for placeholder runtime sections such as `*_cases`;
 4. runtime freshness detection (`runtime_stale`-style attention based on resolved runtime payload changes);
 5. release-grade CMS auth/session boundary instead of develop-only identity fallbacks.
+
+Parallel architecture track now fixed for the next implementation phase:
+
+- `lawyer_page` target structure is documented in `docs/lawyer-page-structure-2026-06-18.md`;
+- blog/media/case editorial architecture is documented in
+  `docs/editorial-content-architecture-2026-06-19.md`;
+- the preferred backend realization path for that contour is documented in
+  `docs/editorial-content-backend-roadmap-2026-06-19.md`;
+- the concrete backend execution slices for that contour are documented in
+  `docs/editorial-content-backend-execution-plan-2026-06-19.md`.
 
 ## Useful Current APIs
 
@@ -987,6 +1032,10 @@ Keep these visible in the next thread:
   The document now also fixes the universal lawyer-profile model: one structured runtime profile block,
   reference-data ownership for editable profile fields, a target `reference_data/lawyers` contract for
   localized public profile data, no public contacts block, and CTA to the common lead form.
+- Blog/media/case target architecture is now documented in
+  `docs/editorial-content-architecture-2026-06-19.md`, but the backend still does not expose
+  `blog_page`, `media_page`, `case_page`, their collection page types, or the shared
+  `publication_meta` / `content_builder` / `case_summary` authoring flow yet.
 - Cases and reviews runtime lists are placeholders/read-model contracts until their real data model is
   completed.
 - Public site frontend integration and cache/revalidation are later-stage work.
