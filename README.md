@@ -59,6 +59,8 @@ See [`docs/reference-data-and-runtime-model.md`](docs/reference-data-and-runtime
 ERP-imported reference data and runtime/read-model boundary.
 See [`docs/cms-front-reference-data-task.md`](docs/cms-front-reference-data-task.md) for the first CMS
 frontend task around reference-data admin screens and endpoints.
+See [`docs/source-diagnostics-and-bulk-bootstrap-task.md`](docs/source-diagnostics-and-bulk-bootstrap-task.md)
+for the project-wide source diagnostics and mass authoring-page creation task.
 
 ## Development Sequencing
 
