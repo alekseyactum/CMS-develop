@@ -28,6 +28,28 @@ Each slice should end in one of two states:
 
 Do not start several slices in parallel if they touch the same page-schema or publish pipeline boundary.
 
+## Implementation Status - 2026-06-20
+
+Implemented in `cms-back`:
+
+- `blog_page`, `media_page`, and `case_page` are registered page types.
+- `blog_collection_page`, `media_collection_page`, and `case_collection_page` are registered collection
+  page types.
+- `publication_meta`, `case_summary`, and `content_builder` are normal page-owned sections.
+- `cms_editorial_publications` and `cms_editorial_publication_contributors` exist as published
+  projection tables.
+- Publishing or rolling back `blog_page`, `media_page`, or `case_page` rebuilds the published projection
+  from the resulting page snapshot.
+- Collection pages resolve `editorial_collection_items` from the published projection.
+- Backend now exposes a first admin facade for publication lists and creation:
+  - `GET /api/admin/editorial/publications?kind=blog|media|case&locale=uk`
+  - `GET /api/admin/editorial/publications/slug-check?kind=blog|media|case&locale=uk&title=...`
+  - `GET /api/admin/editorial/publications/{pageId}`
+  - `POST /api/admin/editorial/publications`
+
+The facade does not replace the section editor. It creates/fetches normal pages and returns links into the
+existing authoring/workbench endpoints for `publication_meta`, `case_summary`, and `content_builder`.
+
 ## Recommended Slice Order
 
 1. naming normalization and page-type registration

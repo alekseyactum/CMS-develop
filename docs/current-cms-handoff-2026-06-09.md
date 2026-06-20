@@ -1015,6 +1015,13 @@ Recent notes to CMS frontend developer:
     `identityProvider + externalIdentity`;
   - protection against disabling/demoting the last active admin
     (`CMS_USER_LAST_ACTIVE_ADMIN_REQUIRED`).
+- Editorial publication backend now has a first admin facade:
+  - `GET /api/admin/editorial/publications?kind=blog|media|case&locale=uk`;
+  - `GET /api/admin/editorial/publications/slug-check?kind=blog|media|case&locale=uk&title=...`;
+  - `GET /api/admin/editorial/publications/{pageId}`;
+  - `POST /api/admin/editorial/publications`.
+  This facade creates/fetches normal `blog_page`, `media_page`, and `case_page` pages and returns links to
+  the existing authoring/workbench section editors. It is not a separate publication storage model.
 
 ## Open Questions / Risks
 
@@ -1032,10 +1039,11 @@ Keep these visible in the next thread:
   The document now also fixes the universal lawyer-profile model: one structured runtime profile block,
   reference-data ownership for editable profile fields, a target `reference_data/lawyers` contract for
   localized public profile data, no public contacts block, and CTA to the common lead form.
-- Blog/media/case target architecture is now documented in
-  `docs/editorial-content-architecture-2026-06-19.md`, but the backend still does not expose
-  `blog_page`, `media_page`, `case_page`, their collection page types, or the shared
-  `publication_meta` / `content_builder` / `case_summary` authoring flow yet.
+- Blog/media/case target architecture is documented in
+  `docs/editorial-content-architecture-2026-06-19.md`. Backend now exposes the first real contour:
+  page schemas, published projection tables/rebuild, collection runtime resolver, and admin facade for
+  list/create/open. Remaining work is frontend screens, richer `content_builder` block UX/validation,
+  selector ergonomics, and public render integration.
 - Cases and reviews runtime lists are placeholders/read-model contracts until their real data model is
   completed.
 - Public site frontend integration and cache/revalidation are later-stage work.
