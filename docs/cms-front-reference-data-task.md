@@ -271,6 +271,26 @@ Request body example:
 Send only fields that belong to that resource translation contract. The backend will reject unsupported
 localized fields.
 
+### Navigation Title Fields
+
+For practice, service, problem, and region dictionaries, the editor-facing title fields have different
+jobs:
+
+- `sourceFields.sourceName` and `sourceFields.sourceShortname` are ERP/source-owned read-only fallbacks.
+- `translations.{locale}.publicName` is the normal public/content name.
+- `translations.{locale}.menuTitle` is the short navigation label used by backend-generated breadcrumbs,
+  menus, hierarchy labels, and compact link lists.
+
+The backend display priority for navigation contexts is:
+
+```text
+menuTitle ?? publicName ?? sourceName
+```
+
+When translation skeletons are created, `menuTitle` is prefilled from `sourceShortname` and then
+`sourceName`; `publicName` is prefilled from `sourceName`. Editors can change both through the translation
+editor. Missing or overlong title values are warnings, not blocking errors.
+
 ## Diagnostics UI
 
 Every record can include `diagnostics`.

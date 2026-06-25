@@ -750,6 +750,11 @@ Implementation note, 2026-06-04/09: service-tree page schemas were aligned with 
 runtime/public payload metadata from route/page context. `practice_collection_page` keeps only an editable
 `practice_collection_intro` hero slot and a runtime `practice_collection` tree; it does not include the
 standard service-hierarchy lead form in the first design slice.
+Implementation note, 2026-06-25: for service hierarchy pages
+(`practice_collection_page`, `practice_page`, `service_page`, `problem_page`), breadcrumbs are assembled by
+the backend during page payload assembly. Labels use `menuTitle ?? publicName ?? sourceName`; the source
+label is only a fallback. The frontend renders the returned payload breadcrumbs and does not reconstruct
+them from reference objects.
 The two collection slots are exposed to the CMS workbench as one composite group
 `practice_collection`: `practice_collection_intro` is the primary editor member and
 `practice_collection` is the readonly/runtime member. This is a UI contract only; the backend keeps their
