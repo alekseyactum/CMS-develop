@@ -420,6 +420,12 @@ because current expected volumes are small enough and a full tree keeps the UI s
 remain summary-only: no full section content, no full validation history, no snapshot history, and no
 authoring payloads.
 
+Performance boundary: `includeIndicators=true` is still a sidebar/bootstrap request, not a hidden call to
+all page workbench matrices. Backend navigation indicators should use lightweight page/source/section
+summaries and must not build full matrix responses, all-locale matrix diagnostics, runtime payload
+resolution, editor content, or history. Full runtime-linked diagnostics stay on the selected workbench
+matrix/editor screen after the user opens that area.
+
 Navigation indicators are dynamic and may become stale while an editor works. Frontend must refresh
 `/api/admin/navigation?locale=<locale>&includeIndicators=true` after successful actions that can change
 page, section, publication, reference-data, media, global-section, settings, or user indicators. A rare

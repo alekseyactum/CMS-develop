@@ -1523,6 +1523,12 @@ diagnostic histories, page version histories, or authoring payloads. Those belon
 section editor, global section, reference data, and user-management APIs opened from the selected menu
 target.
 
+`includeIndicators=true` must also stay lightweight operationally. The sidebar request must not construct
+full page workbench matrix responses, all-locale matrix diagnostics, runtime payload diagnostics, editor
+payloads, or histories. Those heavier checks are loaded only after the editor opens the relevant matrix or
+section screen. If indicator calculation is unavailable or slow in the future, the CMS shell should still be
+able to render the navigation tree without waiting for full diagnostics.
+
 This decision still avoids committing to final screen layout details, but it fixes the backend boundary for
 the admin sidebar/menu because the menu is now part of the core CMS workflow.
 

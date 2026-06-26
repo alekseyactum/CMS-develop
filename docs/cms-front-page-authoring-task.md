@@ -272,6 +272,11 @@ Indicators are optional and should be included only when requested:
   `indicators`;
 - the response includes `generatedAt`, an ISO timestamp showing when the backend assembled the menu and
   indicators;
+- navigation indicators are intentionally summary-only. They are not the same thing as opening every
+  workbench matrix: the backend does not attach full rows, locale diagnostics, runtime payload checks,
+  section content, or history to the sidebar response;
+- deep runtime-linked diagnostics remain on the selected matrix/editor screen. The sidebar can show enough
+  counters to orient the editor, but it must not block CMS shell rendering on full matrix validation;
 - the first implementation does not need backend menu filters such as `filter=errors` or
   `filter=attention`; if the frontend needs quick filters, it can derive them locally from the returned
   indicators.
