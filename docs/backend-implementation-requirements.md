@@ -715,6 +715,14 @@ operation result plus a fresh workbench row, so the CMS frontend can update both
 and the matrix row after save, validate, publish, rollback, enable, or disable without reconstructing
 backend rules or making a separate row-refresh request.
 
+Implementation note, 2026-06-26: the workbench section draft wrapper treats editor-form validation as an
+operation result, not as a transport error. If composition or content is invalid, it returns `saved: false`,
+`saveDraft: null`, a `diagnostics` object with `issues[]`, `compositeGroup`, and a fresh `workbench` row;
+the invalid draft is not persisted. Non-form failures such as missing page, missing slot, disabled section,
+or non-editable runtime slot remain HTTP errors. Page-owned `price` drafts reuse the `global_price`
+diagnostic rules so frontend field highlighting receives the same item-level `fieldPath` contract as the
+global price editor.
+
 Implementation note, 2026-06-09: section editor wrapper responses now build `workbench.row` through the
 same generated source-aware row contract as the page-type matrix and row refresh endpoints. Generated
 regional rows therefore keep `sourceTitle`, `regionTitle`, `displayTitle`, `sourceRecord`, `region`,

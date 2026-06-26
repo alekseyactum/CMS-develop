@@ -51,6 +51,38 @@ POST /api/admin/pages/{pageId}/publish
 POST /api/admin/pages/{pageId}/rollback
 ```
 
+For the page workbench section draft wrapper
+`POST /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/draft`, do not assume that every
+non-saved form state arrives as HTTP 400. Editor-form validation failures are returned as a normal response:
+
+```ts
+{
+  saved: boolean;
+  saveDraft: SaveDraftResult | null;
+  diagnostics: {
+    status: 'ok' | 'warning' | 'error';
+    errorCount: number;
+    warningCount: number;
+    issues: Array<{
+      severity: 'error' | 'warning';
+      code: string;
+      fieldPath: string;
+      itemId?: string;
+      field?: string;
+      message: string;
+    }>;
+  } | null;
+  compositeGroup: CompositeGroup | null;
+  workbench: PageWorkbenchRowRefreshResponse;
+}
+```
+
+If `saved: false`, no draft version was persisted and `saveDraft` is `null`; use `diagnostics.issues[]` to
+highlight form fields. This covers composition errors and content validation errors. Page `price` drafts
+reuse `global_price` validation, so readonly fields and invalid `items[]` come back as field-level
+diagnostics. Missing page/slot, disabled sections, runtime slots, and other non-form failures remain HTTP
+errors.
+
 All write operations may send `x-cms-actor` until real CMS auth/session audit is wired.
 Navigation and other user-aware endpoints should send one of the current identity headers:
 `x-cms-user-id`, `x-cms-user-email`, or temporary develop-only `x-cms-actor`.
