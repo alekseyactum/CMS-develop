@@ -775,6 +775,7 @@ Media records include:
 
 - stable `media_id`;
 - usage type;
+- optional owner context (`owner_resource`, `owner_id`) for picker scoping;
 - lifecycle state;
 - upload state;
 - storage provider and bucket;
@@ -805,6 +806,10 @@ license_document
 generic
 ```
 
+`usageType` describes the file policy. It should not be multiplied just to represent the owning object.
+Object ownership is stored separately as `owner_resource` plus `owner_id`; the initial owner resources are
+`lawyers` and `pages`.
+
 Public image usage types require `alt_text` and `title_text`. Size and MIME limits are owned by the backend
 and exposed through `GET /api/admin/media/meta`. Public image usage types require these fields for every
 supported locale.
@@ -812,13 +817,15 @@ supported locale.
 Reference-data integration:
 
 - lawyer `cmsFields.photoMediaId` must reference an active uploaded `lawyer_photo` media record;
-- the backend rejects missing, deleted, pending-upload, or wrong-usage media ids;
+- if that media record has an owner, it must be `owner_resource = 'lawyers'` and the same lawyer id;
+- the backend rejects missing, deleted, pending-upload, wrong-usage, or wrong-owner media ids;
 - media deletion is soft;
 - deletion is blocked when a record is referenced by a lawyer photo or by a published page snapshot.
 
-The first release does not introduce a universal `cms_media_usages` table. Media ownership remains in the
-field that references the media asset, for example lawyer `photo_media_id` or a section payload field.
-Deletion/readiness checks must inspect the implemented owner fields and published snapshots. A separate
-usage index can be added later only if real cross-object media reporting needs it.
+The first release does not introduce a universal `cms_media_usages` table. Media assets have a lightweight
+owner context for picker scoping, while actual public usage remains in the field that references the media
+asset, for example lawyer `photo_media_id` or a section payload field. Deletion/readiness checks must
+inspect the implemented hard references and published snapshots. A separate usage index can be added later
+only if real cross-object media reporting needs it.
 
 This gives the CMS frontend a stable media identifier before the richer media-library UI is implemented.

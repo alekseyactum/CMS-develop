@@ -400,6 +400,7 @@ when an `<img>`/preview URL is needed in the browser.
 `GET /api/admin/media/meta` returns usage policies:
 
 - supported `usageType` values;
+- supported `ownerResource` values;
 - allowed MIME types;
 - maximum file size;
 - whether localized `altText` and `titleText` are required;
@@ -419,6 +420,18 @@ generic
 For public image usages such as `lawyer_photo`, `article_cover`, and `og_image`, the backend requires
 `altText` and `titleText` for every supported locale.
 
+`usageType` describes the file policy and purpose: MIME types, size, and required localized metadata.
+It must not be expanded just to say which concrete object owns the file. Object ownership is passed
+separately as `ownerResource` plus `ownerId`. Initial owner resources are:
+
+```text
+lawyers
+pages
+```
+
+Use `ownerResource=lawyers` for lawyer photos. Use `ownerResource=pages` for page-owned media such as
+blog/media/case covers, including case pages, when the page id is known.
+
 Upload a file through the backend:
 
 ```http
@@ -430,6 +443,8 @@ Form fields:
 
 - `file`: binary file;
 - `usageType`: one of the backend usage types;
+- `ownerResource`: optional, one of the backend owner resources;
+- `ownerId`: optional, required together with `ownerResource`;
 - `translations`: JSON string with localized media metadata;
 - `width`: optional positive integer;
 - `height`: optional positive integer.
@@ -453,6 +468,8 @@ POST /api/admin/media
 ```json
 {
   "usageType": "lawyer_photo",
+  "ownerResource": "lawyers",
+  "ownerId": "7f94fc5e-80b5-401e-9100-5d6f0f95ce04",
   "originalFilename": "ivan-ivanov.webp",
   "mimeType": "image/webp",
   "sizeBytes": 112000,
@@ -467,6 +484,7 @@ POST /api/admin/media
 The backend owns and returns:
 
 - `id`;
+- `ownerResource` and `ownerId` when an owner context was supplied;
 - configured `bucket`;
 - backend-generated `objectKey`;
 - stable `servingPath`, for example `/media/{mediaId}/original.webp`;
@@ -513,8 +531,10 @@ PUT /api/admin/media/{id}/translations/{locale}
 }
 ```
 
-Use `cmsFields.photoMediaId` on lawyers to connect a lawyer to a media record. The backend now validates
-that `photoMediaId` points to an active uploaded media record with `usageType="lawyer_photo"`.
+Use `cmsFields.photoMediaId` on lawyers to connect a lawyer to a media record. The backend validates that
+`photoMediaId` points to an active uploaded media record with `usageType="lawyer_photo"`. If the media
+record has an owner, it must be `ownerResource="lawyers"` with the same lawyer id; older ownerless
+`lawyer_photo` assets remain accepted for compatibility.
 
 ### Lawyer Photo Picker Flow
 
@@ -524,6 +544,12 @@ For the first lawyer photo picker, use this practical flow:
 
 ```http
 GET /api/admin/media?usageType=lawyer_photo&uploadState=uploaded&limit=50&offset=0
+```
+
+For a concrete lawyer editor, prefer the owner-scoped picker:
+
+```http
+GET /api/admin/media?usageType=lawyer_photo&ownerResource=lawyers&ownerId={lawyerId}&uploadState=uploaded&limit=50&offset=0
 ```
 
 2. Show each choice using media metadata and an admin preview URL proxied by `cms-front`:
@@ -543,6 +569,8 @@ Required fields for `usageType=lawyer_photo`:
 
 - `file`;
 - `usageType=lawyer_photo`;
+- `ownerResource=lawyers`;
+- `ownerId={lawyerId}`;
 - `translations` JSON string with `altText` and `titleText` for `uk`, `ru`, and `en`.
 
 4. After upload succeeds, attach the media record to the lawyer:
@@ -570,8 +598,9 @@ backend validation message and keep the editor's current form state.
 Deletion is soft and guarded. `DELETE /api/admin/media/{id}` is rejected if the record is already referenced
 by a lawyer photo or by a published page snapshot.
 
-There is intentionally no separate `cms_media_usages` API in the current implementation. Media usage is
-known by the owning object or section field, and deletion checks the implemented owners plus published
+There is intentionally no separate `cms_media_usages` API in the current implementation. Media ownership is
+stored on the media asset itself as a lightweight picker context, while actual public usage is still decided
+by the owning object or section field. Deletion checks the implemented hard references plus published
 snapshot payloads.
 
 ## Acceptance Criteria

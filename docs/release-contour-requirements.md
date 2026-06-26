@@ -784,6 +784,7 @@ Required media metadata should include:
 - checksum or equivalent integrity marker when available;
 - original filename;
 - media usage type;
+- optional owner context for media picker scoping;
 - localized alt text when the asset is used as a public content image;
 - localized title when the asset is used as a public content image and the page type requires it;
 - upload author and timestamps;
@@ -799,6 +800,10 @@ Supported media usage types should include at least:
 
 The system must enforce MIME type and file size restrictions. These restrictions should be configurable by
 usage type where needed.
+
+Media `usageType` describes file policy, not the concrete owning object. Object ownership should be modeled
+separately as an owner context such as `ownerResource=lawyers&ownerId=<lawyerId>` or
+`ownerResource=pages&ownerId=<pageId>`.
 
 Public media URLs must be stable enough for published content, SEO metadata, Open Graph previews, and
 cached frontend rendering.
@@ -828,10 +833,11 @@ Media deletion must be safe:
 The first release does not require a large, polished media-library UI. A minimal administrative interface
 is acceptable if the data model, validation, owner-reference checks, and safe deletion rules are correct.
 
-The first release does not require a universal `cms_media_usages` table. A media asset belongs to the
-object or section field that references it. Safe deletion and diagnostics should inspect implemented owner
-fields, such as lawyer `photo_media_id`, and current published snapshots. A separate usage index can be
-added later if reporting or cross-object cleanup becomes painful enough to justify the extra write path.
+The first release does not require a universal `cms_media_usages` table. A media asset may carry a
+lightweight owner context for admin picker filtering, but actual usage belongs to the object or section
+field that references it. Safe deletion and diagnostics should inspect implemented hard-reference fields,
+such as lawyer `photo_media_id`, and current published snapshots. A separate usage index can be added later
+if reporting or cross-object cleanup becomes painful enough to justify the extra write path.
 
 Current backend implementation direction:
 
@@ -846,7 +852,8 @@ Current backend implementation direction:
 - the frontend must not upload directly to Cloud Storage or invent object keys;
 - `POST /api/admin/media/{id}/complete-upload` marks the record as `uploaded` after the object exists;
 - `lawyer_photo`, `article_cover`, and `og_image` require public image metadata;
-- lawyer `photoMediaId` must point to an active uploaded `lawyer_photo` media record;
+- lawyer `photoMediaId` must point to an active uploaded `lawyer_photo` media record owned by the same
+  lawyer or by no owner for legacy assets;
 - deletion is soft and blocked when the asset is referenced by a lawyer photo or by a published page
   snapshot.
 
