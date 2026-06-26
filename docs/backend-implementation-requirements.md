@@ -489,6 +489,11 @@ Reference-data list/detail endpoints remain dictionary endpoints, not the source
 may still expose nested lightweight relation summaries for convenience. For example, a practice can return
 `children.services[]`, and those service summaries can return `children.problems[]`. This helps dictionary
 screens show dependencies, but navigation should still be built from `/api/admin/navigation`.
+Nested relation summaries must expose the same public-label diagnostics contract as top-level reference
+records where the fields are available. For visible service-hierarchy objects, missing localized
+`publicName` or `menuTitle` values are warnings, because public breadcrumbs and menus fall back through
+`menuTitle ?? publicName ?? sourceName`; hidden `showOnSite=false` objects may suppress those public-site
+warnings.
 
 Reference list endpoints such as `/api/admin/reference/practices`, `/api/admin/reference/services`, and
 `/api/admin/reference/problems` are flat dictionary management APIs. They must not be used as the source
