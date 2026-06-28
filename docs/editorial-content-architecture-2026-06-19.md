@@ -316,6 +316,44 @@ Warnings:
 
 - empty `erpCaseExternalId`
 
+## Additional Service-Tree Tags
+
+Cases and reviews can belong to more than one service-tree line.
+
+The primary practice/service/problem line remains the main relation. For cases it is stored in
+`publication_meta`; for reviews it comes from the normal review reference-data fields. This primary line
+can be filled by ERP/import flows.
+
+Additional lines are CMS-owned editorial tags:
+
+```json
+{
+  "additionalServiceTreeRefs": [
+    {
+      "practiceRef": "practice-cms-id",
+      "serviceRef": "service-cms-id",
+      "problemRef": "problem-cms-id"
+    }
+  ]
+}
+```
+
+Rules:
+
+- `practiceRef` is required for each additional line;
+- `serviceRef` is optional;
+- `problemRef` is optional, but requires `serviceRef`;
+- duplicates are invalid;
+- a line that duplicates the primary relation is a warning, because it is redundant;
+- these tags are not overwritten by ERP upsert/resync.
+
+Runtime lists should match both primary and additional lines:
+
+- service-hierarchy case lists match cases by primary relation or by an additional tag;
+- service-hierarchy review lists match reviews by primary relation or by an additional tag;
+- primary matches sort before additional matches;
+- for problem review lists, an exact additional problem match sorts before the older service-level fallback.
+
 ## Collection Behavior
 
 Required public collection page types:

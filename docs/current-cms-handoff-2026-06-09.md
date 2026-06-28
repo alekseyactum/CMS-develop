@@ -1022,6 +1022,11 @@ Recent notes to CMS frontend developer:
   - `POST /api/admin/editorial/publications`.
   This facade creates/fetches normal `blog_page`, `media_page`, and `case_page` pages and returns links to
   the existing authoring/workbench section editors. It is not a separate publication storage model.
+- Cases and reviews now support CMS-owned additional service-tree tags. The primary practice/service/problem
+  line remains the main ERP/import relation, while `additionalServiceTreeRefs[]` lets editors attach extra
+  practice/service/problem lines for cross-cutting cases and reviews. Runtime service-hierarchy lists match
+  primary or additional lines, with primary matches sorted first. ERP upsert/resync does not overwrite these
+  additional tags.
 
 ## Open Questions / Risks
 
@@ -1047,8 +1052,9 @@ Keep these visible in the next thread:
   page schemas, published projection tables/rebuild, collection runtime resolver, and admin facade for
   list/create/open. Remaining work is frontend screens, richer `content_builder` block UX/validation,
   selector ergonomics, and public render integration.
-- Cases and reviews runtime lists are placeholders/read-model contracts until their real data model is
-  completed.
+- Cases and reviews now have the backend relation model needed for primary plus additional service-tree
+  matching. Remaining work is mostly frontend/editor UX for assigning additional tags and public rendering
+  polish around those runtime lists.
 - Public site frontend integration and cache/revalidation are later-stage work.
 - Post-release runtime freshness should be a separate improvement stage, not part of the current
   practice/workbench stabilization. Runtime/read-model slots are not versioned sections today, so reference
