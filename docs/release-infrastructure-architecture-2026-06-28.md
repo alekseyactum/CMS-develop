@@ -7,6 +7,10 @@ with Cloud Run, Cloud SQL, Cloud Build, Secret Manager, Cloud Storage, IAM, DNS,
 balancers is governed by `gcp-infra-playbook` and requires the required preflight before reading or
 changing cloud state.
 
+GCP inventory reference:
+
+- `docs/release-gcp-inventory-2026-06-28.md`
+
 ## Release Intent
 
 The `release` contour is the future production contour, kept closed until the public go-live window around
@@ -131,6 +135,12 @@ Why this matters:
 
 A separate preview host is useful but should stay minimal.
 
+Current decision for the first release infrastructure slice:
+
+- `release.actum.com.ua` is not required before the first Cloud SQL, IAM, and Cloud Run preparation work;
+- the initial closed preview may use an IAP-protected load-balancer URL or temporary Cloud Run/IAP URL;
+- add `release.actum.com.ua` later if domain-specific smoke testing is needed before public go-live.
+
 Recommended:
 
 - create one release preview hostname, for example `release.actum.com.ua`, only if the load-balancer setup
@@ -147,11 +157,22 @@ IAP-protected Cloud Run/LB URLs and add the preview hostname later, before domai
 Confirmed:
 
 - release database boundary: separate Cloud SQL instance.
+- release Cloud SQL instance ID: `site-release`.
 - database name: `site_release`.
 - release DB starts empty.
 - schema is created through migrations.
 - data is filled through ERP/import and CMS editing, not by copying develop content.
 - backups should be enabled with a standard retention of approximately 7 days.
+- initial instance sizing mirrors the current `actum-strapi` Cloud SQL instance:
+  - database version: `MYSQL_8_0_43`
+  - edition: `ENTERPRISE`
+  - tier: `db-g1-small`
+  - availability type: `ZONAL`
+  - zone: `europe-central2-b`
+  - disk: `10 GB`, `PD_SSD`
+  - storage auto-resize: enabled
+  - backups and binary logs: enabled, 7 retained backups / 7 days transaction logs
+  - deletion protection: enabled
 
 Rationale:
 
@@ -164,6 +185,10 @@ Authentication:
 
 - keep the develop pattern: Cloud SQL IAM authentication through the backend runtime service account.
 - do not introduce password-oriented CMS runtime DB credentials.
+- unlike the old `actum-strapi` instance, the CMS release instance should enable
+  `cloudsql_iam_authentication=on`.
+- do not copy old `actum-strapi` public authorized networks by default; prefer Cloud Run/Cloud SQL
+  connector access through approved service accounts.
 
 Migrations:
 
@@ -219,10 +244,11 @@ Expected secret-backed config depends on current service implementation, but lik
 
 No secret values belong in git, markdown, logs, or chat.
 
-Open ownership decision:
+Secret rotation ownership:
 
-- choose who can rotate release secrets. Until delegated, the practical owner is the project owner/operator
-  controlling GCP access.
+- interim owner/operator: `ap@modusmoses.com`;
+- ownership can be delegated later, but every rotation still goes through Secret Manager and must avoid
+  placing secret values in git, markdown, logs, or chat.
 
 ## ERP And Data Intake
 
@@ -233,9 +259,13 @@ Confirmed:
 - content and data are filled fresh.
 - section/page structures come from code and migrations, not from manually copying develop rows.
 
-Open decision:
+Current decision:
 
-- define the release ERP/import source and path.
+- the release import path will start as a controlled operator-run import path based on the current proven
+  Actum/ERP data source and pipeline;
+- it must write into `cms-back-release`/`site_release`, not copy rows from develop;
+- a steady `data-inside-migrator-release` contour may be added later if the recurring import flow needs
+  its own runtime service.
 
 The release contour needs an explicit data path for:
 
@@ -255,8 +285,9 @@ The likely options are:
 - a controlled one-time import job into `cms-back-release`;
 - a temporary operator-run import path before the steady release integration exists.
 
-This must be decided before release CMS editing starts in earnest, because editors should not polish
-content against the wrong source-data boundary.
+This does not block infrastructure work up to the release Cloud SQL instance. It must be finalized before
+release CMS editing starts in earnest, because editors should not polish content against the wrong
+source-data boundary.
 
 ## CMS Auth And Users
 
@@ -277,16 +308,20 @@ Current backend roles should be used as implemented:
 - `publisher`
 - `viewer`
 
-Open decisions:
+Confirmed access decisions:
 
-- first release admin email;
-- exact list of CMS release users;
-- whether release must ship with a stronger session model before public go-live or whether IAP identity
-  plus CMS user mapping is sufficient for the first closed release CMS.
+- first release admin email: `ap@modusmoses.com`;
+- initial IAP/CMS access allowlist:
+  - `privatemailofap@gmail.com`
+  - `yuriy.bishko@gmail.com`
+  - `po@actum.com.ua`
+  - `ap@modusmoses.com`
+  - `jamaslov@gmail.com`
+- for the first closed release CMS, IAP identity plus CMS user mapping is sufficient if anonymous/develop
+  bypass is disabled.
 
-Recommended first admin if no other decision is made:
-
-- `ap@modusmoses.com`
+CMS role assignment uses the implemented roles (`admin`, `editor`, `publisher`, `viewer`) and is done
+when users are created in `site_release`.
 
 ## Indexing And Go-Live Gates
 
@@ -299,6 +334,11 @@ Before public go-live:
 - canonical/hreflang/SEO metadata is still generated and validated internally.
 
 Go-live is a separate action, not a side effect of resource creation.
+
+Target public go-live window:
+
+- approximately `2026-08-15`;
+- no public indexing before a separate approval.
 
 Minimum go-live gates:
 
@@ -358,9 +398,7 @@ Detailed execution checklist: `docs/release-infrastructure-execution-plan-2026-0
 
 ## Open Decisions
 
-- Name and sizing for the separate release Cloud SQL instance.
-- Whether to create `release.actum.com.ua` for closed preview in the first infrastructure slice.
-- Release ERP/import path.
-- First release admin and full release CMS user list.
-- Secret rotation owner.
-- Final go-live date/window.
+- Final Cloud SQL create command after explicit mutation approval.
+- Whether `release.actum.com.ua` is needed later for domain-specific smoke before public go-live.
+- Exact implementation of the controlled release import path.
+- CMS role assignment for each initial user.

@@ -11,6 +11,10 @@ Primary architecture reference:
 
 - `docs/release-infrastructure-architecture-2026-06-28.md`
 
+GCP inventory reference:
+
+- `docs/release-gcp-inventory-2026-06-28.md`
+
 Governing playbook reference:
 
 - `../gcp-infra-playbook/docs/projects/cms.md`
@@ -43,13 +47,26 @@ Status: started.
 
 Open operational decisions before resource creation:
 
-- [ ] Cloud SQL release instance name.
-- [ ] Cloud SQL initial size/tier/storage.
-- [ ] Whether `release.actum.com.ua` is created in the first slice.
-- [ ] Release ERP/import path.
-- [ ] First release admin and full CMS user list.
-- [ ] Secret rotation owner.
-- [ ] Target public go-live date/window inside the mid-August plan.
+- [x] Cloud SQL release instance name: `site-release`.
+- [x] Cloud SQL initial sizing direction: mirror current `actum-strapi` after GCP inventory.
+- [x] `release.actum.com.ua` is not required in the first infrastructure slice.
+- [x] Release ERP/import path direction: controlled operator-run import into `cms-back-release`/`site_release`
+  first; recurring `data-inside-migrator-release` can be added later if needed.
+- [x] First release admin: `ap@modusmoses.com`.
+- [x] Initial CMS/IAP access list:
+  - `privatemailofap@gmail.com`
+  - `yuriy.bishko@gmail.com`
+  - `po@actum.com.ua`
+  - `ap@modusmoses.com`
+  - `jamaslov@gmail.com`
+- [x] Interim secret rotation owner: `ap@modusmoses.com`.
+- [x] Target public go-live window: approximately `2026-08-15`.
+
+Operational decisions still needed during implementation:
+
+- [x] Exact Cloud SQL baseline read from `actum-strapi`.
+- [ ] Final Cloud SQL create command approval.
+- [ ] CMS role assignment for each initial user.
 
 ## Phase 1 - Preflight And Current-State Inventory
 
@@ -131,17 +148,32 @@ Goal: create a clean production-bound database boundary.
 Confirmed:
 
 - separate release Cloud SQL instance;
+- instance ID: `site-release`;
 - database: `site_release`;
 - empty start;
 - migrations create schema;
 - data comes through ERP/import and CMS editing;
 - approximately 7-day backup retention;
 - Cloud SQL IAM authentication, not password runtime credentials.
+- initial sizing mirrors current `actum-strapi`:
+  - `MYSQL_8_0_43`
+  - `ENTERPRISE`
+  - `db-g1-small`
+  - `ZONAL`
+  - `europe-central2-b`
+  - `10 GB` `PD_SSD`
+  - storage auto-resize enabled
+  - backups/binlog enabled, 7 retained backups / 7 days transaction logs
+  - deletion protection enabled
+- CMS release additionally enables `cloudsql_iam_authentication=on`.
+- CMS release does not copy old `actum-strapi` public authorized networks by default.
 
 Checklist:
 
-- [ ] Choose Cloud SQL instance name.
-- [ ] Choose initial tier/storage settings.
+- [x] Choose Cloud SQL instance name: `site-release`.
+- [x] Read current `actum-strapi` settings after preflight.
+- [x] Choose exact initial tier/storage/settings from the `actum-strapi` baseline.
+- [ ] Approve final Cloud SQL create command.
 - [ ] Create Cloud SQL instance in `europe-central2`.
 - [ ] Enable automated backups with about 7 days retention.
 - [ ] Create database `site_release`.
@@ -265,7 +297,8 @@ Domain policy:
 - first public canonical host: `https://actum.com.ua`;
 - `www.actum.com.ua`, if attached, redirects to `https://actum.com.ua`;
 - `actum.ua` is prepared as secondary/future migration domain, not first canonical;
-- `release.actum.com.ua` is optional for closed preview.
+- `release.actum.com.ua` is optional for closed preview and is not required in the first infrastructure
+  slice.
 
 Checklist:
 
@@ -296,9 +329,8 @@ Goal: make release content editable against the correct data boundary.
 Checklist:
 
 - [ ] Decide release ERP/import path:
-  - release `data-inside-migrator` contour;
-  - controlled one-time import job;
-  - temporary operator-run import path.
+  - first path: controlled operator-run import into `cms-back-release`/`site_release`;
+  - later option: release `data-inside-migrator` contour if recurring imports need their own runtime.
 - [ ] Run schema migrations on `site_release`.
 - [ ] Import or create reference data:
   - practices;
@@ -409,7 +441,7 @@ Public rollback:
 The next practical step is not resource creation. It is:
 
 1. approve this plan as the working checklist;
-2. resolve Cloud SQL name/sizing and preview-host decision;
-3. run playbook preflight;
-4. inventory current GCP state;
-5. then create a concrete command-level implementation runbook for Phase 2 through Phase 8.
+2. run playbook preflight;
+3. inventory current GCP state;
+4. create a concrete command-level implementation runbook for Phase 2 through Phase 8;
+5. request explicit approval before mutation commands that create release resources.

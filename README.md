@@ -84,6 +84,9 @@ rollback decisions that must be resolved before creating release resources.
 See [`docs/release-infrastructure-execution-plan-2026-06-28.md`](docs/release-infrastructure-execution-plan-2026-06-28.md)
 for the ordered implementation checklist, gates, stop conditions, and verification plan for creating the
 closed `release` contour.
+See [`docs/release-gcp-inventory-2026-06-28.md`](docs/release-gcp-inventory-2026-06-28.md) and
+[`docs/release-infrastructure-command-runbook-2026-06-28.md`](docs/release-infrastructure-command-runbook-2026-06-28.md)
+for the first preflight/inventory results and command-level implementation runbook.
 
 ## Starting Context
 
