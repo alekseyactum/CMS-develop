@@ -73,10 +73,17 @@ See [`docs/development-sequencing-and-module-plan.md`](docs/development-sequenci
 ## Release Contour
 
 The first production-oriented CMS runtime should be release-ready but closed to indexing until a separate
-explicit decision enables indexing. The expected future primary domain is `actum.ua`; the current live
-production site remains `actum.com.ua` until a controlled migration and redirect plan is approved.
+explicit decision enables indexing. The first CMS release canonical host is `https://actum.com.ua`;
+`actum.ua` remains a prepared secondary/future migration domain until a controlled migration and redirect
+plan is approved.
 
 See [`docs/release-contour-requirements.md`](docs/release-contour-requirements.md).
+See [`docs/release-infrastructure-architecture-2026-06-28.md`](docs/release-infrastructure-architecture-2026-06-28.md)
+for the first release infrastructure plan, including Cloud Run, database, access, domain, indexing, and
+rollback decisions that must be resolved before creating release resources.
+See [`docs/release-infrastructure-execution-plan-2026-06-28.md`](docs/release-infrastructure-execution-plan-2026-06-28.md)
+for the ordered implementation checklist, gates, stop conditions, and verification plan for creating the
+closed `release` contour.
 
 ## Starting Context
 

@@ -75,6 +75,11 @@ The future primary domain is expected to be `actum.ua`.
 During development and release preparation, `actum.ua` may be used as the future primary URL, but it must
 remain closed to indexing until a separate go-live decision changes that policy.
 
+2026-06-28 amendment: this decision is superseded for the first CMS go-live because `actum.com.ua` is the
+current domain with existing Google history. The first release canonical host is `https://actum.com.ua`.
+Treat `actum.com.ua -> actum.ua` as a controlled domain migration, not as a default side effect of the CMS
+release.
+
 The future migration direction is:
 
 - `actum.ua` becomes the primary domain;
@@ -1362,7 +1367,7 @@ Before indexing is enabled, the project must verify at least:
 - robots policy changes from blocking to public according to the go-live decision;
 - `X-Robots-Tag` noindex policy is removed where appropriate;
 - sitemap returns the intended published URLs;
-- canonical URLs point to `actum.ua`;
+- canonical URLs point to `https://actum.com.ua`;
 - hreflang alternates are correct and only include published locale variants;
 - legacy redirect map is applied and representative old URLs are tested;
 - no redirect loops or unnecessary redirect chains exist;
