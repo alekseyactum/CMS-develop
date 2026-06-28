@@ -20,6 +20,10 @@ References:
   `composite-ally-360719`.
 - [x] GCP inventory collected without reading secret values.
 - [x] `actum-strapi` baseline read for Cloud SQL sizing.
+- [x] Remote `release` branches created in `site-front`, `cms-front`, and `cms-back`.
+- [x] `cloudbuild.release.yaml` added and pushed to each release branch.
+- [x] Release runtime service accounts created.
+- [x] `cms-back-release-runner` granted `roles/cloudsql.client` and `roles/cloudsql.instanceUser`.
 
 ## Scope For "Through Point 5"
 
@@ -84,6 +88,19 @@ Current local service-repo observations:
 - current `cloudbuild.yaml` files are develop-oriented and must be adjusted before release triggers are
   created.
 
+Executed state:
+
+- `site-front` remote `release` branch created from `origin/develop`.
+- `cms-front` remote `release` branch created from `origin/develop`.
+- `cms-back` remote `release` branch created from `origin/develop`.
+- `cloudbuild.release.yaml` was added to each release branch.
+- pushed release commits:
+  - `site-front`: `df49945 ci: add release Cloud Build config`
+  - `cms-front`: `ee9a29f ci: add release Cloud Build config`
+  - `cms-back`: `e5f5b8d ci: add release Cloud Build config`
+- existing develop `cloudbuild.yaml` files were not changed.
+- local dirty `cms-front` develop worktree was not checked out or modified.
+
 Recommended branch source:
 
 - create remote `release` branches from current `origin/develop` after fetching and checking remote state;
@@ -117,7 +134,8 @@ Before Cloud Build triggers:
 - ensure `cms-back` release config points to `site-release`/`site_release`;
 - keep migrations explicit through `cms-back-release-migrate`.
 
-Do not create release triggers until the release build configs are corrected.
+Release build configs are now present. Do not create release triggers until Cloud SQL, secrets, media
+bucket, service account act-as permissions, and trigger service-account decisions are confirmed.
 
 Intended trigger names:
 
@@ -135,6 +153,14 @@ Planned service accounts:
 - `cms-front-release-runner@composite-ally-360719.iam.gserviceaccount.com`
 - `cms-back-release-runner@composite-ally-360719.iam.gserviceaccount.com`
 
+Executed state:
+
+- all three release runtime service accounts were created and verified as enabled.
+- `cms-back-release-runner@composite-ally-360719.iam.gserviceaccount.com` was granted:
+  - `roles/cloudsql.client`
+  - `roles/cloudsql.instanceUser`
+- frontend release runners were not granted broad project roles in this phase.
+
 Mutation commands:
 
 ```powershell
@@ -149,6 +175,14 @@ Initial project IAM needed for Cloud SQL connector access:
 gcloud projects add-iam-policy-binding composite-ally-360719 `
   --member="serviceAccount:cms-back-release-runner@composite-ally-360719.iam.gserviceaccount.com" `
   --role="roles/cloudsql.client"
+```
+
+Additional project IAM needed for Cloud SQL IAM authentication:
+
+```powershell
+gcloud projects add-iam-policy-binding composite-ally-360719 `
+  --member="serviceAccount:cms-back-release-runner@composite-ally-360719.iam.gserviceaccount.com" `
+  --role="roles/cloudsql.instanceUser"
 ```
 
 Do not grant broad project roles to the frontend release runners.

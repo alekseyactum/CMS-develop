@@ -72,17 +72,17 @@ Operational decisions still needed during implementation:
 
 Goal: understand existing project state before creating anything.
 
-- [ ] Run the playbook GCP preflight from `gcp-infra-playbook`.
-- [ ] Record active gcloud project and authenticated account.
-- [ ] Inventory existing Cloud Run services relevant to CMS/develop.
-- [ ] Inventory existing service accounts relevant to CMS/develop.
-- [ ] Inventory existing Cloud SQL instances/databases relevant to CMS/develop.
-- [ ] Inventory existing Secret Manager names relevant to CMS/develop.
-- [ ] Inventory existing Cloud Storage buckets relevant to CMS/develop.
-- [ ] Inventory existing Cloud Build triggers relevant to CMS service repos.
-- [ ] Inventory existing load balancers, serverless NEGs, certificates, IAP settings, and DNS decisions if
+- [x] Run the playbook GCP preflight from `gcp-infra-playbook`.
+- [x] Record active gcloud project and authenticated account.
+- [x] Inventory existing Cloud Run services relevant to CMS/develop.
+- [x] Inventory existing service accounts relevant to CMS/develop.
+- [x] Inventory existing Cloud SQL instances/databases relevant to CMS/develop.
+- [x] Inventory existing Secret Manager names relevant to CMS/develop.
+- [x] Inventory existing Cloud Storage buckets relevant to CMS/develop.
+- [x] Inventory existing Cloud Build triggers relevant to CMS service repos.
+- [x] Inventory existing load balancers, serverless NEGs, certificates, IAP settings, and DNS decisions if
   already present.
-- [ ] Save only non-secret findings into markdown.
+- [x] Save only non-secret findings into markdown.
 
 Stop if:
 
@@ -95,19 +95,20 @@ Stop if:
 
 Goal: make release deployable from source control before runtime resources depend on it.
 
-- [ ] Confirm canonical service repositories:
+- [x] Confirm canonical service repositories:
   - `re-actum/site-front`
   - `re-actum/cms-front`
   - `re-actum/cms-back`
-- [ ] Create or verify `release` branches in each service repo.
+- [x] Create or verify `release` branches in each service repo.
 - [ ] Decide whether branch protection is required before first release deploy.
-- [ ] Confirm Cloud Build config files for release builds.
+- [x] Confirm Cloud Build config files for release builds.
+- [x] Add `cloudbuild.release.yaml` to each service repo release branch.
 - [ ] Create or update release Cloud Build triggers:
   - `site-front-release`
   - `cms-front-release`
   - `cms-back-release`
 - [ ] Ensure triggers deploy from `release` branches only.
-- [ ] Ensure release builds do not deploy from develop branches.
+- [x] Ensure release build configs target release services instead of develop services.
 
 Stop if:
 
@@ -127,13 +128,14 @@ Planned service accounts:
 
 Checklist:
 
-- [ ] Create release runtime service accounts.
-- [ ] Grant each service account only required runtime permissions.
-- [ ] Grant `cms-back-release-runner` Cloud SQL access for the release database path.
+- [x] Create release runtime service accounts.
+- [x] Grant each service account only required runtime permissions for this phase.
+- [x] Grant `cms-back-release-runner` Cloud SQL access for the release database path:
+  `roles/cloudsql.client` and `roles/cloudsql.instanceUser`.
 - [ ] Grant `cms-back-release-runner` write/manage access to release media bucket only.
 - [ ] Grant frontend runners access only to required runtime secrets/config.
-- [ ] Ensure humans are not used as runtime identities.
-- [ ] Document non-secret IAM grants in playbook or CMS docs.
+- [x] Ensure humans are not used as runtime identities.
+- [x] Document non-secret IAM grants in playbook or CMS docs.
 
 Stop if:
 

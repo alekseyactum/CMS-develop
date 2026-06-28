@@ -163,5 +163,25 @@ Important note:
 - The exact Cloud SQL baseline is now known: `db-g1-small`, `10 GB`, `PD_SSD`, ZONAL, backups/binlog 7
   days, deletion protection.
 - CMS release DB auth should differ from `actum-strapi` by enabling Cloud SQL IAM authentication.
-- Release CMS service accounts, secrets, Cloud Run services, build triggers, and media bucket still need
-  creation when mutation work is approved.
+- Release CMS secrets, Cloud Run services, build triggers, and media bucket still need creation when
+  mutation work is approved.
+
+## Post-Inventory Changes In This Work Slice
+
+After explicit approval for steps 1-3, the following changes were made:
+
+- remote `release` branches were created in:
+  - `re-actum/site-front`
+  - `re-actum/cms-front`
+  - `re-actum/cms-back`
+- `cloudbuild.release.yaml` was added and pushed to each service release branch;
+- release runtime service accounts were created:
+  - `site-front-release-runner@composite-ally-360719.iam.gserviceaccount.com`
+  - `cms-front-release-runner@composite-ally-360719.iam.gserviceaccount.com`
+  - `cms-back-release-runner@composite-ally-360719.iam.gserviceaccount.com`
+- `cms-back-release-runner` was granted:
+  - `roles/cloudsql.client`
+  - `roles/cloudsql.instanceUser`
+
+No release Cloud SQL instance, database, secrets, media bucket, Cloud Run service, Cloud Build trigger,
+load balancer, IAP policy, migration, import, or CMS user was created in this slice.
