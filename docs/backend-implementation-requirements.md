@@ -925,6 +925,22 @@ The current `service_page` backend scaffold includes:
 - required composite `service_lawyers_block` + runtime `service_lawyers`;
 - composite `lead_questionnaire` + inherited `lead_form` + runtime `lead_capture`.
 
+Product-structure amendment, 2026-06-28: the latest agreed service-hierarchy amendments are documented in
+[`service-hierarchy-page-amendments-2026-06-28.md`](service-hierarchy-page-amendments-2026-06-28.md).
+They supersede the older assumptions where relevant:
+
+- `practice_collection_page` should also expose the national-only `regional_offices` runtime slot. In this
+  context it means regional alternatives for `/services`, not real offices.
+- `regional_offices` should be understood as a regional-link section for all service-hierarchy page types:
+  `practice_collection_page`, `practice_page`, `service_page`, and `problem_page`.
+- regional `practice_page`, `service_page`, and `problem_page` should expose a separate runtime
+  `local_offices` slot for real offices in the current region.
+- `practice_page`, `service_page`, and `problem_page` should support two possible team CTA positions:
+  a top CTA immediately after `achievements_strip` and the existing lower CTA. Both are optional, but
+  enabling both is a page-level validation error attached to the lower CTA slot.
+- team CTA content should move from one large `lead` field to `paragraphs[]`, while keeping a temporary
+  fallback that renders old `lead` content as a single paragraph.
+
 Implementation note, 2026-05-22: `cms-back` now contains the first page runtime resolver layer. During
 preview and publish, page lifecycle asks `PageRuntimeResolverService` to fill missing runtime payloads for
 service-tree pages. The first supported slots are `practice_collection`, `practice_services`,

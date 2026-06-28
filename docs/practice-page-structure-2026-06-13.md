@@ -457,3 +457,43 @@ still default to disabled.
   one physical section.
 - The old generic `practice_optional_text` should be retired in favor of the three fixed text variants:
   `practice_intro_text`, `practice_reviews_text`, and `practice_price_text`.
+
+## 2026-06-28 Amendments
+
+Use [`service-hierarchy-page-amendments-2026-06-28.md`](service-hierarchy-page-amendments-2026-06-28.md)
+as the latest product contract.
+
+### Team CTA Positions
+
+`practice_page` should support two positions for the team CTA:
+
+- `practice_team_cta_top` immediately after `achievements_strip`;
+- existing lower `practice_team_cta` in the current lower-page position.
+
+Both slots are optional and can be enabled/disabled. Recommended defaults:
+
+- `practice_team_cta_top`: disabled;
+- `practice_team_cta`: enabled.
+
+If both slots are enabled, backend validation should return an error on the lower `practice_team_cta` slot.
+
+### Team CTA Content
+
+The old large `lead` field should be replaced by:
+
+```json
+{
+  "title": "Section title",
+  "paragraphs": [
+    { "text": "First paragraph." }
+  ]
+}
+```
+
+Fallback: if `paragraphs` is absent and legacy `lead` exists, render `lead` as one paragraph.
+
+### Local Offices
+
+Regional `practice_page` rows should expose a new read-only/runtime `local_offices` slot with real offices
+in the current region. It is separate from `regional_offices`, which remains the national-only regional
+alternative link section.

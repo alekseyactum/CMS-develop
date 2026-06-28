@@ -1033,7 +1033,10 @@ Keep these visible in the next thread:
   - `service_page`;
   - `problem_page`.
 - Treat further changes to these structures as product changes, not as unfinished carry-over from the first
-  backend pass.
+  backend pass. Product amendments agreed on 2026-06-28 are now captured in
+  `docs/service-hierarchy-page-amendments-2026-06-28.md`: `practice_collection_page` should get the
+  national-only regional-links slot, regional detail pages should get real `local_offices`, and team CTA
+  sections should support top/lower positions plus `paragraphs[]` content.
 - `lawyer_page` target structure is now documented in `docs/lawyer-page-structure-2026-06-18.md`, but the
   backend still exposes only a minimal lawyer-profile slice and has not been expanded to that target yet.
   The document now also fixes the universal lawyer-profile model: one structured runtime profile block,

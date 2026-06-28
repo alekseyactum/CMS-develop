@@ -145,3 +145,43 @@ Public visual rendering is still a frontend task.
   - `card_grid` - default card/grid style from the current design;
   - `compact_grid` - reserved frontend variant;
   - `step_list` - reserved frontend variant.
+
+## 2026-06-28 Amendments
+
+Use [`service-hierarchy-page-amendments-2026-06-28.md`](service-hierarchy-page-amendments-2026-06-28.md)
+as the latest product contract.
+
+### Team CTA Positions
+
+`service_page` should support two positions for the team CTA:
+
+- `service_team_cta_top` immediately after `achievements_strip`;
+- existing lower `service_team_cta`.
+
+Both slots are optional and can be enabled/disabled. Recommended defaults:
+
+- `service_team_cta_top`: disabled;
+- `service_team_cta`: enabled.
+
+If both slots are enabled, backend validation should return an error on the lower `service_team_cta` slot.
+
+### Team CTA Content
+
+Replace the old large `lead` field with `paragraphs[]`:
+
+```json
+{
+  "title": "Section title",
+  "paragraphs": [
+    { "text": "First paragraph." }
+  ]
+}
+```
+
+Fallback: if `paragraphs` is absent and legacy `lead` exists, render `lead` as one paragraph.
+
+### Local Offices
+
+Regional `service_page` rows should expose a new read-only/runtime `local_offices` slot with real offices
+in the current region. It is separate from `regional_offices`, which remains the national-only regional
+alternative link section.

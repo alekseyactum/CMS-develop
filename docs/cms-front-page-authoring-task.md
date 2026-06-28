@@ -1735,6 +1735,23 @@ text/metadata sections inherit from the base page by default.
   published regional targets yet. This is an editor warning, not a publish blocker.
 - Public rendering should hide this section when the runtime payload resolves to no items.
 
+2026-06-28 service-hierarchy amendment:
+
+- Use [`service-hierarchy-page-amendments-2026-06-28.md`](service-hierarchy-page-amendments-2026-06-28.md)
+  as the current product contract for the latest regional links, local offices, and team CTA changes.
+- `practice_collection_page` should also expose `regional_offices` for the base/Ukraine row. This is a
+  read-only regional-link section pointing to published regional collection alternatives such as
+  `/kyiv/services`. Regional collection rows intentionally omit the slot.
+- Treat the technical slot key `regional_offices` as "regional alternatives", not as a real office list.
+- Real offices on regional detail pages should use a separate runtime slot, `local_offices`, on
+  `practice_page`, `service_page`, and `problem_page`. Render it only on regional pages and hide it publicly
+  when the runtime list is empty.
+- Team CTA now has two possible positions on detail pages: a top slot after `achievements_strip` and the
+  existing lower slot. Both can be enabled/disabled; if both are enabled, backend should return an error on
+  the lower slot and the UI should guide the editor to disable one position.
+- Team CTA editors should move from one large `lead` field to `paragraphs[]`. Until existing drafts are
+  migrated, render old `lead` as a single paragraph when `paragraphs` is absent.
+
 Section cells contain only metadata and status:
 
 - ids: `bindingId`, `sectionId`, `sourceSectionId`, `localSectionId`;
