@@ -24,6 +24,7 @@ POST /api/admin/page-workbench/generated-sources/{pageType}/{sourceId}/bootstrap
 POST /api/admin/page-workbench/generated-sources/{pageType}/{sourceId}/open
 POST /api/admin/page-workbench/generated-sources/{pageType}/{sourceId}/open-editor
 GET  /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor
+GET  /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/inspect
 PATCH /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/state
 POST /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/draft
 POST /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/validate
@@ -1020,6 +1021,7 @@ POST /api/admin/page-workbench/generated-sources/{pageType}/{sourceId}/bootstrap
 POST /api/admin/page-workbench/generated-sources/{pageType}/{sourceId}/open?locale=uk
 POST /api/admin/page-workbench/generated-sources/{pageType}/{sourceId}/open-editor?locale=uk
 GET /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor
+GET /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/inspect
 PATCH /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/state
 POST /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/draft
 POST /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/validate
@@ -1392,6 +1394,47 @@ Frontend rule: show controls from `actions`, call URLs from `endpoints`. Do not 
 `/pages/{pageId}/sections/{slotKey}/...` in UI components. Runtime cells without editor endpoints are
 non-openable (`actions.canOpen=false`). Composite groups that include runtime members remain openable
 through the group's primary editable section endpoint.
+
+Pure runtime cells can still be inspected when the backend exposes `actions.canInspect=true` and
+`endpoints.inspect`. This is intentionally separate from `actions.canOpen`: `canOpen` means "open editable
+section editor", while `canInspect` means "open a read-only diagnostic/runtime payload view". Do not ignore
+`canOpen=false` to force an editor-like modal for runtime cells; call `endpoints.inspect` instead.
+
+`GET /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/inspect` returns:
+
+```json
+{
+  "runtime": {
+    "slotKey": "local_offices",
+    "kind": "runtime",
+    "sectionType": "local_offices",
+    "readOnly": true,
+    "runtimeSlot": {},
+    "payload": { "items": [] },
+    "diagnostics": {
+      "errors": 0,
+      "warnings": 1,
+      "missingPublished": false,
+      "missingSourcePreview": false,
+      "missingSourcePublished": false,
+      "stale": false
+    },
+    "reasons": [
+      {
+        "code": "PAGE_RUNTIME_LIST_EMPTY",
+        "severity": "warning",
+        "slotKey": "local_offices",
+        "sectionType": "local_offices"
+      }
+    ]
+  },
+  "workbench": {},
+  "localeDiagnostics": {}
+}
+```
+
+Use `runtime.reasons[]` for the explanation of warnings/errors shown on the runtime cell. Use
+`response.workbench.row` to refresh the matrix row after inspection if the UI keeps the modal open.
 
 The workbench page action endpoints wrap the same lifecycle logic as `POST /api/admin/pages/{pageId}/...`,
 but they also return `workbench`, a fresh row-refresh payload for the affected page:
@@ -1779,6 +1822,11 @@ and section state changes, so the modal can refresh without a second call.
 
 Runtime cells represent read-model data, not editable CMS drafts. They expose `source` metadata and should
 be shown as read-only blocks in the matrix.
+
+For standalone runtime cells with warnings, use `cell.actions.canInspect` and `cell.endpoints.inspect`.
+The inspect response carries the resolved read-only payload and the exact `runtime.reasons[]`; this is the
+place to explain warnings for `local_offices`, `regional_offices`, runtime reviews, runtime cases, and
+similar slots that have no editable section content.
 
 Use row-level `actions` for page buttons:
 
