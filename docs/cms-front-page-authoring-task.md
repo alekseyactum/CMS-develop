@@ -1866,6 +1866,35 @@ Use `relations.practice.displayTitle`, `relations.service.displayTitle`, and
 `relations.problem.displayTitle` for UI labels. Keep `practiceId`, `serviceId`, and `problemId` as the
 stable technical keys.
 
+The same rule applies to editorial authors. Runtime publication items keep technical ids in
+`authors.primaryLawyerAuthorId`, `authors.legalReviewerLawyerId`, and `authors.cmsUserAuthorId`, and now
+return read-only hydrated author objects when the backend can resolve them:
+
+```json
+{
+  "authors": {
+    "primaryLawyerAuthorId": "lawyer-cms-id",
+    "legalReviewerLawyerId": null,
+    "cmsUserAuthorId": null,
+    "primaryLawyerAuthor": {
+      "kind": "primary_lawyer_author",
+      "id": "lawyer-cms-id",
+      "externalId": "100",
+      "displayName": "Olena Lawyer",
+      "title": "Olena Lawyer",
+      "publicName": "Olena Lawyer",
+      "sourceName": "Olena source",
+      "slug": "olena-lawyer"
+    },
+    "legalReviewerLawyer": null,
+    "cmsUserAuthor": null
+  }
+}
+```
+
+Use `authors.primaryLawyerAuthor.displayName`, `authors.legalReviewerLawyer.displayName`, or
+`authors.cmsUserAuthor.displayName` for cards and previews. Keep the `...Id` fields as the stable keys.
+
 Use row-level `actions` for page buttons:
 
 - `actions.canBootstrap`: show create/bootstrap page action when the row is not created yet;

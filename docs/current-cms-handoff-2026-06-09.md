@@ -1034,6 +1034,10 @@ Recent notes to CMS frontend developer:
   `relations.practiceId/serviceId/problemId` and additionally include hydrated `relations.practice`,
   `relations.service`, and `relations.problem` summaries when the backend can resolve them. The site/CMS UI
   should display these summaries instead of issuing follow-up label lookups.
+- Runtime editorial publication payloads now also hydrate authors. `authors.primaryLawyerAuthorId`,
+  `authors.legalReviewerLawyerId`, and `authors.cmsUserAuthorId` remain the stable technical ids; the
+  sibling read-only objects `primaryLawyerAuthor`, `legalReviewerLawyer`, and `cmsUserAuthor` provide
+  `displayName`/`title` for cards and preview rendering.
 
 ## Open Questions / Risks
 
