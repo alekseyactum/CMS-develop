@@ -1828,6 +1828,44 @@ The inspect response carries the resolved read-only payload and the exact `runti
 place to explain warnings for `local_offices`, `regional_offices`, runtime reviews, runtime cases, and
 similar slots that have no editable section content.
 
+Runtime editorial case items keep raw relation ids and now include hydrated relation labels when the
+backend can resolve them. This applies to page/runtime payloads such as `practice_cases`,
+`service_cases`, and `problem_cases`:
+
+```json
+{
+  "relations": {
+    "practiceId": "practice-cms-id",
+    "serviceId": "service-cms-id",
+    "problemId": null,
+    "practice": {
+      "kind": "practice",
+      "id": "practice-cms-id",
+      "externalId": "10",
+      "sourceSlug": "family-law",
+      "title": "Family law",
+      "displayTitle": "Family law",
+      "menuTitle": "Family law",
+      "sourceName": "Family source"
+    },
+    "service": {
+      "kind": "service",
+      "id": "service-cms-id",
+      "externalId": "101",
+      "sourceSlug": "alimony",
+      "title": "Alimony",
+      "displayTitle": "Alimony",
+      "menuTitle": "Alimony",
+      "sourceName": "Alimony source"
+    }
+  }
+}
+```
+
+Use `relations.practice.displayTitle`, `relations.service.displayTitle`, and
+`relations.problem.displayTitle` for UI labels. Keep `practiceId`, `serviceId`, and `problemId` as the
+stable technical keys.
+
 Use row-level `actions` for page buttons:
 
 - `actions.canBootstrap`: show create/bootstrap page action when the row is not created yet;

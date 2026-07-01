@@ -178,6 +178,38 @@ objects in `relations`:
 Use `relations.region` and `relations.office` to show human-readable region/office labels without extra
 requests. Keep `relationFields` as the technical IDs/diagnostic source.
 
+For reviews, additional service-tree tags are also hydrated for display. The technical refs remain in
+`cmsFields.additionalServiceTreeRefs[].practiceRef`, `serviceRef`, and `problemRef`; the nested
+`practice`, `service`, and `problem` objects are read-only labels for UI rendering:
+
+```json
+{
+  "cmsFields": {
+    "additionalServiceTreeRefs": [
+      {
+        "practiceRef": "practice-cms-id",
+        "serviceRef": "service-cms-id",
+        "problemRef": null,
+        "sortOrder": 0,
+        "practice": {
+          "resource": "practices",
+          "id": "practice-cms-id",
+          "displayTitle": "Family law"
+        },
+        "service": {
+          "resource": "services",
+          "id": "service-cms-id",
+          "displayTitle": "Alimony"
+        },
+        "problem": null
+      }
+    ]
+  }
+}
+```
+
+Use the nested `displayTitle` for chips/select labels and continue saving only the refs and `sortOrder`.
+
 For dependency displays, backend returns `children`.
 
 Practices can include their services:

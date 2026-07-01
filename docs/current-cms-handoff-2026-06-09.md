@@ -1027,6 +1027,13 @@ Recent notes to CMS frontend developer:
   practice/service/problem lines for cross-cutting cases and reviews. Runtime service-hierarchy lists match
   primary or additional lines, with primary matches sorted first. ERP upsert/resync does not overwrite these
   additional tags.
+- Review `additionalServiceTreeRefs[]` now returns read-only nested `practice`, `service`, and `problem`
+  summaries with `displayTitle` so the frontend can render chips/select labels without extra reference-data
+  requests. Save payloads should still use only the technical refs plus `sortOrder`.
+- Runtime editorial case payloads (`practice_cases`, `service_cases`, `problem_cases`) keep
+  `relations.practiceId/serviceId/problemId` and additionally include hydrated `relations.practice`,
+  `relations.service`, and `relations.problem` summaries when the backend can resolve them. The site/CMS UI
+  should display these summaries instead of issuing follow-up label lookups.
 
 ## Open Questions / Risks
 
