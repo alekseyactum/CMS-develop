@@ -33,8 +33,8 @@ Current branch rule:
 
 Latest known pushed state:
 
-- `cms-back/develop`: commit `dd830ad` (`Protect the last active admin`).
-- `CMS/develop`: commit `f0a1bd4` (`Document last admin user guardrails`).
+- `cms-back/develop`: commit `92abdb8` (`Add service tree case section titles`).
+- `CMS/develop`: commit `ab09cbb` (`Document service tree case titles`), followed by this handoff update.
 
 Latest verified backend deploy after push:
 
@@ -42,11 +42,13 @@ Latest verified backend deploy after push:
 - Region: `europe-central2`.
 - Cloud Run service: `cms-back-develop`.
 - Cloud Build trigger: `cms-back-develop`.
-- Build id: `457832bd-5967-4446-83e5-ecf97fffd0b4`.
-- Cloud Run revision: `cms-back-develop-00136-rdx`.
+- Build id: `e6dc1208-d6f2-4880-97c9-635f6a0e66fa`.
+- Cloud Run revision: `cms-back-develop-00189-kbd`.
 - `/api/health`: `200`.
 - `/api/ready`: `200`, database `ok`.
 - Fresh `ERROR` logs for that revision: none at the time of verification.
+- Latest develop migration execution: `cms-back-develop-migrate-wtjqs`, completed successfully after the
+  `cases_section_title` migration was deployed.
 
 ## Operational Rules
 
