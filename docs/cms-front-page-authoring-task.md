@@ -1834,6 +1834,7 @@ backend can resolve them. This applies to page/runtime payloads such as `practic
 
 ```json
 {
+  "title": "Успішні справи АКТУМ з сімейного права",
   "relations": {
     "practiceId": "practice-cms-id",
     "serviceId": "service-cms-id",
@@ -1865,6 +1866,13 @@ backend can resolve them. This applies to page/runtime payloads such as `practic
 Use `relations.practice.displayTitle`, `relations.service.displayTitle`, and
 `relations.problem.displayTitle` for UI labels. Keep `practiceId`, `serviceId`, and `problemId` as the
 stable technical keys.
+
+For `practice_cases`, `service_cases`, and `problem_cases`, `payload.title` is the display heading for
+the whole runtime block. It comes from `translations.{locale}.casesSectionTitle` on the current
+practice/service/problem reference object. The frontend should render this value as-is and should not try
+to assemble grammar-sensitive headings from `publicName` or `menuTitle`. If the reference field is empty,
+the backend returns a generic localized fallback so preview stays renderable, while reference diagnostics
+warn the editor that a better heading should be filled in.
 
 The same rule applies to editorial authors. Runtime publication items keep technical ids in
 `authors.primaryLawyerAuthorId`, `authors.legalReviewerLawyerId`, and `authors.cmsUserAuthorId`, and now

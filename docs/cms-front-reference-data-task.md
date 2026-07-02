@@ -296,7 +296,8 @@ Request body example:
 ```json
 {
   "publicName": "Family law",
-  "menuTitle": "Family"
+  "menuTitle": "Family",
+  "casesSectionTitle": "Успішні справи АКТУМ з сімейного права"
 }
 ```
 
@@ -312,6 +313,9 @@ jobs:
 - `translations.{locale}.publicName` is the normal public/content name.
 - `translations.{locale}.menuTitle` is the short navigation label used by backend-generated breadcrumbs,
   menus, hierarchy labels, and compact link lists.
+- `translations.{locale}.casesSectionTitle` exists only for practices, services, and problems. It is the
+  ready-to-render heading for runtime case blocks on the corresponding service-hierarchy pages, for
+  example `Успішні справи АКТУМ з сімейного права`.
 
 The backend display priority for navigation contexts is:
 
@@ -320,8 +324,14 @@ menuTitle ?? publicName ?? sourceName
 ```
 
 When translation skeletons are created, `menuTitle` is prefilled from `sourceShortname` and then
-`sourceName`; `publicName` is prefilled from `sourceName`. Editors can change both through the translation
-editor. Missing or overlong title values are warnings, not blocking errors.
+`sourceName`; `publicName` is prefilled from `sourceName`. Editors can change these fields through the
+translation editor. Missing or overlong title values are warnings, not blocking errors.
+
+`casesSectionTitle` is intentionally not generated from `publicName` on the frontend: Ukrainian, Russian,
+and English headings may need grammar-specific wording. Show it in the translation editor for
+`practices`, `services`, and `problems`; do not show it for regions, offices, lawyers, reviews, or
+qualification rows. If the field is empty, page preview/runtime still works and uses a generic localized
+fallback, but the reference object will carry a warning so the editor can improve the title.
 
 ## Diagnostics UI
 

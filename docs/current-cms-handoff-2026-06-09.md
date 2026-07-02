@@ -214,6 +214,10 @@ Current important reference-data decisions:
   actually meaningful for competencies;
 - `updatedAt`/`updatedBy` exposed to CMS frontend represent the latest CMS edit across the object and its
   localizations;
+- practices, services, and problems have locale-owned `casesSectionTitle` in translation rows. Runtime
+  case sections (`practice_cases`, `service_cases`, `problem_cases`) return this value as `payload.title`
+  so the frontend renders a ready grammar-correct heading instead of composing it from `publicName` or
+  `menuTitle`;
 - `translationsMeta` contains latest translation edit metadata and per-locale metadata:
 
 ```json
