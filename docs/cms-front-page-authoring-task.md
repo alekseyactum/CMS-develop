@@ -800,8 +800,13 @@ Generated `practice_page`, `service_page`, and `problem_page` schemas expose a p
 - base non-regional generated pages source their page `price` from the locale-specific `global_price`;
 - regional generated pages source their page `price` from the matching base non-regional page price
   section;
-- the page `price` may inherit the source, override allowed fields, or append allowed list/rich-text
-  fields;
+- the page `price` may inherit the source and may locally override/append only fields allowed by
+  `slot.fieldPolicies`;
+- for the current backend contract, page-level price editing is focused on `items`. Text fields such as
+  `notes` are source-owned/read-only and are exposed as inherit-only if present in the schema. Do not
+  render override/append controls for them and do not submit them as local editable content;
+- inherited price local drafts are partial deltas. If `items` inherit from the source, the save request
+  does not need to include local `items`; backend validates the composed resolved content;
 - public snapshots store the resolved price payload and keep separate source/local section refs for
   diagnostics and rollback.
 
@@ -834,6 +839,22 @@ global/base content and can be opened for diagnostics/history, but page editors 
 override, append, disable, or drag/reorder UI for it. `practice_collection_page`
 intentionally does not expose either slot. `lead_form` is CMS-authored form content; `lead_capture`
 remains the read-only runtime context for the actual lead form behavior.
+
+`global_lead_form` does not own phone numbers. Do not render or submit `content.phones` for this global
+section. Phone display must come from the single global contact/settings source used by the site, not from
+individual lead form versions.
+
+For `global_achievements.items[].sourceLogo` uploads, use media owner context:
+
+```json
+{
+  "ownerResource": "global_sections",
+  "ownerId": "global_achievements"
+}
+```
+
+The backend still tolerates ownerless legacy media, but media owned by another resource is diagnosed on the
+achievements section.
 
 Price preview modes are intentionally separate:
 
@@ -2058,6 +2079,15 @@ the final section result, and use `section.composition` plus `slot.fieldPolicies
 For inherited price sections, `content.resolved.draft` is the editor's latest-draft preview and
 `content.resolved.published` is the currently published result. Do not show draft-resolved content as if it
 were already public.
+
+Runtime/read-model payloads keep media ids as stable references and may also include ready-to-render URL
+fields. Current examples:
+
+- lawyer cards/profile: `photoMediaId` plus `photoMediaUrl`;
+- editorial/case cards: `coverMediaId` plus `coverMediaUrl`.
+
+Use the URL field for rendering when present. Keep the id for editing/saving and diagnostics. Do not issue
+one `GET /api/admin/media/{mediaId}` per card just to render lists.
 
 Implementation note, 2026-06-13: inherited page sections now save field-level composition together with the
 section draft. When an editor changes a field that is inherited by default, the frontend must send the new

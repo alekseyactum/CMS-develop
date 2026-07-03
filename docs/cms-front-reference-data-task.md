@@ -469,10 +469,13 @@ separately as `ownerResource` plus `ownerId`. Initial owner resources are:
 ```text
 lawyers
 pages
+global_sections
 ```
 
 Use `ownerResource=lawyers` for lawyer photos. Use `ownerResource=pages` for page-owned media such as
 blog/media/case covers, including case pages, when the page id is known.
+Use `ownerResource=global_sections` for shared global-section media. For global achievements logos,
+upload with `ownerResource=global_sections` and `ownerId=global_achievements`.
 
 Upload a file through the backend:
 

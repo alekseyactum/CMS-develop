@@ -254,6 +254,12 @@ Media rules:
 - mime and size restrictions are validated;
 - files cannot be removed if used by a published snapshot;
 - lawyer photo is integrated into reference-data editing through media picker/upload.
+- media ownership now includes `ownerResource = "global_sections"`. Global achievements logo uploads
+  should use `ownerResource: "global_sections"` and `ownerId: "global_achievements"`; ownerless legacy
+  media remains readable, while media owned by another resource is diagnosed for achievements.
+- Runtime/read-model payloads that expose media ids should also expose ready-to-render URL fields where
+  available. Current backend hydration covers lawyer photos (`photoMediaUrl`) and editorial/case covers
+  (`coverMediaUrl`) while keeping the original `photoMediaId` / `coverMediaId`.
 
 ## Global Sections And Site Layout
 
@@ -279,6 +285,10 @@ Key product decisions:
 - default readonly texts such as common title/accent/description can be defined by backend/system and shown
   read-only in the editor;
 - editable core is price items;
+- page-level inherited `price` local drafts are partial deltas: inherited `items` do not have to be
+  submitted locally when the composition inherits them from the source;
+- page `price` keeps local editing focused on `items`; text fields such as `notes` are source-owned /
+  read-only in the current contract and must not be exposed as override/append controls;
 - price validation examples:
   - title length less than 4 or more than 46 is warning/invalid depending policy, 100+ is error;
   - price cannot exceed `100000`;
@@ -994,6 +1004,8 @@ Recent notes to CMS frontend developer:
 - `achievements_strip` and `lead_form` are required inherited page slots on `practice_page`,
   `service_page`, and `problem_page`; edit their shared source through global sections
   `global_achievements` and `global_lead_form`.
+- `global_lead_form` no longer owns phone numbers. The form content controls title/lead/messengers/labels
+  and privacy text; phone display must use the single global contact source, not per-form `phones`.
 - Page schema/workbench section columns can expose `defaultVisibility`. Use it as the bootstrap default
   contract instead of inferring from `required`/`canDisable`. On `practice_page`, `practice_intro_text` and
   `practice_actions` default to enabled; `practice_related_legal_block`, `practice_reviews_text`,
