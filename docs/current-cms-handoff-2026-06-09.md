@@ -1057,6 +1057,14 @@ Recent notes to CMS frontend developer:
   sibling read-only objects `primaryLawyerAuthor`, `legalReviewerLawyer`, and `cmsUserAuthor` provide
   `displayName`/`title` for cards and preview rendering.
 
+### Matrix read-performance rule
+
+Full generated page-type matrices must be read-only. Matrix row assembly calls page authoring with
+`readOnly: true`, so `GET /api/admin/page-workbench/page-types/{pageType}` does not bootstrap missing
+bindings or run regional inheritance repair. Normal editor/open/bootstrap paths keep the existing lazy
+repair behavior. Existing generated rows are assembled with bounded concurrency while preserving response
+order; the limit is intentionally conservative to reduce latency without recreating database lock pressure.
+
 ## Open Questions / Risks
 
 Keep these visible in the next thread:
