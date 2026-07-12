@@ -38,12 +38,12 @@ The first implementation must support:
 
 ## Phase 0 - Documentation And Approval Boundary
 
-Status: started.
+Status: completed for the initial Cloud SQL slice.
 
 - [x] Create CMS release architecture document.
 - [x] Synchronize release summary into `gcp-infra-playbook`.
-- [ ] Confirm this execution plan before real GCP work starts.
-- [ ] Confirm that the next step is cloud inventory/preflight, not resource creation.
+- [x] Confirm this execution plan before real GCP work starts.
+- [x] Confirm that the next step is cloud inventory/preflight, not resource creation.
 
 Open operational decisions before resource creation:
 
@@ -65,7 +65,7 @@ Open operational decisions before resource creation:
 Operational decisions still needed during implementation:
 
 - [x] Exact Cloud SQL baseline read from `actum-strapi`.
-- [ ] Final Cloud SQL create command approval.
+- [x] Final Cloud SQL create command approval.
 - [ ] CMS role assignment for each initial user.
 
 ## Phase 1 - Preflight And Current-State Inventory
@@ -132,8 +132,9 @@ Checklist:
 - [x] Grant each service account only required runtime permissions for this phase.
 - [x] Grant `cms-back-release-runner` Cloud SQL access for the release database path:
   `roles/cloudsql.client` and `roles/cloudsql.instanceUser`.
-- [ ] Grant `cms-back-release-runner` write/manage access to release media bucket only.
-- [ ] Grant frontend runners access only to required runtime secrets/config.
+- [x] Grant `cms-back-release-runner` write/manage access to release media bucket only.
+- [x] Grant frontend runners access only to required runtime secrets/config.
+- [x] Grant frontend runners `roles/run.invoker` only on `cms-back-release` for release server-to-server calls.
 - [x] Ensure humans are not used as runtime identities.
 - [x] Document non-secret IAM grants in playbook or CMS docs.
 
@@ -175,14 +176,52 @@ Checklist:
 - [x] Choose Cloud SQL instance name: `site-release`.
 - [x] Read current `actum-strapi` settings after preflight.
 - [x] Choose exact initial tier/storage/settings from the `actum-strapi` baseline.
-- [ ] Approve final Cloud SQL create command.
-- [ ] Create Cloud SQL instance in `europe-central2`.
-- [ ] Enable automated backups with about 7 days retention.
-- [ ] Create database `site_release`.
-- [ ] Create/authorize IAM database user for `cms-back-release-runner`.
-- [ ] Prepare release migration job, for example `cms-back-release-migrate`.
-- [ ] Ensure migrations are executed explicitly, not on normal Cloud Run startup.
+- [x] Approve final Cloud SQL create command.
+- [x] Create Cloud SQL instance in `europe-central2`.
+- [x] Enable automated backups with about 7 days retention.
+- [x] Create database `site_release`.
+- [x] Create/authorize IAM database user for `cms-back-release-runner`.
+- [x] Prepare release migration job, for example `cms-back-release-migrate`.
+- [x] Ensure migrations are executed explicitly, not on normal Cloud Run startup.
 - [ ] Before destructive or risky migrations, define backup/export or forward-fix path.
+
+Executed on `2026-07-05`:
+
+- `site-release` created as `MYSQL_8_0_43`, `ENTERPRISE`, `db-g1-small`, `ZONAL`,
+  `europe-central2-b`.
+- Initially created with private IP only: `10.89.62.17`.
+- Deletion protection is enabled.
+- Automated backups and binary logs are enabled with 7 days transaction log retention.
+- `site_release` database was created with `utf8mb4` / `utf8mb4_unicode_ci`.
+- Cloud SQL IAM DB user was created for
+  `cms-back-release-runner@composite-ally-360719.iam.gserviceaccount.com`.
+
+Post-create connectivity change on `2026-07-05`:
+
+- Public IP was enabled for local Cloud SQL Auth Proxy access: `34.116.243.97`.
+- Private IP remains enabled: `10.89.62.17`.
+- Authorized networks remain empty.
+- Cloud SQL connector enforcement is `REQUIRED`.
+- SSL mode is `ENCRYPTED_ONLY`.
+- This does not make MySQL password authentication technically impossible; Cloud SQL MySQL still has the
+  built-in `root` user. The release security boundary is therefore:
+  - no authorized public networks;
+  - Cloud SQL Auth Proxy / Cloud SQL connector required;
+  - IAM permissions only for approved principals;
+  - DB privileges granted only to approved IAM database users;
+  - no root password distribution through git, docs, logs, or chat.
+
+Implementation note:
+
+- Current `gcloud` uses `--retained-transaction-log-days=7`, not
+  `--transaction-log-retention-days=7`.
+- Current `gcloud sql instances create` accepts either `--region` or `--zone`; the executed command used
+  `--zone=europe-central2-b` so the region is inferred.
+- Current Cloud SQL IAM service account users must be created with the full service account email.
+- On `2026-07-05`, MySQL DB privileges were granted to the IAM DB user with a one-time Cloud SQL SQL
+  import, avoiding root password distribution:
+  - `GRANT ALL PRIVILEGES ON site_release.* TO 'cms-back-release-runner'@'%'`
+  - temporary GCS object and temporary Cloud SQL service agent bucket read grant were removed after import.
 
 Stop if:
 
@@ -203,10 +242,10 @@ Planned project-specific secret names:
 
 Checklist:
 
-- [ ] Create secret placeholders or secret resources as needed.
+- [x] Create secret placeholders or secret resources as needed.
 - [ ] Add secret values only through GCP Secret Manager, never in git/docs/chat/logs.
-- [ ] Assign secret access only to the service accounts that need each secret.
-- [ ] Confirm runtime non-secret config:
+- [x] Assign secret access only to the service accounts that need each secret.
+- [x] Confirm runtime non-secret config:
   - `ENVIRONMENT=release`
   - `APP_ENV=release` or service equivalent
   - `CMS_BACK_URL`
@@ -215,7 +254,20 @@ Checklist:
   - `DB_IAM_USER=cms-back-release-runner`
   - `MEDIA_BUCKET=site-media-release`
   - noindex/robots mode before go-live
-- [ ] Confirm secret rotation owner.
+- [x] Confirm secret rotation owner.
+
+Executed on `2026-07-05`:
+
+- Created release Secret Manager containers with automatic replication and no recorded secret values:
+  - `site-front-runtime-release`
+  - `cms-front-runtime-release`
+  - `cms-back-runtime-release`
+  - `cms-admin-auth-release`
+- Granted `roles/secretmanager.secretAccessor` only to the matching runtime service accounts:
+  - `site-front-runtime-release` -> `site-front-release-runner`
+  - `cms-front-runtime-release` -> `cms-front-release-runner`
+  - `cms-back-runtime-release` -> `cms-back-release-runner`
+  - `cms-admin-auth-release` -> `cms-back-release-runner`
 
 Stop if:
 
@@ -233,12 +285,24 @@ Planned bucket:
 
 Checklist:
 
-- [ ] Create release media bucket with region/location policy matching the project decision.
-- [ ] Grant write/manage access to `cms-back-release-runner`.
-- [ ] Avoid direct frontend write permissions.
+- [x] Create release media bucket with region/location policy matching the project decision.
+- [x] Grant write/manage access to `cms-back-release-runner`.
+- [x] Avoid direct frontend write permissions.
 - [ ] Confirm public media URL strategy before go-live.
 - [ ] Confirm whether media delivery needs signed URLs, public object serving, or LB/CDN path later.
-- [ ] Keep release media fresh; do not copy develop media by default.
+- [x] Keep release media fresh; do not copy develop media by default.
+
+Executed on `2026-07-05`:
+
+- Created `gs://site-media-release`.
+- Location: `EUROPE-CENTRAL2`.
+- Storage class: `STANDARD`.
+- Uniform bucket-level access: enabled.
+- Public access prevention: enforced.
+- Soft delete retention: 7 days.
+- Granted `roles/storage.objectAdmin` only to
+  `cms-back-release-runner@composite-ally-360719.iam.gserviceaccount.com`.
+- No develop media was copied.
 
 Stop if:
 
@@ -262,18 +326,66 @@ Planned job:
 
 Checklist:
 
-- [ ] Create/deploy `cms-back-release` with release runner and release DB/media config.
-- [ ] Create/deploy `cms-front-release` with release runner and backend URL.
-- [ ] Create/deploy `site-front-release` with release runner and backend URL.
-- [ ] Set min instances to `0` while the contour is closed.
-- [ ] Keep initial max instances conservative:
+- [x] Create/deploy `cms-back-release` with release runner and release DB/media config.
+- [x] Create/deploy `cms-front-release` with release runner and backend URL.
+- [x] Create/deploy `site-front-release` with release runner and backend URL.
+- [x] Set min instances to `0` while the contour is closed.
+- [x] Keep initial max instances conservative:
   - `site-front-release`: `3`
   - `cms-front-release`: `2`
   - `cms-back-release`: `3`
-- [ ] Restrict `cms-back-release` from public browser access.
-- [ ] Allow only approved service-to-service invocation paths.
-- [ ] Deploy/update `cms-back-release-migrate`.
-- [ ] Run migrations explicitly after confirming target DB.
+- [x] Restrict `cms-back-release` from public browser access.
+- [x] Allow only approved service-to-service invocation paths.
+- [x] Deploy/update `cms-back-release-migrate`.
+- [x] Run migrations explicitly after confirming target DB.
+
+Executed on `2026-07-05`:
+
+- Updated `cms-back` release branch from current `origin/develop` and kept `cloudbuild.release.yaml`.
+- Pushed `cms-back` release commits:
+  - `8fa772e` merge current develop into release;
+  - `732014c` fix release migration job Cloud SQL flag.
+- Cloud Build `73926ddb-5e43-4218-8983-487fc673395d` built and deployed the first
+  `cms-back-release` revision, then failed while creating the migration job because Cloud Run Jobs require
+  `--set-cloudsql-instances`, not `--add-cloudsql-instances`.
+- Cloud Build `4ef7402b-9819-4002-ba0c-a0fe044e74eb` succeeded.
+- `cms-back-release` is Ready at `https://cms-back-release-2ubpwinuqq-lm.a.run.app`.
+- `cms-back-release` uses:
+  - service account `cms-back-release-runner`;
+  - Cloud SQL instance `composite-ally-360719:europe-central2:site-release`;
+  - `DB_NAME=site_release`;
+  - `DB_IAM_USER=cms-back-release-runner`;
+  - `MEDIA_BUCKET=site-media-release`;
+  - min instances `0`, max instances `3`;
+  - unauthenticated access disabled.
+- `cms-back-release-migrate` job is Ready.
+- Migration execution `cms-back-release-migrate-lps9f` completed successfully and applied migrations
+  through `202607020001`.
+- Updated frontend release branches from current `origin/develop`:
+  - `site-front` release commit `61160f2`;
+  - `cms-front` release merge commit `add9906`;
+  - `cms-front` release fix commit `30c6bb6` makes production start honor Cloud Run `PORT`.
+- Granted `roles/run.invoker` on `cms-back-release` to:
+  - `cms-front-release-runner@composite-ally-360719.iam.gserviceaccount.com`;
+  - `site-front-release-runner@composite-ally-360719.iam.gserviceaccount.com`.
+- Cloud Build `834909b0-1226-4bee-8430-cde2cc81e574` built and pushed the first
+  `cms-front-release` image, then failed deploy because the container started Next.js on port `3000`
+  while Cloud Run expected `PORT=8080`.
+- Cloud Build `e8a9a344-58d8-4c7b-a5b6-30bd36697251` successfully deployed `cms-front-release`.
+- `cms-front-release` is Ready at `https://cms-front-release-2ubpwinuqq-lm.a.run.app`.
+- `cms-front-release` uses:
+  - service account `cms-front-release-runner`;
+  - `CMS_BACK_URL=https://cms-back-release-2ubpwinuqq-lm.a.run.app`;
+  - min instances `0`, max instances `2`;
+  - unauthenticated access disabled.
+- Cloud Build `7464d74c-6581-4360-af9c-ed24cb9e0d40` successfully deployed `site-front-release`.
+- `site-front-release` is Ready at `https://site-front-release-2ubpwinuqq-lm.a.run.app`.
+- `site-front-release` uses:
+  - service account `site-front-release-runner`;
+  - `CMS_BACK_URL=https://cms-back-release-2ubpwinuqq-lm.a.run.app`;
+  - `INDEXING_MODE=noindex`;
+  - min instances `0`, max instances `3`;
+  - unauthenticated access disabled.
 
 Stop if:
 
@@ -304,13 +416,13 @@ Domain policy:
 
 Checklist:
 
-- [ ] Decide whether LB/IAP is created in the first slice or whether direct Cloud Run IAP is used only as
+- [x] Decide whether LB/IAP is created in the first slice or whether direct Cloud Run IAP is used only as
   a temporary bridge.
 - [ ] Create serverless NEG/backends for required release services.
 - [ ] Configure HTTPS LB and managed certificate(s).
-- [ ] Configure IAP access for `cms-front-release`.
-- [ ] Configure IAP or IP allowlist for pre-go-live public site preview.
-- [ ] Ensure `*.run.app` direct access does not bypass the intended boundary where final architecture
+- [x] Configure IAP access for `cms-front-release`.
+- [x] Configure IAP or IP allowlist for pre-go-live public site preview.
+- [x] Ensure `*.run.app` direct access does not bypass the intended boundary where final architecture
   supports ingress restriction.
 - [ ] Configure noindex response headers before go-live.
 - [ ] Configure `robots.txt` blocking policy before go-live.
@@ -323,6 +435,32 @@ Stop if:
 - noindex is absent while the preview is reachable;
 - `actum.ua` becomes canonical accidentally;
 - direct Cloud Run URL bypasses the perimeter unexpectedly.
+
+Executed on `2026-07-11`:
+
+- Chose direct Cloud Run IAP as the first temporary closed reviewer bridge for the release frontend
+  services.
+- This does not replace the recommended final release entrypoint: HTTPS LB + serverless NEGs + IAP remains
+  deferred until the domain/DNS decision is ready.
+- Existing project LB inventory showed a shared HTTPS LB already serving `actum.com.ua`, `www`, `strapi`,
+  `erp`, and `tag` hosts on IP `34.160.235.199`; no release-specific LB objects were created.
+- Cloud DNS inventory failed for the active account with missing DNS permissions, so DNS/domain work is
+  deferred until permissions or external DNS ownership are clarified.
+- Enabled direct Cloud Run IAP on:
+  - `cms-front-release`;
+  - `site-front-release`.
+- `run.googleapis.com/iap-enabled=true` is set on both release frontend services.
+- Cloud Run `roles/run.invoker` for both release frontend services is granted only to the Google-managed
+  IAP service agent:
+  `service-865011807785@gcp-sa-iap.iam.gserviceaccount.com`.
+- IAP `roles/iap.httpsResourceAccessor` is granted on both release frontend services to:
+  - `privatemailofap@gmail.com`;
+  - `yuriy.bishko@gmail.com`;
+  - `po@actum.com.ua`;
+  - `ap@modusmoses.com`;
+  - `jamaslov@gmail.com`.
+- Unauthenticated HTTP smoke to `/health` on both release frontend URLs returns `302` to Google OAuth,
+  confirming IAP intercepts browser access instead of serving content directly.
 
 ## Phase 9 - Data, Import, And CMS Initialization
 
@@ -365,10 +503,15 @@ Goal: prove that the release contour works while still closed.
 
 Smoke checks:
 
-- [ ] `cms-back-release` health endpoint works.
-- [ ] `cms-back-release` readiness confirms DB connectivity.
-- [ ] `cms-front-release` is reachable only by approved identities.
-- [ ] `site-front-release` preview is reachable only through the approved closed boundary.
+- [x] `cms-back-release` health endpoint works.
+- [x] `cms-back-release` readiness confirms DB connectivity.
+- [x] `cms-front-release` health endpoint works through authenticated Cloud Run access.
+- [x] `site-front-release` health endpoint works through authenticated Cloud Run access.
+- [x] direct unauthenticated requests to `cms-front-release` return `403`.
+- [x] direct unauthenticated requests to `site-front-release` return `403`.
+- [x] `cms-front-release` can call `cms-back-release` through the release service-to-service path.
+- [x] `site-front-release` can call `cms-back-release` through the release service-to-service path.
+- [x] IAP/closed reviewer boundary is configured for the approved initial emails.
 - [ ] public routes render from published snapshots.
 - [ ] global sections render on public pages.
 - [ ] media upload/render path works.
@@ -377,7 +520,7 @@ Smoke checks:
 - [ ] rollback/snapshot recovery path works for a test page.
 - [ ] backend is not callable by public browsers outside approved paths.
 - [ ] logs contain no secrets or raw credentials.
-- [ ] fresh error-log check is clean after smoke.
+- [x] fresh error-log check is clean after backend/frontend smoke.
 - [ ] noindex/robots/sitemap behavior is correct before go-live.
 
 Stop if:
@@ -386,6 +529,23 @@ Stop if:
 - CMS auth or IAP behaves inconsistently for approved users;
 - indexing controls are missing;
 - logs expose sensitive values.
+
+Smoke result on `2026-07-05`:
+
+- Authenticated `GET /api/health` returned `200`.
+- Authenticated `GET /api/ready` returned `200`.
+- `/api/ready` reported database status `ok` with Cloud SQL IAM access to `site_release`.
+- Authenticated `GET cms-front-release /health` returned `200`.
+- Authenticated `GET cms-front-release /api/admin/pages` returned `200` with an empty release DB page list.
+- Authenticated `GET site-front-release /health` returned `200`.
+- Authenticated `POST site-front-release /api/preview/pages/smoke-missing-page` returned app-layer `404`
+  for a missing page, confirming the frontend -> backend invocation path works.
+- Unauthenticated `GET /health` returned `403` on both frontend services.
+- After direct Cloud Run IAP was enabled on `2026-07-11`, unauthenticated `GET /health` returns `302` to
+  Google OAuth on both frontend services.
+- `cms-front-release` and `site-front-release` both have explicit IAP OAuth settings with the dedicated
+  release OAuth client `865011807785-dc2h038ejlv6hjlpaodmaliprs2rdvrp.apps.googleusercontent.com`; the
+  secret was applied from a temporary local JSON and deleted, not stored in git/docs/chat.
 
 ## Phase 11 - Public Go-Live Preparation
 
@@ -440,10 +600,11 @@ Public rollback:
 
 ## Immediate Next Step
 
-The next practical step is not resource creation. It is:
+The next practical step is the closed access and content-preparation slice:
 
-1. approve this plan as the working checklist;
-2. run playbook preflight;
-3. inventory current GCP state;
-4. create a concrete command-level implementation runbook for Phase 2 through Phase 8;
-5. request explicit approval before mutation commands that create release resources.
+1. create/map CMS users and roles for the approved release reviewers;
+2. run controlled import/bootstrap into `site_release`;
+3. fill and publish the first release snapshots for smoke routes;
+4. verify noindex/robots/sitemap behavior before any public DNS/certificate cutover;
+5. decide the final LB/serverless NEG/IAP/domain perimeter separately from the temporary direct Cloud Run
+   IAP bridge.
