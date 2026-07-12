@@ -420,4 +420,22 @@ Smoke:
 - unauthenticated `GET https://cms-front-release-2ubpwinuqq-lm.a.run.app/health`: `302` to Google OAuth
 - unauthenticated `GET https://site-front-release-2ubpwinuqq-lm.a.run.app/health`: `302` to Google OAuth
 
+## Release Site Indexing Controls - 2026-07-12
+
+Current deployed `site-front-release` indexing state:
+
+- branch/source: `re-actum/site-front` branch `release`, commit `918a3fa`;
+- Cloud Build: `5b45bcce-1a94-4ade-82b0-2e52302d005f`;
+- ready revision: `site-front-release-00002-8qm`;
+- runtime env still includes `INDEXING_MODE=noindex`;
+- `proxy.js` sets `X-Robots-Tag: noindex, nofollow` for noindex mode;
+- `app/robots.js` blocks all crawlers;
+- `app/sitemap.js` returns an empty sitemap list;
+- IAP remains enabled and unauthenticated `/health` still redirects to Google OAuth;
+- no fresh `ERROR` logs were found after the deploy.
+
+The app-level `X-Robots-Tag` cannot be read through the current CLI user-token flow while IAP is the active
+entrypoint. Repeat header/robots/sitemap smoke when the final LB/public entrypoint exists and before any
+public opening or noindex removal.
+
 The final LB/serverless NEG/IAP/domain perimeter remains deferred.

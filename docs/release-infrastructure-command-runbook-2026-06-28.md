@@ -593,6 +593,44 @@ Verified:
   settings, and the temporary local JSON used to apply the setting was deleted.
 - Unauthenticated `GET /health` on both release frontend URLs returns `302` to Google OAuth, not content.
 
+## Phase 8b - Release Indexing Controls - 2026-07-12
+
+Decision:
+
+- Keep `site-front-release` closed by IAP and keep app-level indexing controls enabled before any public
+  opening.
+- Treat the app-level controls as a second layer behind IAP, not as a replacement for the closed preview
+  boundary.
+
+Executed:
+
+- Added `proxy.js` in `re-actum/site-front` branch `release`, commit `918a3fa`.
+- The proxy sets `X-Robots-Tag: noindex, nofollow` when `INDEXING_MODE=noindex`.
+- Added unit test `tests/unit/proxy-indexing.test.js`.
+- Existing `app/robots.js` blocks all crawlers.
+- Existing `app/sitemap.js` returns an empty sitemap list.
+- Cloud Build `5b45bcce-1a94-4ade-82b0-2e52302d005f` deployed the change to `site-front-release`.
+
+Verified:
+
+- `npm run lint` passed in the `site-front-release` worktree.
+- `npm test -- proxy-indexing.test.js` passed.
+- `npx prettier --check proxy.js tests/unit/proxy-indexing.test.js` passed.
+- Full `npm run format:check` still fails because of pre-existing formatting drift across the release
+  worktree; do not autoformat the whole tree as part of this slice.
+- New Cloud Run ready revision: `site-front-release-00002-8qm`.
+- IAP stayed enabled after deploy.
+- Cloud Run invoker for `site-front-release` stayed limited to
+  `service-865011807785@gcp-sa-iap.iam.gserviceaccount.com`.
+- Unauthenticated `GET /health` still returns `302` to Google OAuth.
+- Fresh `ERROR` logs for the new revision were empty after deploy.
+
+Follow-up:
+
+- App-level `X-Robots-Tag` could not be read directly through the current CLI user-token flow because IAP
+  correctly intercepts access. Repeat header/robots/sitemap smoke through the final LB/public entrypoint
+  before opening the site.
+
 ## Still Deferred
 
 These are intentionally deferred:
@@ -603,4 +641,4 @@ These are intentionally deferred:
 - import data;
 - create CMS users;
 - open any public access;
-- change DNS/canonical/robots for the public site.
+- change DNS/canonical or remove noindex/robots for the public site.

@@ -424,9 +424,9 @@ Checklist:
 - [x] Configure IAP or IP allowlist for pre-go-live public site preview.
 - [x] Ensure `*.run.app` direct access does not bypass the intended boundary where final architecture
   supports ingress restriction.
-- [ ] Configure noindex response headers before go-live.
-- [ ] Configure `robots.txt` blocking policy before go-live.
-- [ ] Keep sitemap disabled, empty, or non-public before go-live.
+- [x] Configure noindex response headers before go-live.
+- [x] Configure `robots.txt` blocking policy before go-live.
+- [x] Keep sitemap disabled, empty, or non-public before go-live.
 - [ ] Confirm redirect behavior for `www` and any attached `actum.ua` host.
 
 Stop if:
@@ -461,6 +461,20 @@ Executed on `2026-07-11`:
   - `jamaslov@gmail.com`.
 - Unauthenticated HTTP smoke to `/health` on both release frontend URLs returns `302` to Google OAuth,
   confirming IAP intercepts browser access instead of serving content directly.
+
+Executed on `2026-07-12`:
+
+- Added `site-front-release` proxy behavior on branch `release` in `re-actum/site-front` commit `918a3fa`.
+- The proxy sets `X-Robots-Tag: noindex, nofollow` whenever `INDEXING_MODE=noindex`.
+- Existing release deploy config already sets `INDEXING_MODE=noindex` for `site-front-release`.
+- Existing `robots.txt` blocks all crawling, and `sitemap.xml` returns an empty sitemap list.
+- Unit test `tests/unit/proxy-indexing.test.js` confirms the header is set only in noindex mode.
+- Cloud Build `5b45bcce-1a94-4ade-82b0-2e52302d005f` deployed `site-front-release`.
+- New ready revision: `site-front-release-00002-8qm`.
+- IAP remained enabled after deploy, and Cloud Run invoker remained limited to the IAP service agent.
+- CLI app-level header smoke is blocked by IAP for the current user-token flow; this is acceptable while
+  the site stays closed, but the final LB/public entrypoint must repeat header/robots/sitemap smoke before
+  public opening.
 
 ## Phase 9 - Data, Import, And CMS Initialization
 
@@ -521,7 +535,8 @@ Smoke checks:
 - [ ] backend is not callable by public browsers outside approved paths.
 - [ ] logs contain no secrets or raw credentials.
 - [x] fresh error-log check is clean after backend/frontend smoke.
-- [ ] noindex/robots/sitemap behavior is correct before go-live.
+- [x] noindex/robots/sitemap behavior is correct for the current closed release boundary; repeat through
+  the final public/LB entrypoint before opening.
 
 Stop if:
 
@@ -546,6 +561,9 @@ Smoke result on `2026-07-05`:
 - `cms-front-release` and `site-front-release` both have explicit IAP OAuth settings with the dedicated
   release OAuth client `865011807785-dc2h038ejlv6hjlpaodmaliprs2rdvrp.apps.googleusercontent.com`; the
   secret was applied from a temporary local JSON and deleted, not stored in git/docs/chat.
+- On `2026-07-12`, `site-front-release` revision `site-front-release-00002-8qm` deployed a runtime
+  `X-Robots-Tag: noindex, nofollow` proxy for `INDEXING_MODE=noindex`; unauthenticated `/health` still
+  returns `302` to Google OAuth, and fresh `ERROR` logs were empty after deploy.
 
 ## Phase 11 - Public Go-Live Preparation
 
@@ -605,6 +623,6 @@ The next practical step is the closed access and content-preparation slice:
 1. create/map CMS users and roles for the approved release reviewers;
 2. run controlled import/bootstrap into `site_release`;
 3. fill and publish the first release snapshots for smoke routes;
-4. verify noindex/robots/sitemap behavior before any public DNS/certificate cutover;
+4. repeat noindex/robots/sitemap smoke through the final public/LB entrypoint before any opening;
 5. decide the final LB/serverless NEG/IAP/domain perimeter separately from the temporary direct Cloud Run
    IAP bridge.
