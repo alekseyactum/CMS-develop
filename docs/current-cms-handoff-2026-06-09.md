@@ -878,6 +878,19 @@ PATCH /api/admin/reference/{type}/{id}
 For the admin navigation menu, do not use flat `/reference/problems` as the source for service hierarchy.
 Use the navigation tree/workbench hierarchy returned by backend.
 
+### 2026-07-13 Reference detail diagnostics and hierarchy coverage
+
+- Lawyer qualifications remain related ERP records, not scalar lawyer `sourceFields`. Lawyer records now
+  expose the read-only `relationFields.qualificationSummary` object with `activeCount`,
+  `highQualificationCount`, and `maxScore`. The UI must still have a generic diagnostics area for issues
+  such as `LAWYER_HIGH_QUALIFICATION_MISSING`; field-bound inline rendering alone is not sufficient.
+- Deep practice/service/problem detail can request page coverage without per-child requests:
+  `GET /api/admin/reference/{type}/{id}?includePageCoverage=true&pageCoverageLocale=uk`.
+- Child service/problem summaries now include `updatedBy`, `updatedAt`, and, when requested,
+  `pageCoverage`. Coverage is resolved in batches. Its `actionScope` can target `practice_page`,
+  `service_page`, or `problem_page` and can be passed to the existing generated-page bootstrap workflow.
+- Omitting `includePageCoverage` keeps the detail request lighter; child update metadata is still returned.
+
 ## 2026-06-09 Practice Collection Workbench Update
 
 `practice_collection_page` matrix rows now carry admin diagnostics for the generated runtime tree:
