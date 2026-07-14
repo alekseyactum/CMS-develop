@@ -1091,6 +1091,22 @@ bindings or run regional inheritance repair. Normal editor/open/bootstrap paths 
 repair behavior. Existing generated rows are assembled with bounded concurrency while preserving response
 order; the limit is intentionally conservative to reduce latency without recreating database lock pressure.
 
+### Effective section diagnostics
+
+- Cell diagnostics are effective section diagnostics, not only stored-content validation. An enabled
+  section that has no usable draft/published source now receives the same critical reason in its own
+  `cell.diagnostics` that already blocks the page. This rule applies to every page section, not only FAQ.
+- Valid inheritance without a local version remains valid, a local `with_page` draft remains publishable
+  with its page, and a disabled optional section does not receive a missing-instance error.
+- For composite visual sections, the frontend must use `row.compositeGroups[].diagnostics`. The aggregate
+  includes both the editable section member and its read-only runtime member, so missing/unpublished linked
+  pages no longer leave the visible composite block looking healthy.
+- Section editor responses expose the same aggregate as `compositeGroup.diagnostics` and the actionable
+  list as `compositeGroup.reasons[]`. Per-member diagnostics/reasons remain available for explaining which
+  technical member caused the status.
+- Runtime linked-page issues remain warnings and do not block page publication. A required runtime list
+  that resolves empty remains a critical error.
+
 ## Open Questions / Risks
 
 Keep these visible in the next thread:
