@@ -1070,6 +1070,19 @@ Recent notes to CMS frontend developer:
   sibling read-only objects `primaryLawyerAuthor`, `legalReviewerLawyer`, and `cmsUserAuthor` provide
   `displayName`/`title` for cards and preview rendering.
 
+### Unsaved page-section payload validation
+
+- `POST /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/validate` and the equivalent
+  admin page-authoring endpoint accept `content` plus optional `composition`. This validates the current
+  form payload without first creating or saving a section draft.
+- Payload validation is side-effect free: it does not create a version or a validation-run record. The
+  response therefore has `validationSource: "payload"`, `sectionVersionId: null`, and
+  `validationRunId: null`; field-aware errors and warnings are returned normally.
+- The stored-version mode remains supported for compatibility. Send `sectionVersionId` (or omit both
+  targets to use the current draft) and receive `validationSource: "draft_version"`.
+- `content` and `sectionVersionId` are mutually exclusive. `recordDiagnostics` is supported only for a
+  stored draft because unsaved form content has no stable version to attach a diagnostics record to.
+
 ### Matrix read-performance rule
 
 Full generated page-type matrices must be read-only. Matrix row assembly calls page authoring with
