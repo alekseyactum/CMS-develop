@@ -103,11 +103,11 @@ Goal: make release deployable from source control before runtime resources depen
 - [ ] Decide whether branch protection is required before first release deploy.
 - [x] Confirm Cloud Build config files for release builds.
 - [x] Add `cloudbuild.release.yaml` to each service repo release branch.
-- [ ] Create or update release Cloud Build triggers:
+- [x] Create or update release Cloud Build triggers:
   - `site-front-release`
   - `cms-front-release`
   - `cms-back-release`
-- [ ] Ensure triggers deploy from `release` branches only.
+- [x] Ensure triggers deploy from `release` branches only.
 - [x] Ensure release build configs target release services instead of develop services.
 
 Stop if:
@@ -115,6 +115,30 @@ Stop if:
 - release branch does not contain the required runtime code;
 - release trigger would deploy from the wrong branch;
 - build config requires secrets that are not yet modeled.
+
+Executed on `2026-07-14`:
+
+- Created dedicated build identity `cms-release-build-runner`.
+- Granted project roles `roles/cloudbuild.builds.builder`, `roles/artifactregistry.writer`, and
+  `roles/logging.logWriter`.
+- Granted `roles/run.developer` only on release Cloud Run resources:
+  `site-front-release`, `cms-front-release`, `cms-back-release`, and `cms-back-release-migrate`.
+- Granted `roles/iam.serviceAccountUser` only on release runtime service accounts:
+  `site-front-release-runner`, `cms-front-release-runner`, and `cms-back-release-runner`.
+- Created release triggers in `europe-central2`:
+  - `site-front-release`, id `39cf2871-90be-466c-b9ed-25ab72d2a40c`;
+  - `cms-front-release`, id `d689ee57-2a44-4194-83e0-dd99328b59a1`;
+  - `cms-back-release`, id `237cd212-f0f3-44af-a681-0099b8a1c13d`.
+- Test empty commits pushed to release branches triggered successful builds:
+  - `site-front-release`: build `0066b087-68fc-4933-bf49-e6eee05e3913`, commit `cce327f`;
+  - `cms-front-release`: build `1afaebd5-e613-4682-97bd-0fccaad0ae38`, commit `83af86a`;
+  - `cms-back-release`: build `5a96d08e-6cd2-4f52-a90b-2cd0b3e2ffbd`, commit `ece032e`.
+- Current ready revisions after trigger deploy:
+  - `site-front-release-00003-cn7`;
+  - `cms-front-release-00004-q8n`;
+  - `cms-back-release-00004-4k6`.
+- IAP remained enabled for both frontend services, unauthenticated frontend `/health` still redirects to
+  Google OAuth, and fresh `ERROR` logs were empty after trigger deploy.
 
 ## Phase 3 - IAM And Service Accounts
 

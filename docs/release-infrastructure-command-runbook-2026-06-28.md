@@ -161,8 +161,9 @@ Before Cloud Build triggers:
 - ensure `cms-back` release config points to `site-release`/`site_release`;
 - keep migrations explicit through `cms-back-release-migrate`.
 
-Release build configs are now present. Do not create release triggers until Cloud SQL, secrets, media
-bucket, service account act-as permissions, and trigger service-account decisions are confirmed.
+Release build configs are now present. At this point, do not create release triggers until Cloud SQL,
+secrets, media bucket, service account act-as permissions, and trigger service-account decisions are
+confirmed. This was resolved in Phase 2b on `2026-07-14`.
 
 Intended trigger names:
 
@@ -171,6 +172,110 @@ Intended trigger names:
 - `cms-back-release`
 
 Trigger creation commands will be finalized only after release build configs are reviewed.
+
+## Phase 2b - Release Cloud Build Triggers - 2026-07-14
+
+Decision:
+
+- Use a dedicated release trigger identity: `cms-release-build-runner`.
+- Do not reuse `cms-develop-build-runner`.
+- Do not grant project-wide `roles/run.admin` to the release build runner in this slice.
+- Use project roles only for build/logging/artifact push, and resource-scoped Cloud Run/IAM permissions
+  for release deploy.
+
+Executed:
+
+```powershell
+gcloud iam service-accounts create cms-release-build-runner `
+  --project=composite-ally-360719 `
+  --display-name="CMS release Cloud Build runner"
+
+gcloud projects add-iam-policy-binding composite-ally-360719 `
+  --member=serviceAccount:cms-release-build-runner@composite-ally-360719.iam.gserviceaccount.com `
+  --role=roles/cloudbuild.builds.builder `
+  --condition=None
+
+gcloud projects add-iam-policy-binding composite-ally-360719 `
+  --member=serviceAccount:cms-release-build-runner@composite-ally-360719.iam.gserviceaccount.com `
+  --role=roles/artifactregistry.writer `
+  --condition=None
+
+gcloud projects add-iam-policy-binding composite-ally-360719 `
+  --member=serviceAccount:cms-release-build-runner@composite-ally-360719.iam.gserviceaccount.com `
+  --role=roles/logging.logWriter `
+  --condition=None
+```
+
+The release build runner has `roles/iam.serviceAccountUser` only on:
+
+- `site-front-release-runner@composite-ally-360719.iam.gserviceaccount.com`;
+- `cms-front-release-runner@composite-ally-360719.iam.gserviceaccount.com`;
+- `cms-back-release-runner@composite-ally-360719.iam.gserviceaccount.com`.
+
+The release build runner has `roles/run.developer` only on:
+
+- Cloud Run service `site-front-release`;
+- Cloud Run service `cms-front-release`;
+- Cloud Run service `cms-back-release`;
+- Cloud Run job `cms-back-release-migrate`.
+
+Release trigger commands used:
+
+```powershell
+gcloud builds triggers create github `
+  --project=composite-ally-360719 `
+  --region=europe-central2 `
+  --name=site-front-release `
+  --repository=projects/composite-ally-360719/locations/europe-central2/connections/strapitest-github/repositories/site-front `
+  --branch-pattern=release$ `
+  --build-config=cloudbuild.release.yaml `
+  --service-account=projects/composite-ally-360719/serviceAccounts/cms-release-build-runner@composite-ally-360719.iam.gserviceaccount.com `
+  --include-logs-with-status
+
+gcloud builds triggers create github `
+  --project=composite-ally-360719 `
+  --region=europe-central2 `
+  --name=cms-front-release `
+  --repository=projects/composite-ally-360719/locations/europe-central2/connections/strapitest-github/repositories/cms-front `
+  --branch-pattern=release$ `
+  --build-config=cloudbuild.release.yaml `
+  --service-account=projects/composite-ally-360719/serviceAccounts/cms-release-build-runner@composite-ally-360719.iam.gserviceaccount.com `
+  --include-logs-with-status
+
+gcloud builds triggers create github `
+  --project=composite-ally-360719 `
+  --region=europe-central2 `
+  --name=cms-back-release `
+  --repository=projects/composite-ally-360719/locations/europe-central2/connections/strapitest-github/repositories/cms-back `
+  --branch-pattern=release$ `
+  --build-config=cloudbuild.release.yaml `
+  --service-account=projects/composite-ally-360719/serviceAccounts/cms-release-build-runner@composite-ally-360719.iam.gserviceaccount.com `
+  --include-logs-with-status
+```
+
+Created trigger ids:
+
+- `site-front-release`: `39cf2871-90be-466c-b9ed-25ab72d2a40c`;
+- `cms-front-release`: `d689ee57-2a44-4194-83e0-dd99328b59a1`;
+- `cms-back-release`: `237cd212-f0f3-44af-a681-0099b8a1c13d`.
+
+Test pushes:
+
+- `site-front` release empty commit `cce327f` triggered build `0066b087-68fc-4933-bf49-e6eee05e3913`;
+- `cms-front` release empty commit `83af86a` triggered build `1afaebd5-e613-4682-97bd-0fccaad0ae38`;
+- `cms-back` release already had `a8ddc91 Merge develop into release`; the empty test commit was rebased
+  on top and pushed as `ece032e`, triggering build `5a96d08e-6cd2-4f52-a90b-2cd0b3e2ffbd`.
+
+Verified:
+
+- all three test builds completed with `SUCCESS`;
+- new Cloud Run ready revisions:
+  - `site-front-release-00003-cn7`;
+  - `cms-front-release-00004-q8n`;
+  - `cms-back-release-00004-4k6`;
+- direct Cloud Run IAP stayed enabled on both release frontend services;
+- frontend unauthenticated `/health` still returns `302` to Google OAuth;
+- fresh `ERROR` logs were empty after trigger deploy.
 
 ## Phase 3 - Release Runtime Identities
 

@@ -79,12 +79,34 @@ services.
 
 ## Cloud Build
 
-No Cloud Build triggers matching the planned CMS release services were observed with the CMS/site-front
-filter:
+Initial inventory did not observe Cloud Build triggers matching the planned CMS release services.
+
+Release triggers created on `2026-07-14` in `europe-central2`:
 
 - `site-front-release`
+  - id: `39cf2871-90be-466c-b9ed-25ab72d2a40c`
+  - repo: `site-front`
+  - branch pattern: `release$`
+  - config: `cloudbuild.release.yaml`
+  - service account: `cms-release-build-runner`
 - `cms-front-release`
+  - id: `d689ee57-2a44-4194-83e0-dd99328b59a1`
+  - repo: `cms-front`
+  - branch pattern: `release$`
+  - config: `cloudbuild.release.yaml`
+  - service account: `cms-release-build-runner`
 - `cms-back-release`
+  - id: `237cd212-f0f3-44af-a681-0099b8a1c13d`
+  - repo: `cms-back`
+  - branch pattern: `release$`
+  - config: `cloudbuild.release.yaml`
+  - service account: `cms-release-build-runner`
+
+Test pushes on `2026-07-14` triggered and completed:
+
+- `site-front-release`: build `0066b087-68fc-4933-bf49-e6eee05e3913`, commit `cce327f`, `SUCCESS`;
+- `cms-front-release`: build `1afaebd5-e613-4682-97bd-0fccaad0ae38`, commit `83af86a`, `SUCCESS`;
+- `cms-back-release`: build `5a96d08e-6cd2-4f52-a90b-2cd0b3e2ffbd`, commit `ece032e`, `SUCCESS`.
 
 Existing non-CMS triggers for old `Actum`, `Strapi`, ERP, Telegram, and other projects were observed.
 
@@ -96,6 +118,16 @@ CMS/develop service accounts observed:
 - `cms-front-develop-runner@composite-ally-360719.iam.gserviceaccount.com`
 - `cms-back-develop-runner@composite-ally-360719.iam.gserviceaccount.com`
 - `cms-develop-build-runner@composite-ally-360719.iam.gserviceaccount.com`
+
+CMS/release build service account:
+
+- `cms-release-build-runner@composite-ally-360719.iam.gserviceaccount.com`
+  - project roles: `roles/cloudbuild.builds.builder`, `roles/artifactregistry.writer`,
+    `roles/logging.logWriter`
+  - Cloud Run resource roles: `roles/run.developer` on `site-front-release`, `cms-front-release`,
+    `cms-back-release`, and `cms-back-release-migrate`
+  - service-account act-as: `roles/iam.serviceAccountUser` on `site-front-release-runner`,
+    `cms-front-release-runner`, and `cms-back-release-runner`
 
 Existing old site release service account observed:
 
@@ -363,9 +395,9 @@ Smoke:
 - unauthenticated `GET /health` on both frontend services: `403`
 - no `ERROR` logs on latest ready frontend revisions after smoke
 
-Still not created/configured:
+Still not created/configured at this frontend runtime point:
 
-- release Cloud Build triggers;
+- release Cloud Build triggers, later created on `2026-07-14`;
 - final load balancer / serverless NEGs / IAP perimeter;
 - CMS users and CMS role assignments;
 - data import and published content snapshots;
