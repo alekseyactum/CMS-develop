@@ -140,6 +140,22 @@ Executed on `2026-07-14`:
 - IAP remained enabled for both frontend services, unauthenticated frontend `/health` still redirects to
   Google OAuth, and fresh `ERROR` logs were empty after trigger deploy.
 
+Follow-up executed on `2026-07-14`:
+
+- Synced release branches with current GitHub `origin/develop`:
+  - `site-front`: merge commit `144301f`, build `6f6da010-d034-48ca-84fd-61b89f12c431`, `SUCCESS`,
+    ready revision `site-front-release-00004-qj6`;
+  - `cms-front`: merge commit `4fbb00c`; first build `f80ef11d-90b7-42a5-90d3-c5c78324e613` failed on a
+    release IAP actor type mismatch; fix commit `cce6756` deployed by build
+    `5fad275b-859f-4de8-a4d2-633a782d79d3`, `SUCCESS`, ready revision `cms-front-release-00005-g9x`;
+  - `cms-back`: already contained current `origin/develop`; no new push was needed.
+- Verified no release branch is missing develop commits:
+  - `site-front`: `5 0`;
+  - `cms-front`: `8 0`;
+  - `cms-back`: `6 0`.
+- `cms-front-release` fresh `ERROR` logs were empty after deploy, and Cloud Run invoker did not include
+  `allUsers`.
+
 ## Phase 3 - IAM And Service Accounts
 
 Goal: isolate release runtime identities from develop.

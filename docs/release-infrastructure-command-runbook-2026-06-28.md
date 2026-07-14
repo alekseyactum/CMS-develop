@@ -277,6 +277,44 @@ Verified:
 - frontend unauthenticated `/health` still returns `302` to Google OAuth;
 - fresh `ERROR` logs were empty after trigger deploy.
 
+## Phase 2c - Release Branch Develop Sync - 2026-07-14
+
+Reason:
+
+- release branches must contain the current GitHub `develop` code before editors start working against the
+  release contour;
+- release-specific runtime config and IAP identity forwarding must stay intact.
+
+Executed:
+
+- `site-front` branch `release` was merged with `origin/develop` and pushed as merge commit `144301f`.
+- `cms-front` branch `release` was merged with `origin/develop` and pushed as merge commit `4fbb00c`.
+- `cms-back` branch `release` was already up to date with `origin/develop`; no new commit was needed.
+
+Build results:
+
+- `site-front-release` build `6f6da010-d034-48ca-84fd-61b89f12c431` completed with `SUCCESS` for commit
+  `144301f1c79e9e9f935c6e74bd8665e783ac5d33`.
+- First `cms-front-release` sync build `f80ef11d-90b7-42a5-90d3-c5c78324e613` failed TypeScript because
+  the new `fetchWorkbenchPageRow` method from `develop` still accepted `actor?: string`, while release IAP
+  routes pass `CmsIdentity`.
+- `cms-front` release fix commit `cce6756` changed that method to `actor?: CmsIdentityInput`.
+- `cms-front-release` build `5fad275b-859f-4de8-a4d2-633a782d79d3` completed with `SUCCESS` for commit
+  `cce6756438bd20646b981d4cc674d82685e23452`.
+
+Verified:
+
+- `git rev-list --left-right --count HEAD...origin/develop` showed no missing develop commits in release:
+  - `site-front`: `5 0`;
+  - `cms-front`: `8 0`;
+  - `cms-back`: `6 0`.
+- ready revisions after the sync deploy:
+  - `site-front-release-00004-qj6`;
+  - `cms-front-release-00005-g9x`.
+- `cms-front-release` fresh `ERROR` logs for `cms-front-release-00005-g9x` were empty.
+- `cms-front-release` Cloud Run IAM did not include `allUsers`; invoker stayed limited to the IAP service
+  agent, with release build runner retaining its deployment permissions.
+
 ## Phase 3 - Release Runtime Identities
 
 Planned service accounts:

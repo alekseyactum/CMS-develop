@@ -108,6 +108,22 @@ Test pushes on `2026-07-14` triggered and completed:
 - `cms-front-release`: build `1afaebd5-e613-4682-97bd-0fccaad0ae38`, commit `83af86a`, `SUCCESS`;
 - `cms-back-release`: build `5a96d08e-6cd2-4f52-a90b-2cd0b3e2ffbd`, commit `ece032e`, `SUCCESS`.
 
+Develop sync pushes on `2026-07-14`:
+
+- `site-front-release`: merge commit `144301f`, build `6f6da010-d034-48ca-84fd-61b89f12c431`, `SUCCESS`,
+  ready revision `site-front-release-00004-qj6`;
+- `cms-front-release`: merge commit `4fbb00c`, build `f80ef11d-90b7-42a5-90d3-c5c78324e613`, `FAILURE`
+  due to the new page row gateway method still typing release IAP actor as `string`;
+- `cms-front-release`: fix commit `cce6756`, build `5fad275b-859f-4de8-a4d2-633a782d79d3`, `SUCCESS`,
+  ready revision `cms-front-release-00005-g9x`;
+- `cms-back-release`: no new push; release already contained current `origin/develop`.
+
+Release branch comparison with `origin/develop` after sync:
+
+- `site-front`: `5 0`;
+- `cms-front`: `8 0`;
+- `cms-back`: `6 0`.
+
 Existing non-CMS triggers for old `Actum`, `Strapi`, ERP, Telegram, and other projects were observed.
 
 ## Service Accounts
