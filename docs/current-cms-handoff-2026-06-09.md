@@ -214,8 +214,13 @@ Current important reference-data decisions:
 - offices, reviews, and competencies do not have route slugs;
 - `lastSyncedAt` was removed from normal reference objects and kept only where synchronization state is
   actually meaningful for competencies;
-- `updatedAt`/`updatedBy` exposed to CMS frontend represent the latest CMS edit across the object and its
-  localizations;
+- `updatedAt`/`updatedBy` exposed to CMS frontend represent the latest authoring event across the object's
+  CMS-owned fields and localizations. Automatic locale-skeleton creation is therefore attributed to the
+  technical migrator actor even when no human editor has changed the object;
+- reference records, translation metadata, and nested service-tree relation summaries expose the derived
+  `updatedByType`: `system` for `data-inside-migrator*`, `cms_user` for the current email-based CMS user
+  audit marker, `actor` for legacy/develop actor strings, and `null` when no actor exists. This is an API
+  projection only and does not require a database column or migration;
 - practices, services, and problems have locale-owned `casesSectionTitle` in translation rows. Runtime
   case sections (`practice_cases`, `service_cases`, `problem_cases`) return this value as `payload.title`
   so the frontend renders a ready grammar-correct heading instead of composing it from `publicName` or
@@ -226,8 +231,9 @@ Current important reference-data decisions:
 "translationsMeta": {
   "latestUpdatedAt": "...",
   "latestUpdatedBy": "...",
+  "latestUpdatedByType": "system",
   "locales": {
-    "uk": { "updatedAt": "...", "updatedBy": "..." }
+    "uk": { "updatedAt": "...", "updatedBy": "data-inside-migrator-release", "updatedByType": "system" }
   }
 }
 ```
