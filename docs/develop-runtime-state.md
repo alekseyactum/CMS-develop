@@ -144,6 +144,20 @@ Schema state:
 - First migration applied: `202605080001 create cms_system_metadata table`.
 - First application table: `cms_system_metadata`.
 
+Develop database reset on `2026-07-16`:
+
+- Target reset was limited to Cloud SQL instance `develop-eu`, database `site_develop`.
+- Release Cloud SQL instance `site-release` and database `site_release` were not changed.
+- Before reset, `site_develop` was exported to
+  `gs://site-media-develop/db-backups/site_develop-pre-reset-20260716-222354.sql.gz`.
+- A temporary `roles/storage.objectAdmin` grant for the Cloud SQL service agent on `site-media-develop`
+  was added only for the export and removed immediately after the export completed.
+- `site_develop` was deleted and recreated with `utf8mb4` / `utf8mb4_unicode_ci`.
+- Cloud Run Job execution `cms-back-develop-migrate-29zlc` completed successfully and reapplied migrations
+  through `202607160001`.
+- Cloud Run Job execution `cms-back-ready-check-chph8` completed successfully after the reset.
+- Fresh `ERROR` logs for `cms-back-develop` were empty after migration and ready-check.
+
 ## Secret Manager
 
 Created develop secrets:
