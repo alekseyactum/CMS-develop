@@ -1116,6 +1116,21 @@ order; the limit is intentionally conservative to reduce latency without recreat
 - Runtime linked-page issues remain warnings and do not block page publication. A required runtime list
   that resolves empty remains a critical error.
 
+### ERP problem-level relations for reviews and lawyer qualifications
+
+- ERP reviews and lawyer qualifications accept the complete primary taxonomy line:
+  `practiceExternalId`, `serviceExternalId`, and optional `problemExternalId`. The CMS stores both the
+  source external ids and resolved CMS `practiceId/serviceId/problemId` values.
+- When a referenced CMS practice, service, or problem does not exist yet, ingestion keeps the external id
+  and leaves the CMS id null. The existing reference-relation reconcile pass fills the id after the missing
+  reference row arrives.
+- If resolved service/problem records contradict the supplied practice/service line, ingestion fails with
+  `REFERENCE_RELATION_CONFLICT` instead of storing a misleading hierarchy.
+- Admin reference contracts expose `problemExternalId` and `problemId` for both resources. Region
+  qualifications deliberately remain region + practice/service only and do not gain a problem relation.
+- This is a storage, synchronization, and admin-contract change. Existing runtime selection rules are not
+  broadened to problem-level matching in this pass; that requires an explicit product decision and tests.
+
 ## Open Questions / Risks
 
 Keep these visible in the next thread:
