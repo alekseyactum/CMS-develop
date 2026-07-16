@@ -1724,7 +1724,11 @@ buttons still belong to the primary section/editor actions.
   for the standard service-hierarchy lead form and is not edited through a section form.
 - `lead_questionnaire` is the page-specific questionnaire section. It is disabled by default until the
   editor enables and fills it. A typical draft payload is
-  `{ "title": "...", "description": [...], "questions": [{ "id": "minor_children", "label": "...", "type": "single_choice", "required": false, "options": [{ "value": "yes", "label": "Так" }] }] }`.
+  `{ "finalMessageTitle": "...", "finalMessageDescription": [...], "questions": [{ "id": "minor_children", "question": "...", "type": "single_choice", "required": false, "options": [{ "id": "yes", "label": "Так" }] }] }`.
+  Only `single_choice` and `multiple_choice` are supported. Preserve stable question/option IDs and use
+  array order for display order. The backend reads old `title`/`description`/`label`/`value` aliases but
+  stores every newly saved draft in the canonical format. See
+  [`lead-questionnaire-contract-2026-07-16.md`](lead-questionnaire-contract-2026-07-16.md).
 
 2026-06-09/10 `practice_page` structure checkpoint: do not treat the whole backend scaffold as the final
 screen structure. The global recognition strip after the hero is implemented as `achievements_strip`.

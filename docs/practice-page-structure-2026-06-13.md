@@ -378,21 +378,26 @@ still default to disabled.
 - Append is allowed for questions.
 - Cannot be moved separately from the lead block.
 - Fields:
-  - `title` optional, section-heading locked for regional override.
-  - `description` optional rich text/plain text.
+  - `finalMessageTitle` optional final-state heading.
+  - `finalMessageDescription` optional final-state rich text.
   - `questions[]`.
 - Question fields:
+  - `id` required stable technical ID.
   - `question` required.
-  - `type`: `single_choice`, `multiple_choice`, or `text`.
-  - `options[]` for choice questions.
-  - `required` boolean.
-  - `sortOrder` / editor order.
+  - `type`: `single_choice` or `multiple_choice`.
+  - `options[]` required, each with stable `id` and visible `label`.
+  - `required` boolean, default `false` for legacy content.
+  - array order is display order; there is no `sortOrder` field.
 - Validation:
   - enabled questionnaire with no questions is an error;
   - empty question is an error;
-  - choice question without options is an error;
+  - unsupported question type is an error;
+  - duplicate/missing question or option ID is an error;
+  - question without options is an error;
   - empty option label is an error;
-  - overlong title/description/question/option is a warning.
+  - overlong final message/question/option text is a warning.
+- Canonical payload and legacy read compatibility are fixed in
+  `docs/lead-questionnaire-contract-2026-07-16.md`.
 
 `lead_form`:
 

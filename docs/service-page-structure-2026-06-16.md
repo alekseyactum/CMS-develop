@@ -107,6 +107,7 @@ Public visual rendering is still a frontend task.
 18. `lead_questionnaire` + `lead_form` + `lead_capture`
     - Composite group: `lead_block`.
     - `lead_questionnaire` is optional and disabled by default.
+    - It uses the canonical contract in `docs/lead-questionnaire-contract-2026-07-16.md`.
     - `lead_form` inherits from `global_lead_form`.
     - `lead_capture` is runtime form context.
 

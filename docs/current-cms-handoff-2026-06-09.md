@@ -602,9 +602,12 @@ Current backend slots:
     - optional page-owned questionnaire section;
     - can be disabled;
     - fields:
-      - `title` optional;
-      - `description` optional rich text;
-      - `questions` required list.
+      - `finalMessageTitle` optional;
+      - `finalMessageDescription` optional rich text;
+      - `questions` required list with stable question/option IDs;
+    - supported question types: `single_choice` and `multiple_choice`;
+    - regional fields inherit by default; `questions` additionally supports append;
+    - full contract and legacy compatibility: `docs/lead-questionnaire-contract-2026-07-16.md`.
 
 16. `lead_capture`
     - runtime standard lead form contract;

@@ -840,7 +840,9 @@ stale inherited changes become fresh.
 `lead_capture` is a fixed backend/runtime contract for the service hierarchy pages, not a global section
 and not an editable page-owned section. It gives the frontend a stable form component context. The optional
 `lead_questionnaire` stores page-specific questions and can be inherited/overridden/appended regionally as
-a normal page-owned section. The same `lead_form` + `lead_questionnaire` + `lead_capture` tail is available
+a normal page-owned section. Its canonical fields, supported choice types, stable IDs, and legacy read
+compatibility are fixed in `docs/lead-questionnaire-contract-2026-07-16.md`. The same
+`lead_form` + `lead_questionnaire` + `lead_capture` tail is available
 on `practice_page`, `service_page`, and `problem_page`; detailed service/problem content structure remains
 a separate design pass.
 
