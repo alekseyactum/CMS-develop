@@ -1127,9 +1127,11 @@ order; the limit is intentionally conservative to reduce latency without recreat
 - If resolved service/problem records contradict the supplied practice/service line, ingestion fails with
   `REFERENCE_RELATION_CONFLICT` instead of storing a misleading hierarchy.
 - Admin reference contracts expose `problemExternalId` and `problemId` for both resources. Region
-  qualifications deliberately remain region + practice/service only and do not gain a problem relation.
+  qualifications deliberately remain region + practice only and do not gain service/problem relations.
 - This is a storage, synchronization, and admin-contract change. Existing runtime selection rules are not
   broadened to problem-level matching in this pass; that requires an explicit product decision and tests.
+- Migration `202607160001` was explicitly applied on `2026-07-16` through the standard Cloud Run jobs in
+  both environments: `cms-back-develop-migrate-dmxkh` and `cms-back-release-migrate-qx9fr`.
 
 ## Open Questions / Risks
 
