@@ -1125,6 +1125,19 @@ order; the limit is intentionally conservative to reduce latency without recreat
 - Runtime linked-page issues remain warnings and do not block page publication. A required runtime list
   that resolves empty remains a critical error.
 
+### Repeated team CTA section identity
+
+- `practice/service/problem` top and lower team CTA slots reuse one content schema per page type, but are
+  separate physical section instances. Page-owned section lookup is keyed by page plus `slotKey`; matching
+  `sectionType` alone is not sufficient.
+- Editing `*_team_cta_top` affects only regional `*_team_cta_top` descendants. Editing the lower
+  `*_team_cta` affects only lower descendants. Their drafts, published versions, history, stale state, and
+  dependency review state are independent.
+- Migration `202607190001` repairs legacy shared instances: the existing section remains attached to the
+  lower slot, the complete history and validation state are cloned for the top slot, and inherited top
+  bindings/dependencies are rewired to the cloned section. Historical page snapshots are deliberately not
+  changed.
+
 ### ERP problem-level relations for reviews and lawyer qualifications
 
 - ERP reviews and lawyer qualifications accept the complete primary taxonomy line:

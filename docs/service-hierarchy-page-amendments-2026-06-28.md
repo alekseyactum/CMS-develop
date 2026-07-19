@@ -222,6 +222,22 @@ The message should tell the editor to disable the lower CTA when the top CTA is 
 
 Both slots disabled should be allowed unless a later page-specific design makes the CTA mandatory again.
 
+### Independent Section Instances
+
+Top and lower CTA slots reuse the same section type and content schema, but they are independent section
+instances. A page-owned section is identified by the page and `slotKey`, not only by `sectionType`.
+
+- editing or publishing the top CTA must not change the lower CTA;
+- top and lower positions have separate draft and published histories;
+- a regional top CTA inherits only from the matching base top CTA;
+- a regional lower CTA inherits only from the matching base lower CTA;
+- stale/review dependencies must follow the same-position source section.
+
+Migration `202607190001` splits legacy top/lower bindings that shared one physical section. It keeps the old
+section for the lower position, clones its complete section and validation history for the top position, and
+rewires inherited top bindings and dependency versions to the cloned source. Existing published page
+snapshots remain immutable and are not rewritten.
+
 ## Team CTA Content Shape
 
 The old `team_cta` content model has a large `lead` field. This is not precise enough for rendering
