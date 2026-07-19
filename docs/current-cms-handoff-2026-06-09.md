@@ -321,7 +321,15 @@ Editable:
 - social URLs for a predefined fixed set of social networks;
 - visibility/order behavior is constrained by predefined keys;
 - legal PDF document references, such as offer and privacy policy;
-- working hours if kept in footer content.
+
+Locale/lifecycle contract:
+
+- `site_footer` has `localeScope = shared`;
+- social URLs and legal PDF refs have one draft, publication, and history for all languages;
+- the locale query still selects localized read-only labels/routes in editor and layout preview;
+- the canonical physical storage locale is an implementation detail and must not be presented as a
+  separate Ukrainian footer version;
+- `site_footer_practices` remains locale-specific because its labels and public routes are localized.
 
 Not editable or currently frontend/system-owned:
 
@@ -333,6 +341,7 @@ Legal PDFs:
 
 - store file in object storage/media system;
 - CMS stores media id/reference;
+- the same privacy/offer media refs are used for `uk`, `ru`, and `en` at this stage;
 - missing required legal document is warning;
 - validate max size and PDF mime type.
 

@@ -697,6 +697,8 @@ For the footer screen:
 - `site_footer_practices` shows all active practices that have a locale `menuTitle` and public route;
   missing `menuTitle` or route omits the practice and adds a warning;
 - `site_footer` edits only footer-owned settings for now: social URLs and legal PDF media refs;
+- `site_footer.localeScope` is `shared`: those fields use one draft, published version, and history for all
+  languages; `site_footer_practices` remains localized;
 - public phone and work time are read from `site_contact_settings`, not from `site_footer`;
 - allowed social network types and order are code-owned; the editor changes only URLs, and an empty URL
   hides the social network without warning;
@@ -762,6 +764,8 @@ is false.
 
 When opening `GET /api/admin/global-sections/site_footer/editor?locale=uk`, use:
 
+- `localeScope` to determine whether locale tabs represent independent editable lifecycles; for
+  `site_footer` it is `shared`;
 - `editableContent.socialUrls` for social links;
 - `editableContent.legalDocuments.privacyPolicyMediaId`;
 - `editableContent.legalDocuments.offerContractMediaId`;
@@ -773,6 +777,11 @@ When opening `GET /api/admin/global-sections/site_footer/editor?locale=uk`, use:
 The footer editor should save only the `site_footer` editable content through
 `POST /api/admin/global-sections/site_footer/draft?locale=uk`. Phone/work-time values belong to
 `site_contact_settings`, and footer practices belong to `site_footer_practices`.
+
+The locale query remains part of the endpoint because the response also contains localized read-only
+labels and preview routes. Saving through `uk`, `ru`, or `en` changes the same shared footer section. The
+frontend must therefore show one footer history/state rather than three independent drafts. A returned
+physical `section.locale` of `uk` is the canonical storage locale and is not a locale mismatch.
 
 `global_price` uses the same global section lifecycle, but its detailed workbench contract is fixed in
 `docs/global-price-section-workbench.md`.
@@ -884,9 +893,10 @@ such as `practice_actions`, `practice_faq`, and `lead_questionnaire`; workbench 
 publish through the existing section validation diagnostics. Warning-grade quality checks are still a later
 backend pass.
 
-Global sections are locale-specific. Opening the editor for `site_footer?locale=uk` reads or creates the
-Ukrainian global footer section record. Russian and English versions are separate section records and
-separate version histories.
+Global sections declare `localeScope` in list, diagnostics, editor, public-content, and history responses.
+Most global sections are `localized`: `uk`, `ru`, and `en` have separate records and histories.
+`site_footer` is `shared`: every requested locale reads and writes one footer lifecycle. The requested
+locale still controls localized read-only/runtime decoration in the response.
 
 When a global section screen needs tab/header indicators for all locales, use the lightweight diagnostics
 endpoint instead of loading three full editors:
@@ -897,6 +907,8 @@ GET /api/admin/global-sections/{sectionKey}/locale-diagnostics
 
 It returns `locales[]` for `uk`, `ru`, and `en`, each with `status`, `facts`, and `diagnostics`.
 Use the full editor endpoint only for the currently opened locale form.
+For a shared section, locale entries intentionally describe the same underlying section/version state;
+do not render them as three independently editable footer versions.
 
 When the screen needs to compare the edited draft with what is currently active for public rendering, use:
 
@@ -916,6 +928,7 @@ This returns only the current published version merged with backend-owned readon
     | 'site_footer_practices'
     | 'site_footer';
   locale: 'uk' | 'ru' | 'en';
+  localeScope: 'localized' | 'shared';
   publishedVersion: SectionVersion | null;
   readonlyContent: object | null;
   editableContent: object;

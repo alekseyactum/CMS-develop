@@ -293,19 +293,25 @@ Global sections must be separated by behavior, not by a new ownership scope. `gl
 shared fixed sections and shared editable/base sections, while section schema defines how dependent pages
 react to draft and published changes.
 
-Global sections are localized as separate section records. Do not store all languages inside one large
-multilingual `content_json`.
+Global sections are locale-scoped by definition. The default scope is `localized`, with a separate section
+record and lifecycle per locale. A deliberately locale-neutral section may declare `localeScope = shared`
+and use one lifecycle while still receiving a requested locale for read-only/runtime decoration. Do not
+store all languages inside one large multilingual `content_json`.
 
 Example:
 
 ```text
-site_footer uk -> one global section
-site_footer ru -> one global section
-site_footer en -> one global section
+site_footer_practices uk -> one localized global section
+site_footer_practices ru -> one localized global section
+site_footer_practices en -> one localized global section
+
+site_footer shared -> one global section and one version history for all locales
 ```
 
 The `cms_sections` table must therefore store an explicit `locale`. For `page_owned` sections, this locale
-matches the owner page locale. For `global_owned` sections, locale belongs directly to the section itself.
+matches the owner page locale. For localized `global_owned` sections, locale belongs directly to the
+section itself. A shared global section uses a canonical physical locale internally; API responses expose
+`localeScope = shared`, so clients must not interpret that storage locale as a separate language variant.
 
 Shared fixed global sections, such as footer and main navigation/menu, should normally use:
 
@@ -330,8 +336,9 @@ fixed in `docs/site-footer-section-workbench.md`.
 
 In the first footer contract, `site_footer_practices` is read-only in CMS and uses practice `menuTitle`
 plus public routes for the active locale. `site_footer` edits only social URLs and legal PDF media refs.
-Legal PDF files are stored through the media contour, while labels, sitemap route, navigation, contact
-data, and copyright remain code-owned/read-only or `site_contact_settings`-owned.
+Both editable groups are shared across locales. Legal PDF files are stored through the media contour,
+while localized labels, sitemap route, navigation, contact data, and copyright remain code-owned/read-only
+or `site_contact_settings`-owned.
 
 Saving a draft of a shared fixed global section must not change public pages, current page snapshots, or
 page authoring state. Footer/menu draft changes must not mark dependent pages `draft_stale`; ordinary page

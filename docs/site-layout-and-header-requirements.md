@@ -414,6 +414,12 @@ frontend should reload this workbench and replace the full screen state.
 `site_footer` is a layout-level editable global section for footer-owned
 settings.
 
+It declares `localeScope = "shared"`. Social URLs, legal document refs, draft,
+published version, and history are one site-wide lifecycle. The locale query on
+editor/workbench/layout endpoints remains meaningful only for localized
+read-only labels, practices, navigation, and preview routes. CMS must not show
+separate editable footer versions for `uk`, `ru`, and `en`.
+
 Editable content:
 
 ```ts
@@ -436,7 +442,9 @@ Editable content:
 `site_contact_settings`.
 
 Footer legal PDF files use media records with `usageType = "legal_document"`.
-Missing legal files are warnings. Invalid media records are errors.
+The same selected privacy and offer files are used in every locale. Missing
+legal files are warnings. Invalid media records are errors. Visible legal link
+labels remain localized and code-owned.
 
 Its editor `readonlyContent` exposes:
 

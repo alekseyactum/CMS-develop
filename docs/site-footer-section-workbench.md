@@ -24,10 +24,16 @@ site_footer_practices / uk
 site_footer_practices / ru
 site_footer_practices / en
 
-site_footer / uk
-site_footer / ru
-site_footer / en
+site_footer / shared
 ```
+
+`site_footer_practices` remains locale-specific because its rendered title, practice labels, and public
+routes depend on the requested locale. `site_footer` has `localeScope = "shared"`: social URLs and legal
+documents use one draft, published version, and history for the whole site.
+
+The `locale` query parameter is still required for `site_footer` endpoints. It controls requested-locale
+read-only labels, routes, and layout preview decoration; it does not select a separate editable footer
+lifecycle. The backend uses one canonical physical section record and returns `localeScope` explicitly.
 
 Both sections are:
 
@@ -176,8 +182,8 @@ Important:
 `workTime` is not owned by `site_footer`. It is stored in `site_contact_settings` and reused by header,
 footer, contacts, and forms as one shared `from/to` time pair.
 
-Social URLs are also locale-neutral. Legal PDF documents are locale-specific because documents may differ
-by language.
+Social URLs and legal PDF document refs are locale-neutral. Editing or publishing them through any locale
+updates the same shared footer lifecycle. Legal link labels remain localized and code-owned.
 
 ## Read-Only / Code-Owned Fields
 
@@ -382,7 +388,11 @@ The footer workbench should:
 
 - use the aggregated workbench endpoint for the first screen load;
 - show the locale-specific `site_footer_practices` state for read-only practice preview and diagnostics;
-- show the locale-specific `site_footer` state for editable lower-footer settings;
+- show one shared `site_footer` editable state and version history for every locale;
+- use `footerSection.localeScope === "shared"` as the contract signal and do not present locale tabs as
+  independent footer drafts;
+- keep the requested locale when loading the workbench so read-only labels, practice links, and layout
+  preview are rendered for the current language;
 - show read-only preview/info for non-editable footer parts;
 - edit only social URLs and legal PDF media refs;
 - use the media upload/picker flow for legal PDF files;
