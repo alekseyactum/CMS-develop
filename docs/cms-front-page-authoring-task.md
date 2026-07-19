@@ -802,9 +802,14 @@ Generated `practice_page`, `service_page`, and `problem_page` schemas expose a p
   section;
 - the page `price` may inherit the source and may locally override/append only fields allowed by
   `slot.fieldPolicies`;
-- for the current backend contract, page-level price editing is focused on `items`. Text fields such as
-  `notes` are source-owned/read-only and are exposed as inherit-only if present in the schema. Do not
-  render override/append controls for them and do not submit them as local editable content;
+- the canonical page price payload is `title`, `accentText`, `description`, and `items`. The first three
+  fields are hydrated from the locale-specific `global_price` registry and are exposed as inherit-only.
+  Only `items` may use `inherit`, `override`, or `append`;
+- `lead` and `notes` are not part of the `global_price` contract. Page-specific price copy belongs to the
+  separate `practice_price_text` or `service_price_text` section. Do not submit system price header fields
+  as local editable content;
+- page editor `content.source` and `content.resolved.*` include the hydrated system header even though the
+  persisted global section version stores only editable `{ items }`;
 - inherited price local drafts are partial deltas. If `items` inherit from the source, the save request
   does not need to include local `items`; backend validates the composed resolved content;
 - public snapshots store the resolved price payload and keep separate source/local section refs for

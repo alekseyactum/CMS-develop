@@ -79,6 +79,11 @@ payload and do not need to know about backend registry defaults.
 
 `notes` is not part of the first `global_price` contract.
 
+The page-owned `price` slot uses the same canonical field names. `title`, `accentText`, and `description`
+are inherited and read-only in page editors. Only `items` supports local `inherit`, `override`, or `append`
+composition. Page-specific explanatory copy belongs to the separate `practice_price_text` or
+`service_price_text` section rather than to aliases such as `lead` or `notes` inside `global_price`.
+
 ## Price Item Contract
 
 Each item in `items` has this shape:
