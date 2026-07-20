@@ -1133,6 +1133,8 @@ order; the limit is intentionally conservative to reduce latency without recreat
 - Editing `*_team_cta_top` affects only regional `*_team_cta_top` descendants. Editing the lower
   `*_team_cta` affects only lower descendants. Their drafts, published versions, history, stale state, and
   dependency review state are independent.
+- For all practice/service/problem Team CTA slots, `title` is optional. Missing or empty `title` is valid
+  and produces neither an error nor a warning; overlength diagnostics apply only when a title is present.
 - Migration `202607190001` repairs legacy shared instances: the existing section remains attached to the
   lower slot, the complete history and validation state are cloned for the top slot, and inherited top
   bindings/dependencies are rewired to the cloned section. Historical page snapshots are deliberately not

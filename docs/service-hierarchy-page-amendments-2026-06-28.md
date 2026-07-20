@@ -259,14 +259,14 @@ Use a paragraph array instead.
 
 Field rules:
 
-- `title` is required when the section is enabled;
+- `title` is optional; an absent or empty title produces neither an error nor a warning;
 - `paragraphs` is required when the section is enabled;
 - minimum recommended paragraphs: 1;
 - target maximum paragraphs: 4;
 - more than 4 paragraphs should produce a warning, not an error, until the final frontend layout proves it
   must be strict;
 - empty `paragraphs[].text` is an error;
-- overlong title or paragraph text is a warning.
+- an overlong non-empty title or paragraph text is a warning.
 
 ### Backward Compatibility
 

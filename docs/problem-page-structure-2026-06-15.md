@@ -53,7 +53,7 @@ slice. Public visual rendering is still a frontend task.
 9. `problem_team_cta`
    - Optional, default enabled.
    - Editable text block for the team/support CTA.
-   - Fields: `title`, optional `lead`.
+   - Fields: optional `title`, optional `lead`; an absent title has no diagnostic.
 
 10. `problem_cases`
     - Runtime/read-model slot.
@@ -153,6 +153,9 @@ Replace the old large `lead` field with `paragraphs[]`:
 ```
 
 Fallback: if `paragraphs` is absent and legacy `lead` exists, render `lead` as one paragraph.
+
+`title` is optional. An absent or empty title does not produce an error or warning. When present, it may
+still receive the standard overlength warning.
 
 ### Local Offices
 

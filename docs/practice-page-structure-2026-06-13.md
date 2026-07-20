@@ -209,7 +209,7 @@ still default to disabled.
 - Cannot be moved.
 - No URL navigation from lawyer cards in this section.
 - Fields:
-  - `title` required, section-heading locked for regional override.
+  - `title` optional, section-heading locked for regional override; absence is valid and has no diagnostic.
   - `lead` optional rich text/plain text.
   - optional secondary/help text if the frontend design needs it.
 - Runtime lawyer source:
@@ -496,6 +496,9 @@ The old large `lead` field should be replaced by:
 ```
 
 Fallback: if `paragraphs` is absent and legacy `lead` exists, render `lead` as one paragraph.
+
+`title` is optional. An absent or empty title does not produce an error or warning. When present, it may
+still receive the standard overlength warning.
 
 ### Local Offices
 
