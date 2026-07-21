@@ -866,6 +866,8 @@ the next schema/runtime pass. Key backend implications:
   override/append where allowed by the slot schema;
 - `practice_related_legal_block` + `practice_related_legal` should be a separate optional composite from
   `practice_services`;
+- `practice_services_block` and `practice_related_legal_block` expose optional `accentTitle`; the field is
+  inherited from the base page and locked for regional override;
 - `practice_intro_text`, `practice_reviews_text`, and `practice_price_text` replace the old generic
   `practice_optional_text` idea with three fixed optional visual variants;
 - keep `practice_team_cta` and `practice_lawyers_block` + `practice_lawyers` as separate product sections:

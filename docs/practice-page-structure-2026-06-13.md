@@ -110,6 +110,7 @@ still default to disabled.
 - Regional behavior: inherited from base by default; explicit override allowed except section title.
 - Fields:
   - `title` required, section-heading locked for regional override.
+  - `accentTitle` optional highlighted title fragment, inherited from the base page and locked for regional override.
   - `lead` optional rich text/plain text.
 
 `practice_services`:
@@ -141,6 +142,7 @@ still default to disabled.
 - Regional behavior: inherited from base by default; explicit override allowed except section title.
 - Fields:
   - `title` required when enabled, section-heading locked for regional override.
+  - `accentTitle` optional highlighted title fragment, inherited from the base page and locked for regional override.
   - `lead` optional rich text/plain text.
 
 `practice_related_legal`:

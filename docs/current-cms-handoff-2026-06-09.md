@@ -1206,3 +1206,11 @@ post-structure layer matters most now: frontend matrix/editor implementation, pu
 runtime freshness, real read models for runtime placeholder sections, or release auth/session. After that,
 make targeted API/docs changes without reopening page-structure design.
 ```
+
+## Practice Accent Title Alignment (2026-07-21)
+
+- Existing `accentTitle` contracts on service/problem guidance sections and regional offices remain unchanged.
+- `practice_services_block` and `practice_related_legal_block` now also expose optional `accentTitle`.
+- The new field is inherited from the base page and locked for regional override, matching the established
+  accent-title inheritance rule.
+- No accent field was added to `practice_intro`; no existing accent field was removed or renamed.
