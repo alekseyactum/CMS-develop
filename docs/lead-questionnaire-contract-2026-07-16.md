@@ -31,7 +31,8 @@ editor when the page needs preliminary qualifying questions before the standard 
 
 - `finalMessageTitle` is the optional heading shown after the questionnaire is completed.
 - `finalMessageDescription` is the optional rich-text message shown with that heading.
-- `questions` is required when the section is enabled and must contain at least one question.
+- `questions` is optional. It may be omitted or stored as an empty array; in that case the composite
+  lead block renders the standard required lead form without preliminary questionnaire steps.
 - `question.id` and `option.id` are stable technical identifiers. The frontend must preserve them while
   labels and order are edited.
 - `question.question` is the visible question text.
@@ -40,6 +41,10 @@ editor when the page needs preliminary qualifying questions before the standard 
 - `question.required` is a boolean and defaults to `false` when omitted from legacy content.
 - `question.options` is required and non-empty for every supported question type.
 - Array order is the canonical display order. There is no separate `sortOrder` field.
+
+The lead block itself remains required through `lead_form`. An empty or absent questionnaire does not
+disable the form and is not a validation issue. Question-level validation applies only to questions that
+are actually present.
 
 ## Inheritance
 

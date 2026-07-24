@@ -391,7 +391,8 @@ still default to disabled.
   - `required` boolean, default `false` for legacy content.
   - array order is display order; there is no `sortOrder` field.
 - Validation:
-  - enabled questionnaire with no questions is an error;
+  - missing or empty `questions` is allowed and means that the required standard lead form is shown
+    without preliminary questionnaire steps;
   - empty question is an error;
   - unsupported question type is an error;
   - duplicate/missing question or option ID is an error;
