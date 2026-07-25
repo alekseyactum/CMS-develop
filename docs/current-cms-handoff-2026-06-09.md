@@ -907,6 +907,12 @@ Use the navigation tree/workbench hierarchy returned by backend.
 - Child service/problem summaries now include `updatedBy`, `updatedAt`, and, when requested,
   `pageCoverage`. Coverage is resolved in batches. Its `actionScope` can target `practice_page`,
   `service_page`, or `problem_page` and can be passed to the existing generated-page bootstrap workflow.
+- Page coverage is locale-specific. A page with the same `publicPath` in another locale does not count
+  as existing for the requested `pageCoverageLocale`.
+- `pageCoverage.descendants.state` distinguishes `none_expected`, `incomplete`, and `complete`.
+  `none_expected` means that the source object has no eligible child pages in this locale and must not
+  be presented as "all child pages created". `incomplete` means that at least one expected child page is
+  missing or blocked. `complete` means that every expected child page exists.
 - Omitting `includePageCoverage` keeps the detail request lighter; child update metadata is still returned.
 
 ## 2026-06-09 Practice Collection Workbench Update
