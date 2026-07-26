@@ -105,16 +105,25 @@ The expected backend capabilities are:
 - `POST /api/admin/page-workbench/bulk-bootstrap/plan`
 - `POST /api/admin/page-workbench/bulk-bootstrap`
 
-Planning is a dry run. Execution creates missing authoring pages.
+Planning is a dry run. Execution creates missing authoring pages and repairs existing pages whose
+authoring state is missing schema-required section bindings.
 
 The backend plan/result model should be consumed as-is, including statuses such as:
 
 - `will_create`
+- `will_repair`
 - `already_exists`
 - `blocked`
 
 The frontend should also surface backend-provided reasons and diagnostics instead of inventing its own
 heuristics.
+
+An existing page row is not necessarily initialized. The page state exposes `initialization` with
+`status`, expected/bound section-slot counts, and `missingSectionSlots`. When
+`initialization.status = "repair_required"`, the workbench exposes the critical
+`PAGE_AUTHORING_REPAIR_REQUIRED` diagnostic and blocks preview/publish readiness until bootstrap restores
+the missing bindings. A successful repair returns `bootstrap.created = false`,
+`bootstrap.repaired = true`; bulk planning/execution use `will_repair`/`repaired`.
 
 ## Scope Model
 
@@ -150,6 +159,7 @@ Relevant source-backed list screens should show a CMS diagnostics summary area n
 The summary should present:
 
 - total missing pages that can be created;
+- existing pages that require authoring repair;
 - pages that already exist;
 - blocked items;
 - a clear call to action for planning and creation.
@@ -161,6 +171,7 @@ This summary should describe CMS authoring readiness, not publish status.
 Each relevant list row should expose a compact CMS state indicator, for example:
 
 - page exists;
+- page exists but authoring repair is required;
 - missing and creatable;
 - blocked.
 
@@ -175,7 +186,7 @@ The user should be able to:
 
 - request a plan for the current scope;
 - review the returned list and summary;
-- understand what will be created and what is blocked;
+- understand what will be created, repaired, and what is blocked;
 - explicitly confirm execution.
 
 The plan step is required. The first release should not run mass creation blindly from one click.
@@ -185,6 +196,7 @@ The plan step is required. The first release should not run mass creation blindl
 After running bulk bootstrap, the UI should show a report with at least:
 
 - created;
+- repaired;
 - already existed;
 - blocked;
 - failed.
