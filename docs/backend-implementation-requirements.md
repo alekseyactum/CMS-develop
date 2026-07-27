@@ -872,8 +872,8 @@ the next schema/runtime pass. Key backend implications:
   `practice_optional_text` idea with three fixed optional visual variants;
 - keep `practice_team_cta` and `practice_lawyers_block` + `practice_lawyers` as separate product sections:
   the first is a no-URL lawyer showcase, the second is lawyer selection with lawyer-page links;
-- add/align `practice_reviews_block` so reviews have editable section text/title beside the runtime
-  `practice_reviews` list;
+- model `practice_reviews` as a standalone runtime section whose payload owns the fixed localized
+  `title`; do not expose an editable reviews block or `lead`;
 - keep the bottom lead block visually composite while preserving separate lifecycles for
   `lead_questionnaire`, inherited `lead_form`, and runtime `lead_capture`;
 - `lead_form` remains page-level read-only for this pass and should reuse the current inherited global
@@ -899,8 +899,8 @@ The current `problem_page` backend scaffold includes:
 - optional/default-enabled `problem_accent_text_1`, `problem_must_not_do`, `problem_accent_text_2`,
   `problem_lawyer_actions`, and `problem_team_cta`;
 - runtime `problem_cases` placeholder;
-- composite `problem_reviews_block` + runtime `problem_reviews`, filtered by current service and region
-  for the first slice;
+- standalone runtime `problem_reviews`, with fixed localized `title`, prioritizing exact problem
+  relations and falling back to current service, with regional filtering where applicable;
 - inherited `price`;
 - optional/default-enabled `problem_faq`;
 - composite `problem_lawyers_block` + runtime `problem_lawyers`;
@@ -921,8 +921,8 @@ The current `service_page` backend scaffold includes:
 - optional/default-enabled `service_accent_text_1`, `service_lawyer_actions`, `service_accent_text_2`,
   `service_must_not_do`, `service_accent_text_3`, `service_must_do`, and `service_team_cta`;
 - runtime `service_cases` placeholder;
-- required composite `service_reviews_block` + runtime `service_reviews`, filtered by current service and
-  region for the first slice;
+- required standalone runtime `service_reviews`, with fixed localized `title`, filtered by current
+  service and region for the first slice;
 - inherited `price`;
 - optional/default-disabled `service_price_text`;
 - optional/default-enabled `service_faq`;

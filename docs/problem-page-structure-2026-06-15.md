@@ -59,11 +59,14 @@ slice. Public visual rendering is still a frontend task.
     - Runtime/read-model slot.
     - Currently returns a route-aware empty list until the cases read model is ready.
 
-11. `problem_reviews_block` + `problem_reviews`
-    - Composite group: `problem_reviews`.
-    - `problem_reviews_block` stores editable title/lead.
-    - `problem_reviews` is runtime/read-model data.
-    - First-pass filter: current service + region, not problem id.
+11. `problem_reviews`
+    - Runtime/read-model data and read-only in CMS.
+    - Runtime payload owns the fixed localized `title`: `Відгуки` / `Отзывы` / `Reviews`.
+    - There is no editable reviews block and no `lead`.
+    - Runtime filter prioritizes exact problem relations, then falls back to the current service; regional
+      pages additionally filter by region.
+    - Historical snapshots may still expose `problem_reviews_block`; consumers use it only as a fallback
+      when the runtime payload has no `title`.
 
 12. `price`
     - Inherited `global_price` page-level section.

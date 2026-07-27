@@ -1698,16 +1698,17 @@ Generated service-tree schemas now pair editable CMS block sections with runtime
 - `practice_collection_intro` + `practice_collection` use `practice_collection`;
 - `practice_services_block` + `practice_services` use `practice_services`;
 - `practice_related_legal_block` + `practice_related_legal` use `practice_related_legal`;
-- `practice_reviews_block` + `practice_reviews` use `practice_reviews`;
 - `practice_lawyers_block` + `practice_lawyers` use `practice_lawyers`;
 - `service_problems_block` + `service_problems` use `service_problems`;
 - `service_lawyers_block` + `service_lawyers` use `service_lawyers`;
-- `problem_reviews_block` + `problem_reviews` use `problem_reviews`;
 - `problem_lawyers_block` + `problem_lawyers` use `problem_lawyers`;
 - `lead_questionnaire` + `lead_form` + `lead_capture` use `lead_block` on service-hierarchy detail pages.
 
-The `*_block` section stores CMS-authored title/lead/settings for the block. The runtime slot stores the
-read-only list contract. Optional page-owned `*_faq` and `*_consultation_cta` sections are also present
+For the listed `*_block` composites, the block section stores CMS-authored title/lead/settings and the
+runtime slot stores the read-only list contract. Reviews are the deliberate exception: `practice_reviews`,
+`service_reviews`, and `problem_reviews` are standalone runtime slots. Their payload owns the fixed
+localized `title` (`Відгуки` / `Отзывы` / `Reviews`) and `items`; there is no editable reviews title or
+`lead`. Optional page-owned `*_faq` and `*_consultation_cta` sections are also present
 and may be enabled/disabled through backend-provided actions. Price sections are modeled as source-backed
 page-owned sections: base generated pages inherit from `global_price`, while regional generated pages
 inherit from the matching base page price section.
@@ -1784,8 +1785,9 @@ text/metadata sections inherit from the base page by default.
 - The previous single `problem_guidance` concept was replaced with fixed slots because the design requires
   independent lifecycle/visibility for `problem_must_do`, `problem_must_not_do`,
   `problem_lawyer_actions`, and two accent text sections.
-- `problem_reviews_block` + `problem_reviews`, `problem_lawyers_block` + `problem_lawyers`, and
-  `lead_questionnaire` + `lead_form` + `lead_capture` should be rendered as composite UI blocks.
+- `problem_reviews` is a standalone read-only runtime section; `problem_lawyers_block` +
+  `problem_lawyers` and `lead_questionnaire` + `lead_form` + `lead_capture` should be rendered as
+  composite UI blocks.
 - `problem_cases` is currently a runtime placeholder that may return an empty list by design.
 
 2026-06-16 `service_page` implementation update:
@@ -1795,9 +1797,21 @@ text/metadata sections inherit from the base page by default.
 - `service_page` uses the same regional-base inheritance philosophy as `practice_page` and `problem_page`:
   base content is the source, regional pages review/publish inherited stale changes, and section headings
   are locked on regional pages.
-- `service_problems_block` + `service_problems`, `service_reviews_block` + `service_reviews`,
-  `service_lawyers_block` + `service_lawyers`, and `lead_questionnaire` + `lead_form` + `lead_capture`
-  should be rendered as composite UI blocks.
+- `service_reviews` is a standalone read-only runtime section. `service_problems_block` +
+  `service_problems`, `service_lawyers_block` + `service_lawyers`, and `lead_questionnaire` +
+  `lead_form` + `lead_capture` should be rendered as composite UI blocks.
+
+Reviews rollout compatibility:
+
+- new snapshots contain `payload.title` directly in each `*_reviews` runtime section and do not contain
+  `*_reviews_block`;
+- historical snapshots may contain `*_reviews_block.payload.title` and a runtime reviews payload without
+  `title`;
+- a public consumer must resolve the heading as
+  `runtime.payload.title ?? legacyReviewsBlock.payload.title ?? localizedDefault(locale)` and must render
+  only one reviews section;
+- CMS frontend must open reviews through the read-only runtime dialog and must not show draft,
+  save, publish, title, or lead controls for reviews.
 - The previous shallow service-page slice is replaced by fixed slots because the design requires
   independent lifecycle/visibility for three accent text sections, three advisory sections, and the
   separate text/runtime composites around problems, reviews, lawyers, and lead capture.

@@ -77,12 +77,14 @@ Public visual rendering is still a frontend task.
     - Currently returns a route-aware empty list until the cases read model is ready.
     - Empty list is allowed for now and should surface as a warning, not a blocker.
 
-13. `service_reviews_block` + `service_reviews`
-    - Composite group: `service_reviews`.
+13. `service_reviews`
     - Required.
-    - `service_reviews_block` stores editable title/lead.
-    - `service_reviews` is runtime/read-model data.
+    - Runtime/read-model data and read-only in CMS.
+    - Runtime payload owns the fixed localized `title`: `Відгуки` / `Отзывы` / `Reviews`.
+    - There is no editable reviews block and no `lead`.
     - First-pass runtime filter: current service + region.
+    - Historical snapshots may still expose `service_reviews_block`; consumers use it only as a fallback
+      when the runtime payload has no `title`.
 
 14. `price`
     - Inherited `global_price` page-level section.

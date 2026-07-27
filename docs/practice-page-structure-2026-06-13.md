@@ -20,6 +20,9 @@ and `practice_lawyers` runtime cells. Schema/workbench columns expose `defaultVi
 `practice_intro_text` and `practice_actions` default to enabled, while the other optional practice sections
 still default to disabled.
 
+2026-07-27 amendment: the former `practice_reviews_block` was removed from the current schema. Reviews are
+now a standalone read-only runtime slot with a backend-owned localized title, as specified in section 10.
+
 ## General Rules
 
 - `practice_page` is a generated service-hierarchy page for one practice:
@@ -231,23 +234,14 @@ still default to disabled.
 - Cases read model is not ready yet.
 - Empty placeholder is allowed for now and should produce a warning, not a publish blocker.
 
-### 10. `practice_reviews_block` + `practice_reviews`
+### 10. `practice_reviews`
 
-- Composite group: `practice_reviews`.
 - Required.
 - Fixed after cases.
-
-`practice_reviews_block`:
-
-- Type: editable CMS text block.
-- Regional behavior: inherited from base by default; explicit override allowed except section title.
-- Fields:
-  - `title` required, section-heading locked for regional override.
-  - `lead` optional.
-
-`practice_reviews`:
-
 - Type: runtime/read-model list.
+- This section is read-only in CMS; there is no editable `practice_reviews_block`.
+- Runtime payload owns the fixed localized `title`: `Відгуки` / `Отзывы` / `Reviews`.
+- There is no `lead` field.
 - Source: `cms_ref_reviews`.
 - Filters:
   - current practice identifier;
@@ -255,6 +249,9 @@ still default to disabled.
 - Runtime order is not important for the current CMS decision.
 - Validation/diagnostics:
   - empty reviews list is a warning, not a blocker.
+- Compatibility: historical published snapshots may still contain `practice_reviews_block`; public
+  rendering should use the runtime `title` when present and fall back to the historical block title only
+  for old snapshots.
 
 ### 11. `practice_reviews_text`
 
