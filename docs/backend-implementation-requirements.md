@@ -675,6 +675,15 @@ editor action, CMS frontend can request this row and replace the matrix row with
 diagnostics, and action flags. Workbench cell actions now distinguish `canEnable` and `canDisable` for
 section visibility controls.
 
+Implementation note, 2026-07-27: page-specific workbench responses now resolve the exact semantic row for
+all public locales and expose it through `localeDiagnostics.locales[].pageId` and
+`localeDiagnostics.locales[].href`. Generated targets preserve `pageType`, source identity, base/regional
+kind, and region identity; they never reuse the current locale's page id. Missing or ambiguous targets
+return both fields as `null` with a one-row not-created summary, and diagnostics reads never create pages.
+Matrix-wide diagnostics have no single navigation target and therefore return `null` for these fields.
+Section editor and generated open-editor responses reuse their nested workbench locale diagnostics so the
+frontend receives one stable navigation source.
+
 Implementation note, 2026-05-22: `cms-back` page workbench now exposes page-level action endpoints:
 `POST /api/admin/page-workbench/pages/{pageId}/preview`,
 `POST /api/admin/page-workbench/pages/{pageId}/publish`, and

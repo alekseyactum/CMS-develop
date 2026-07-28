@@ -258,6 +258,53 @@ Recommended central screen layout:
 - page buttons: preview/publish/rollback/snapshots from `row.endpoints`;
 - page creation button: bootstrap from `row.endpoints.bootstrap` when `row.page === null`.
 
+For page-specific workbench responses, including
+`GET /api/admin/page-workbench/pages/{pageId}/row`, every
+`localeDiagnostics.locales[]` item also contains the backend-resolved target:
+
+```json
+{
+  "locale": "en",
+  "summary": {
+    "pagesTotal": 1,
+    "pagesNotCreated": 0
+  },
+  "pageId": "73129a52-f514-4b6f-aa10-345dc3a6b229",
+  "href": "/en/admin/pages/practice_page/73129a52-f514-4b6f-aa10-345dc3a6b229?sourceId=5e3d21c9-d3b7-4b45-9ab1-501ccdb29b5e",
+  "endpoint": {
+    "method": "GET",
+    "path": "/api/admin/page-workbench/page-types/practice_page?locale=en&sourceId=5e3d21c9-d3b7-4b45-9ab1-501ccdb29b5e"
+  }
+}
+```
+
+The target is the same semantic row in the requested locale. For generated pages this means the same
+`pageType`, `sourceId`, variant kind, and, for regional rows, the same `regionId`; the backend does not
+reuse the current locale's `pageId`. `summary` describes that exact target row, not every base and regional
+variant for the source.
+
+If the equivalent page is not created or cannot be resolved unambiguously, `pageId` and `href` are `null`
+and `summary.pagesNotCreated` is `1`. Reading diagnostics never bootstraps a page. The matrix-level
+`GET /page-types/{pageType}` response has no single row target, so its locale items keep `pageId` and
+`href` as `null`.
+
+The frontend should navigate only when `href` is present and must not build a provisional URL by replacing
+the locale while retaining the old `pageId`:
+
+```ts
+const target = response.localeDiagnostics.locales.find(
+  (item) => item.locale === nextLocale,
+);
+
+if (target?.href) {
+  router.push(target.href);
+}
+```
+
+The page row nested into section editor and generated open-editor responses uses the same
+`localeDiagnostics` value, so the UI should not switch between two locale-data sources after the row
+request completes.
+
 Do not use `/api/admin/reference/...` endpoints to build this central page workbench. Reference endpoints
 are for editing ERP/CMS dictionary objects. The page workbench is driven by
 `/api/admin/page-workbench/page-types/...`.
