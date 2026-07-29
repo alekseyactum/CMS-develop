@@ -1851,6 +1851,49 @@ Reviews rollout compatibility:
   the lower slot and the UI should guide the editor to disable one position.
 - Team CTA editors should move from one large `lead` field to `paragraphs[]`. Until existing drafts are
   migrated, render old `lead` as a single paragraph when `paragraphs` is absent.
+- Team CTA lawyer cards are backend runtime data. Each editable CTA slot now has a read-only companion in
+  the same `compositeGroupKey`:
+  - `practice_team_cta_top` + `practice_team_cta_top_lawyers`;
+  - `practice_team_cta` + `practice_team_cta_lawyers`;
+  - `service_team_cta_top` + `service_team_cta_top_lawyers`;
+  - `service_team_cta` + `service_team_cta_lawyers`;
+  - `problem_team_cta_top` + `problem_team_cta_top_lawyers`;
+  - `problem_team_cta` + `problem_team_cta_lawyers`.
+- The companion is resolved only when its editable CTA slot is enabled. Do not render a second standalone
+  section for it: combine the editable text and runtime `items[]` into one Team CTA component.
+- Runtime Team CTA cards are a showcase/carousel, not lawyer-page navigation. The backend deliberately
+  omits `pagePath` and `publicPath` from these items.
+
+Example Team CTA runtime companion:
+
+```json
+{
+  "slotKey": "service_team_cta_top_lawyers",
+  "payload": {
+    "mode": "showcase",
+    "source": {
+      "kind": "service",
+      "id": "service-cms-id",
+      "externalId": "20"
+    },
+    "items": [
+      {
+        "kind": "lawyer",
+        "id": "lawyer-cms-id",
+        "externalId": "100",
+        "slug": "olena-lawyer",
+        "fullName": "Olena Lawyer",
+        "sourceName": "Olena source",
+        "license": "license-1",
+        "photoMediaId": "media-1",
+        "photoMediaUrl": "/api/public/media/media-1/original",
+        "description": "Service specialist",
+        "score": 5
+      }
+    ]
+  }
+}
+```
 
 Section cells contain only metadata and status:
 
@@ -1959,6 +2002,34 @@ return read-only hydrated author objects when the backend can resolve them:
 
 Use `authors.primaryLawyerAuthor.displayName`, `authors.legalReviewerLawyer.displayName`, or
 `authors.cmsUserAuthor.displayName` for cards and previews. Keep the `...Id` fields as the stable keys.
+
+Case pages use separate page records for localized content. Admin editorial responses now expose:
+
+- `localeGroupId`: stable id shared by all language variants of one case;
+- `translations[]`: existing `uk`, `ru`, and `en` variants with page id, route, status, and publish state;
+- `availableTranslationLocales[]`: locales that can still be created;
+- `endpoints.createTranslation`: present for `case_page`, otherwise `null`.
+
+Create a missing locale through the endpoint returned by the item:
+
+```http
+POST /api/admin/editorial/publications/{sourcePageId}/translations
+Content-Type: application/json
+
+{
+  "locale": "ru",
+  "title": "Успешное дело о разделе имущества",
+  "slug": "uspeshnoe-delo-o-razdele-imushchestva",
+  "excerpt": "Краткое описание для карточки."
+}
+```
+
+The backend creates a normal independent `case_page` draft in the same locale group. It copies structural
+relations and non-localized identity (`practiceRef`, `serviceRef`, `problemRef`, authors, cover, ERP case
+id, and additional service-tree relations), but it does not copy the source-language `case_summary` or
+`content_builder`. Their localized drafts start empty and must be authored and published independently.
+The site runtime response includes `payload.localeAlternates[]` only for published variants, ready for
+localized navigation and `hreflang`.
 
 Use row-level `actions` for page buttons:
 

@@ -99,6 +99,31 @@ This is needed for:
 
 So a case is not forced to become a fully custom editorial composition every time.
 
+### Case localization model
+
+Localized versions of one case are separate `case_page` records joined by `cms_pages.locale_group_id`.
+This keeps every locale independently editable, previewable, publishable, and rollbackable while preserving
+the fact that all variants describe the same case.
+
+Creating a translation copies only shared structural data:
+
+- practice, service, and problem relations;
+- primary and co-author relations;
+- cover media and featured state;
+- ERP case id and additional service-tree relations.
+
+Localized content is never inherited from another language. `seo`, `publication_meta.title`,
+`publication_meta.excerpt`, `case_summary`, and `content_builder` belong to the target locale. A newly
+created variant starts with the requested title/excerpt and empty `case_summary`/`content_builder` drafts.
+It cannot be published until the normal page validation rules are satisfied.
+
+The unique `(locale_group_id, locale)` database constraint allows at most one page per language in a group.
+Existing editorial pages are assigned individual groups during migration; they are not merged heuristically.
+Only explicitly created translations join an existing group.
+
+Public page reads calculate `localeAlternates` from the currently published variants in the same group.
+Unpublished drafts are not exposed as language alternatives.
+
 ## Shared Page-Owned Sections
 
 All three publication page types should use the common page-owned section:
