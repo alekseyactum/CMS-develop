@@ -3,6 +3,31 @@
 This document is the short source of truth for continuing the CMS work in a new Codex thread without
 loading the full previous chat history.
 
+## Current Deployment Checkpoint - 2026-07-29
+
+This checkpoint supersedes the older develop-only branch rule below. The release contour now exists and
+receives controlled promotions from `cms-back/develop` after explicit approval.
+
+Team CTA lawyer runtime and case locale groups were deployed:
+
+- `cms-back/develop`: `8fd3ddf` (`feat: add team CTA lawyers and case translations`);
+- develop Cloud Build: `684f54f5-3e63-4670-8d89-4f9b395bd594`, `SUCCESS`;
+- develop ready revision: `cms-back-develop-00237-xsp`;
+- develop migration execution: `cms-back-develop-migrate-js8pj`, `SUCCESS`;
+- `cms-back/release`: `05e08d8` (`Merge develop into release`);
+- release Cloud Build: `d6d17eb1-6eb9-4d95-87dd-afa879454cc8`, `SUCCESS`;
+- release ready revision: `cms-back-release-00030-bfz`;
+- release migration execution: `cms-back-release-migrate-jvjhd`, `SUCCESS`;
+- migration `202607290002` adds editorial `locale_group_id`, safely assigns independent groups to
+  existing editorial pages, and enforces one page per locale in a group;
+- authenticated `/api/health` and `/api/ready` smoke passed in both environments, including database
+  status `ok` and the expected commit SHA.
+
+The frontend/backend contract and localization architecture are recorded in:
+
+- `docs/cms-front-page-authoring-task.md`;
+- `docs/editorial-content-architecture-2026-06-19.md`.
+
 ## How To Continue In A New Chat
 
 Start the new chat with this message:
