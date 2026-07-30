@@ -1,0 +1,635 @@
+# Search Intent Page Families - Product And Backend Requirements - 2026-07-30
+
+## Status
+
+This document records the requirements accepted during the search-intent page discussion.
+
+The product requirements review is complete. This is a normative product and backend contract, not an
+implementation report. Implementation has not started, and the exact JSON-LD graph templates still depend
+on the broader unresolved organization/provider and service-type decisions recorded in
+`docs/json-ld-architecture-2026-07-27.md`.
+
+Search-intent pages must use the existing CMS page lifecycle. They are not a second page engine and must not
+be implemented as an independent SEO landing-page subsystem.
+
+All intent families use one generic CMS page type:
+
+```text
+intent_page
+```
+
+The source binding, not a separate page type, identifies whether the family originated from a practice
+collection, practice, service, or problem.
+
+## Goal
+
+The service hierarchy is primarily organized for hierarchical user navigation:
+
+```text
+practice collection -> practice -> service -> problem
+```
+
+Important search intents do not always fit naturally into that hierarchy. Examples include:
+
+- lawyer in Kyiv;
+- attorney in Kyiv;
+- legal services in Kyiv;
+- online lawyer consultation;
+- lawyer consultation.
+
+Trying to optimize one hierarchy page equally for several materially different intents produces unclear
+titles, weak content focus, and search cannibalization. The CMS therefore needs controlled alternative
+intent pages derived from existing service-hierarchy pages.
+
+The feature must support focused pages without producing disconnected, automatically published, low-value
+doorway pages.
+
+## Eligible Source Pages
+
+An intent family may be created from the base Ukrainian, non-regional variant of:
+
+- `practice_collection_page`;
+- `practice_page`;
+- `service_page`;
+- `problem_page`.
+
+An intent page cannot be the source of another intent family.
+
+One source line may own more than one intent family. For example, one service may have separate families for
+"lawyer consultation" and "online lawyer consultation".
+
+The create action is available only when:
+
+- the current page is the base Ukrainian non-regional source;
+- its page type is eligible;
+- the source authoring aggregate exists and is not archived;
+- the current page is not itself an intent page.
+
+The base Ukrainian page is the creation root, not the only page related to the intent family.
+
+## Core Domain Model
+
+### `IntentPageFamily`
+
+`IntentPageFamily` identifies one search intent across locales and regions.
+
+Conceptually it contains:
+
+```json
+{
+  "id": "intent-family-id",
+  "sourceRootPageId": "base-ua-non-regional-source-page-id",
+  "slug": "advokat-po-alimentam",
+  "internalTitle": "Адвокат по аліментах",
+  "status": "active"
+}
+```
+
+`sourceRootPageId` is immutable. It identifies the service-hierarchy line from which the intent was
+created and prevents the same family from being independently recreated from a regional or translated
+source variant.
+
+The family uses the same route slug across locales. Locale prefixes and public paths follow the ordinary
+site route contract; intent pages do not introduce an independent localized-slug subsystem.
+
+The family remains a domain object rather than being identical to a page record. In the CMS, however, its
+visual anchor is the national intent page:
+
+- the national intent is the family header/primary row for the selected locale;
+- regional intent pages are displayed as that national page's variants;
+- the base Ukrainian national intent is the stable creation and identity root;
+- family-level counters aggregate the national and all regional/localized variants;
+- if the national page authoring state is damaged or missing, the family remains visible under its
+  `internalTitle` and exposes repair diagnostics instead of disappearing.
+
+The exact storage table and field names remain an implementation detail.
+
+### Concrete variant binding
+
+Family-level provenance is insufficient for navigation and publication.
+
+Every concrete intent page must also be bound to the matching concrete source page:
+
+```json
+{
+  "familyId": "intent-family-id",
+  "intentPageId": "intent-page-kyiv-uk",
+  "sourceVariantPageId": "source-page-kyiv-uk",
+  "locale": "uk",
+  "regionId": "kyiv"
+}
+```
+
+The matching rule is:
+
+```text
+intent locale == source locale
+intent region == source region
+intent hierarchy lineage == family source lineage
+```
+
+Examples:
+
+```text
+Ukraine / UK intent <-> Ukraine / UK source
+Kyiv / UK intent    <-> Kyiv / UK source
+Kyiv / RU intent    <-> Kyiv / RU source
+Kharkiv / EN intent <-> Kharkiv / EN source
+```
+
+The backend creates and maintains this binding. An editor must not manually select an arbitrary source
+variant.
+
+Recommended invariants:
+
+- one intent page belongs to exactly one intent family;
+- one intent page points to exactly one matching source variant;
+- one family has at most one intent variant for each `(locale, region)` pair;
+- a source variant may be linked to several different intent families;
+- a regional intent must not silently fall back to the national source;
+- a translated intent must not silently fall back to another locale.
+
+The relation must be queryable in both directions:
+
+```text
+source variant -> matching intent variants
+intent variant -> matching source variant
+```
+
+## Creation And Reconciliation
+
+Creation uses the normal CMS plan-and-execute workflow.
+
+Suggested API surface:
+
+```text
+POST /api/admin/page-workbench/pages/:sourcePageId/intent-families/plan
+POST /api/admin/page-workbench/pages/:sourcePageId/intent-families
+
+POST /api/admin/intent-page-families/:familyId/reconcile-regions/plan
+POST /api/admin/intent-page-families/:familyId/reconcile-regions
+```
+
+Eligible source rows should advertise their actual endpoints through the workbench contract. The frontend
+must not construct endpoint paths from page type assumptions.
+
+Planning must use the existing CMS operation vocabulary where applicable:
+
+```text
+will_create
+will_repair
+already_exists
+blocked
+```
+
+Execution must be idempotent. Retrying an operation must not create a second family or duplicate variants.
+
+Initial creation input must include at least:
+
+```json
+{
+  "slug": "advokat-po-alimentam",
+  "internalTitle": "Адвокат по аліментах",
+  "introTitle": "Адвокат по аліментах",
+  "regionalIntroTitleTemplate": "Адвокат по аліментах {regionPrepositional}"
+}
+```
+
+The backend builds the full route from the source route and validates route conflicts. The slug is immutable
+in the first version.
+
+Illustrative routes:
+
+```text
+/services/advokat
+/kyiv/services/advokat
+
+/services/family/alimony/advokat-po-alimentam
+/kyiv/services/family/alimony/advokat-po-alimentam
+```
+
+Intent pages are created as drafts. Creation and reconciliation never publish them automatically.
+
+## Locale And Route Behavior
+
+Intent pages use the same localization model as other generated site pages:
+
+- supported locales are `uk`, `ru`, and `en`;
+- every locale/region combination is a separate CMS page, authoring state, validation state, and snapshot;
+- the workbench exposes the normal locale tabs and all-locale diagnostics;
+- Ukrainian public paths have no locale prefix;
+- Russian and English public paths use the existing `/ru` and `/en` prefixes;
+- locale switching uses backend-provided exact page URLs;
+- no locale falls back to another locale's editable content or published snapshot;
+- the primary Ukrainian publication gate remains in force.
+
+The family slug follows the same immutability and route-building rules as existing generated page slugs.
+Creating, opening, repairing, and diagnosing a localized intent variant must reuse the normal page
+workbench/bootstrap behavior rather than a separate "intent translation" workflow.
+
+## Initial Page Structure
+
+Intent pages use ordinary CMS sections, validation, preview, snapshots, rollback, and repair.
+
+The initial structure is:
+
+1. SEO;
+2. intent intro;
+3. global achievements;
+4. intent introductory text;
+5. FAQ content with related intent/source navigation;
+6. the existing lead block/form composition;
+7. `regional_links` regional alternatives on the national variant;
+8. `local_offices` physical offices on regional variants.
+
+The implementation should reuse established section contracts where their semantics are already correct.
+It must not duplicate lead-form or achievement schemas only because the page type is new.
+
+Page-owned editable content is independent for every intent page:
+
+- the national intent and every regional intent are separate drafts;
+- changing the national intent does not rewrite regional drafts or snapshots;
+- changing one regional intent does not rewrite another region;
+- creation may initialize titles and empty/minimal section drafts from deterministic templates, but this
+  is one-time initialization rather than live content inheritance.
+
+Standard shared/typical sections keep their existing CMS source policies. For example, global achievements,
+lead-form content, and other genuinely shared sections continue to use the same inheritance/override
+behavior as they do on current generated page types. This shared-section behavior does not turn
+page-owned intent copy into inherited content.
+
+The following future sections should be possible without changing the family model:
+
+- related services;
+- lawyers;
+- cases;
+- reviews.
+
+Their inclusion in the first implementation is not yet required.
+
+## System Relationships And Visible Links
+
+The source/intent relation is domain data. Editable FAQ content is not its source of truth.
+
+The CMS exposes a runtime/read-only navigation model adjacent to the FAQ content.
+
+On a source page:
+
+```json
+{
+  "kind": "intent_navigation",
+  "direction": "to_intents",
+  "items": [
+    {
+      "familyId": "intent-family-id",
+      "pageId": "matching-published-intent-page-id",
+      "title": "Адвокат по аліментах у Києві",
+      "href": "/kyiv/services/family/alimony/advokat-po-alimentam"
+    }
+  ]
+}
+```
+
+On an intent page:
+
+```json
+{
+  "kind": "intent_navigation",
+  "direction": "to_source",
+  "source": {
+    "pageId": "matching-published-source-page-id",
+    "title": "Аліменти",
+    "href": "/kyiv/services/family/alimony"
+  }
+}
+```
+
+Public link resolution is always locale- and region-exact:
+
+- national source -> national intent in the same locale;
+- regional source -> regional intent in the same locale and region;
+- regional intent -> regional source in the same locale and region.
+
+Only published targets enter a public snapshot. Draft targets remain visible in CMS diagnostics but do not
+produce broken public links.
+
+If one source variant has several published intent pages, all of them must remain available through its
+system navigation. Editorial control is limited to presentation:
+
+- `sortOrder` controls their order;
+- `featured` marks one or more links for more prominent presentation;
+- the localized intent H1 is the default anchor label;
+- an optional localized `navigationTitle` may provide a shorter label;
+- neither `featured` nor ordering may remove the last crawlable link to a published intent.
+
+The public frontend may render this navigation in or immediately after the FAQ visual block. Disabling the
+editable FAQ section must not disable the system relationship navigation; otherwise important pages can
+become orphaned.
+
+Contextual typed links inside individual FAQ answers are not part of V1. The first implementation contains
+only the mandatory runtime navigation block.
+
+A future version may add structured references such as:
+
+```json
+{
+  "question": "Коли потрібен адвокат?",
+  "answer": "...",
+  "links": [
+    {
+      "targetKind": "intent_family",
+      "targetId": "intent-family-id",
+      "label": "Адвокат по аліментах"
+    }
+  ]
+}
+```
+
+If introduced later, typed references will be resolved by the backend to the published target for the
+current locale and region. Raw editor-managed URLs must not become the system relationship mechanism.
+
+## Publication And Snapshot Dependencies
+
+The existing snapshot-first rule applies:
+
+- preview is assembled from the resolved preview payload;
+- publication stores all resolved navigation and structured data in an immutable snapshot;
+- published snapshots do not mutate when a related page is later published or unpublished.
+
+Publication prerequisites:
+
+- the base Ukrainian non-regional source must have a current published snapshot;
+- an intent variant requires its exact matching source variant to be published;
+- non-primary intent variants remain subject to the normal primary Ukrainian publication gate;
+- a regional intent requires the national intent of the same locale to have a current published snapshot;
+- missing or ambiguous variant binding blocks preview/publication with an explicit diagnostic.
+
+The family publication order is therefore:
+
+```text
+UK national intent -> UK regional intents
+RU national intent -> RU regional intents
+EN national intent -> EN regional intents
+```
+
+The base Ukrainian national intent remains the primary family publication prerequisite across locales.
+
+Publishing or unpublishing an intent changes the set of reverse links expected on its source page. The
+backend must mark the matching source variant stale with a diagnostic such as:
+
+```text
+INTENT_LINKS_CHANGED
+```
+
+The source page remains published with its previous immutable snapshot and is republished explicitly to
+update its reverse links. Publishing the intent must not silently republish or rewrite the source.
+
+Publishing or unpublishing a regional intent also changes the regional-alternatives list expected in the
+matching national intent page for that locale. The backend therefore marks that national intent page stale
+as well. It is republished separately.
+
+Consequently, a regional intent publication may produce two explicit stale dependencies:
+
+```text
+matching regional source variant -> INTENT_LINKS_CHANGED
+matching national intent variant -> INTENT_REGIONAL_LINKS_CHANGED
+```
+
+`stale` does not mean unpublished. It means that the currently served snapshot remains valid but does not
+yet contain the newly expected runtime links.
+
+Unpublishing a national intent while published regional or localized dependants still require it must not
+silently break them. The backend must either block the isolated operation or return an explicit impact plan
+that includes the dependant unpublish operations.
+
+## New Regions And Changed Applicability
+
+Intent regional variants participate in the normal service-hierarchy region lifecycle.
+
+Reconciliation is triggered when:
+
+- a region is created;
+- a region becomes visible on the site;
+- the corresponding source hierarchy becomes applicable in the region;
+- a previously disabled or archived applicable region is restored.
+
+A regional intent draft is created only when a matching regional source variant exists and the source
+line is applicable to that region. The source may still be unpublished: this does not prevent intent
+authoring preparation, but it continues to block intent publication.
+
+Intent-family creation and reconciliation must not bootstrap a missing regional source page as a side
+effect. When the source page is missing:
+
+- the expected intent row remains visible as blocked;
+- diagnostics identify the missing exact source variant;
+- no orphan intent page is created;
+- after the source page is created through the normal service-hierarchy workflow, reconciliation creates
+  the missing intent draft.
+
+Reconciliation must:
+
+- be idempotent;
+- create missing drafts;
+- repair incomplete bindings or authoring aggregates through the normal repair workflow;
+- never overwrite existing editor content;
+- never publish automatically;
+- report blocked variants instead of silently omitting them.
+
+If a region or source line later becomes inapplicable, published intent pages are not silently deleted.
+They receive an explicit diagnostic and an unpublish/archive plan.
+
+## CMS Navigation And Workbench
+
+Intent pages must not be mixed with ordinary practice/service/problem children. They are alternative landing
+pages, not another hierarchy level.
+
+Each eligible source node exposes a lazy virtual group:
+
+```text
+Аліменти
+├── Інтент-сторінки (2)
+│   ├── Адвокат по аліментах
+│   └── Консультація по аліментах
+├── ordinary hierarchy child
+└── ordinary hierarchy child
+```
+
+Selecting an intent family opens one ordinary workbench matrix:
+
+- locale tabs: UK, RU, EN;
+- rows: Ukraine and applicable regions;
+- columns: the intent page sections;
+- each row uses the concrete source-variant binding for its locale and region.
+
+Entering the family from a regional source preselects that regional row. Entering from a translated source
+preselects the matching locale. These are different views of the same family, not duplicate families.
+
+In addition to contextual navigation, CMS needs a global `Intent pages` audit view with filters for:
+
+- source page type;
+- source hierarchy;
+- family;
+- locale;
+- region;
+- draft/published/stale/blocked state;
+- missing regional variants;
+- reconciliation and repair failures.
+
+This global view is especially important after a new region creates drafts in many families.
+
+## Archive Lifecycle
+
+Archive is a reversible administrative state, not physical deletion.
+
+An archived intent family:
+
+- is hidden from the normal active navigation;
+- remains available through an `Archived` filter;
+- preserves page ids, routes, versions, snapshots, audit history, and source bindings;
+- cannot create, repair, or publish variants until restored;
+- keeps its slug/routes reserved.
+
+Archiving must use an explicit impact plan. If the family still has published variants, the plan includes
+their unpublication and the resulting stale source/national snapshots. Nothing is unpublished silently.
+
+The first version does not physically delete intent families.
+
+Unpublishing or archiving a source page must discover its published intent dependants. The isolated source
+operation is blocked until an explicit plan accounts for them. Making a region inapplicable follows the
+same principle: variants receive diagnostics and an explicit unpublish/archive plan rather than automatic
+deletion.
+
+## Public Navigation And Indexing Boundaries
+
+Intent pages are not automatically inserted into the primary public service hierarchy menu.
+
+When published, they must:
+
+- have crawlable links to and from the matching source variant;
+- enter the appropriate sitemap;
+- have their own canonical URL;
+- use ordinary locale-alternate rules;
+- have breadcrumbs that preserve the complete matching source hierarchy and append the intent as the
+  final leaf;
+- remain excluded from public output while they are drafts.
+
+Illustrative national breadcrumb:
+
+```text
+Home -> Services -> Family law -> Alimony -> Alimony lawyer
+```
+
+Illustrative regional breadcrumb:
+
+```text
+Home -> Kyiv -> Services -> Family law -> Alimony -> Alimony lawyer in Kyiv
+```
+
+V1 public discovery is limited to:
+
+- automatic source-to-intent and intent-to-source links;
+- national-intent-to-regional-intent links;
+- breadcrumbs;
+- sitemap entries;
+- ordinary locale alternatives.
+
+Intent pages are not added to the primary public menu and V1 does not introduce a separate public intent
+catalog or index page. The global intent-family list is an administrative CMS audit view only.
+
+The feature must not equate automatic draft creation with search readiness. Regional variants are published
+independently only after their content is useful for that intent and region.
+
+## JSON-LD Intent Entity Principle
+
+The initial accepted principle is that a search phrase does not create a new business entity.
+
+- an intent page does not create a new `Service @id` merely because it uses a different query or title;
+- the national intent `WebPage` describes the same page-backed source entity from a different search angle;
+- the relationship uses the final source entity type and stable `@id` selected by the general JSON-LD
+  architecture;
+- where the source entity is a `Service` and the regional page contains a real regional proposition, the
+  regional intent may use an `Offer` whose `itemOffered` points to the source `Service` and whose
+  seller/provider points to the regional `LegalService`;
+- an `Offer` must not be emitted merely because a regional URL exists; the visible page payload must support
+  the asserted regional proposition.
+
+This principle is accepted provisionally. Exact graph templates still depend on the unresolved general
+type mapping for practice collections, practices, services, and problems.
+
+## Validation Scope For V1
+
+Intent pages use the same section, page, locale, preview, and publication validation model as other
+generated page types.
+
+V1 does not add an intent-specific word-count, similarity, regional-uniqueness, or manual SEO-review gate.
+Independent drafts and independent publication remain the editorial control.
+
+Domain invariants are still mandatory validation, not optional SEO heuristics. Publication remains blocked
+when, for example:
+
+- the exact source binding is missing or ambiguous;
+- the matching source variant is not published;
+- the primary Ukrainian publication prerequisite is not met;
+- the route conflicts with another page;
+- ordinary required sections are invalid.
+
+More advanced intent-content quality diagnostics may be added later without changing the family model.
+
+## Required Diagnostics
+
+The backend must expose stable machine-readable diagnostics for at least:
+
+```text
+INTENT_SOURCE_NOT_ELIGIBLE
+INTENT_ON_INTENT_NOT_ALLOWED
+INTENT_FAMILY_ALREADY_EXISTS
+INTENT_ROUTE_CONFLICT
+INTENT_SOURCE_VARIANT_MISSING
+INTENT_SOURCE_VARIANT_NOT_PUBLISHED
+INTENT_VARIANT_BINDING_MISSING
+INTENT_VARIANT_BINDING_AMBIGUOUS
+INTENT_PRIMARY_UA_NOT_PUBLISHED
+INTENT_NATIONAL_VARIANT_NOT_PUBLISHED
+INTENT_LINKS_CHANGED
+INTENT_REGION_NOT_APPLICABLE
+INTENT_RECONCILIATION_REQUIRED
+```
+
+Clients must not infer these states from missing URLs, empty arrays, or generic HTTP errors.
+
+## Explicit Non-Goals For The First Version
+
+- creating intent pages from other intent pages;
+- automatic publication;
+- automatic rewriting of published snapshots;
+- manual selection of arbitrary source variants;
+- silent national or cross-locale link fallback;
+- slug editing, redirect management, and public identity re-keying;
+- a separate intent-only page editor or publication engine;
+- automatically placing every intent page in the primary public navigation tree;
+- editor-managed source/intent URLs or typed per-FAQ-answer links in V1.
+
+## Runtime Slot Keys
+
+Intent pages use two semantically separate runtime/read-only slots:
+
+### `regional_links`
+
+- page type: `intent_page`;
+- scope: national variants only;
+- meaning: published regional variants of the same intent family in the current locale;
+- source: backend-resolved family variant bindings and current published snapshots;
+- empty public result: hide the section;
+- CMS behavior: keep expected/missing/blocked variants visible through diagnostics.
+
+### `local_offices`
+
+- page type: `intent_page`;
+- scope: regional variants only;
+- meaning: real physical offices applicable to the current region;
+- source: the same office/reference-data resolver contract used by other regional hierarchy pages;
+- empty public result: hide the section, subject to the ordinary page diagnostics contract;
+- not editable in the page section editor.
+
+The legacy `regional_offices` key on existing page types is not renamed as part of this task. New
+`intent_page` behavior must not use that misleading key.

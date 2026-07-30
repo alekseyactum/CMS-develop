@@ -183,8 +183,8 @@ The current discussion has identified, but has not yet made normative, the follo
 Later decisions must cover non-page-backed entity identifiers, per-page node sets, reviews and ratings,
 FAQ/cases/breadcrumbs, validation severity, and rollout.
 
-Search-intent landing pages are deliberately not specified in this document yet. They require a separate
-requirements pass covering intent clustering, page identity, URL and navigation rules, entity ownership,
-regional/provider relationships, content uniqueness, and protection against duplicate or doorway-like
-page generation. No intent-page behavior should be inferred from the decisions above until that separate
-requirements work is accepted.
+Search-intent landing pages are specified separately in
+`docs/intent-page-family-requirements-2026-07-30.md`. That document now defines the accepted family,
+variant-binding, navigation, workbench, lifecycle, and entity-identity principles. Exact intent graph
+templates still depend on the unresolved general organization/provider and service-type decisions in this
+document and must not be implemented by inference.
