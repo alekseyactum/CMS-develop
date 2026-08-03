@@ -464,6 +464,12 @@ that pass the new contract. It creates new immutable snapshots, preserves visibl
 `contentModifiedAt`, records a system actor/reason, and never publishes pages that fail diagnostics. Failed
 pages remain on their previous snapshot and enter a repair queue.
 
+The dry-run endpoint accepts explicitly requested supported page types in inspection mode even while those
+types are absent from the runtime rollout allowlist. Inspection mode must not activate preview, publish, or
+public snapshot generation. The mutating backfill endpoint remains restricted to page types already enabled
+in the runtime allowlist. This preserves the required order: inventory first, activation second, controlled
+republish third.
+
 Requiring a human to open and publish every existing page was rejected as the default rollout mechanism.
 Human repair and publication remain required for records that fail the dry run or blocking validation.
 
