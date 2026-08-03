@@ -16,6 +16,23 @@ readiness. Search-intent and editorial details also require:
 
 No public frontend or admin frontend may independently reconstruct graph semantics.
 
+## Implementation State
+
+As of 2026-08-03, the first `cms-back` implementation is prepared but deliberately not activated:
+
+- graph builders, snapshot persistence, blocking diagnostics, dependency tracking, repair inventory, and
+  controlled backfill endpoints are implemented on the backend feature branch;
+- database migrations are authored but have not been executed against shared environments;
+- `CMS_JSON_LD_ENABLED_PAGE_TYPES` remains empty, so no page type generates or blocks publication on the
+  new contract yet;
+- no backfill, repair republish, Cloud Run deployment, or GCP configuration change has been performed;
+- `site-front` safe script serialization and optional `cms-front` read-only diagnostics remain separate
+  follow-up work and are not implemented by the backend change.
+
+Activation therefore still requires migration review/execution, a dry-run inventory, explicit page-type
+allowlisting in the accepted dependency order, frontend serialization, and release QA. Prepared code must
+not be interpreted as an active production contract.
+
 ## Public And Preview Payload Contract
 
 The resolved SEO payload uses one exact property:
@@ -209,7 +226,9 @@ architecture document.
 An offer always has a stable page-owned or source-row-based identifier. Price-row offers use the stable
 price item id, never array position or price text. Numeric values are JSON numbers normalized to the source
 currency precision; display prefixes such as `from` are represented through the accepted
-`PriceSpecification` mode rather than embedded into numeric values.
+`PriceSpecification` mode rather than embedded into numeric values. The accepted V1 modes are `exact`,
+`from`, `up_to`, `range`, and `negotiable`; `up_to` emits `maxPrice` and preserves existing upper-bound
+price semantics.
 
 ### Reviews and aggregate ratings
 

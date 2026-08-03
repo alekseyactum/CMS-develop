@@ -240,12 +240,15 @@ Provider and geography follow the page variant:
 - Supported V1 modes are:
   - `exact`: emit `PriceSpecification.price`;
   - `from`: emit `PriceSpecification.minPrice`;
+  - `up_to`: emit `PriceSpecification.maxPrice`;
   - `range`: emit both `PriceSpecification.minPrice` and `PriceSpecification.maxPrice`;
   - `negotiable`: do not emit a numeric price; preserve the visible localized explanation through the
     offer description.
-- `priceCurrency` is required for `exact`, `from`, and `range` and uses an ISO 4217 currency code.
+- `priceCurrency` is required for `exact`, `from`, `up_to`, and `range` and uses an ISO 4217 currency code.
 - `exact` requires one numeric price.
 - `from` requires one numeric minimum.
+- `up_to` requires one numeric maximum. Existing `up_to` rows remain valid and must not be coerced to
+  `exact`, `from`, or free text.
 - `range` requires numeric minimum and maximum values, and the maximum must not be lower than the
   minimum.
 - `negotiable` must not publish a fabricated zero, minimum, maximum, or currency.
