@@ -18,19 +18,25 @@ No public frontend or admin frontend may independently reconstruct graph semanti
 
 ## Implementation State
 
-As of 2026-08-03, the first `cms-back` implementation is prepared but deliberately not activated:
+As of 2026-08-03, the first `cms-back` implementation is deployed to `develop` but deliberately not
+activated:
 
-- graph builders, snapshot persistence, blocking diagnostics, dependency tracking, repair inventory, and
-  controlled backfill endpoints are implemented on the backend feature branch;
-- database migrations are authored but have not been executed against shared environments;
+- `cms-back-develop` runs commit `15a8a47` with graph builders, snapshot persistence, blocking diagnostics,
+  dependency tracking, repair inventory, and controlled backfill endpoints;
+- develop migration execution `cms-back-develop-migrate-fhpsn` applied migrations `202608030001` through
+  `202608030005` to `site_develop`; no JSON-LD migration has been run in `release`;
 - `CMS_JSON_LD_ENABLED_PAGE_TYPES` remains empty, so no page type generates or blocks publication on the
   new contract yet;
-- no backfill, repair republish, Cloud Run deployment, or GCP configuration change has been performed;
+- a non-mutating inspection dry run for `home_page` and `contacts_page` found no `home_page` records, one
+  blocked Ukrainian contacts snapshot that requires the primary Ukrainian home Organization graph, and one
+  Russian contacts page without a current snapshot;
+- no backfill or repair republish has been performed, and `release` remains unchanged;
 - `site-front` safe script serialization and optional `cms-front` read-only diagnostics remain separate
   follow-up work and are not implemented by the backend change.
 
-Activation therefore still requires migration review/execution, a dry-run inventory, explicit page-type
-allowlisting in the accepted dependency order, frontend serialization, and release QA. Prepared code must
+Activation therefore still requires creating and publishing the primary Ukrainian home page with its
+`organization_profile`, repeating the dry-run inventory, explicit page-type allowlisting in the accepted
+dependency order, controlled backfill, frontend serialization, and release QA. The develop deployment must
 not be interpreted as an active production contract.
 
 ## Public And Preview Payload Contract
