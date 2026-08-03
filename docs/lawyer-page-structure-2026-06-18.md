@@ -50,6 +50,7 @@ only a minimal `seo` + runtime `lawyer_profile` slice and must be expanded later
      - localized display title;
      - public path of the related `practice_page`, when available.
    - `educationItems[]` item fields:
+     - `educationItemId` required, CMS-generated, stable, locale-neutral, and read-only;
      - `institution` required;
      - `degree` optional;
      - `specialization` optional;
@@ -203,6 +204,7 @@ Recommended translation payload shape:
     "professionalSummary": "Фахівчиня з ...",
     "educationItems": [
       {
+        "educationItemId": "4bb28c7e-0000-4000-8000-000000000001",
         "institution": "КНУ ім. Тараса Шевченка",
         "degree": "магістр",
         "specialization": "міжнародне право",
@@ -216,6 +218,10 @@ Recommended translation payload shape:
 ```
 
 `educationItems` should stay editor-owned but structured. Do not hide it inside one long rich-text field.
+Every real education fact has one backend-generated `educationItemId` shared by all locale translations.
+The primary Ukrainian profile owns the shared item set and ordering. Other locales translate the fields of
+those items and cannot independently create, remove, or re-key education facts. Array position and
+localized text never define education-item identity.
 
 ## Target API/Storage Direction
 
@@ -266,6 +272,7 @@ After backend expansion, the runtime payload should move closer to this shape:
   ],
   "educationItems": [
     {
+      "educationItemId": "4bb28c7e-0000-4000-8000-000000000001",
       "institution": "КНУ ім. Тараса Шевченка",
       "degree": "магістр",
       "specialization": "міжнародне право",
@@ -298,6 +305,9 @@ For visible lawyers and generated `lawyer_page` rows:
 - missing `roleLabel` in any required locale is an error;
 - missing `professionalSummary` in any required locale is an error;
 - empty `educationItems` is allowed;
+- a missing, duplicated, unknown, or locale-mismatched `educationItemId` is an error;
+- every translated education item must use the shared item set and must have a non-empty localized
+  `institution` value;
 - empty `experienceText` is allowed;
 - empty `licenseNumber` is a warning for now;
 - overlong `publicName`, `roleLabel`, summary, experience, or education item text should produce warnings.

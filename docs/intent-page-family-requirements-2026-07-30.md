@@ -5,9 +5,9 @@
 This document records the requirements accepted during the search-intent page discussion.
 
 The product requirements review is complete. This is a normative product and backend contract, not an
-implementation report. Implementation has not started, and the exact JSON-LD graph templates still depend
-on the broader unresolved organization/provider and service-type decisions recorded in
-`docs/json-ld-architecture-2026-07-27.md`.
+implementation-status report. The intent JSON-LD templates now use the accepted organization, regional
+provider, shared `Service`, and `Offer` rules in `docs/json-ld-architecture-2026-07-27.md` together with the
+payload and page-matrix contract in `docs/json-ld-implementation-requirements-2026-08-03.md`.
 
 Search-intent pages must use the existing CMS page lifecycle. They are not a second page engine and must not
 be implemented as an independent SEO landing-page subsystem.
@@ -547,14 +547,18 @@ The initial accepted principle is that a search phrase does not create a new bus
 - the national intent `WebPage` describes the same page-backed source entity from a different search angle;
 - the relationship uses the final source entity type and stable `@id` selected by the general JSON-LD
   architecture;
-- where the source entity is a `Service` and the regional page contains a real regional proposition, the
-  regional intent may use an `Offer` whose `itemOffered` points to the source `Service` and whose
-  seller/provider points to the regional `LegalService`;
-- an `Offer` must not be emitted merely because a regional URL exists; the visible page payload must support
-  the asserted regional proposition.
+- national and regional intent `WebPage.mainEntity` values reference that same source `Service` entity;
+- a regional intent describes geography and provider by the same rules as its matching ordinary regional
+  source variant: `Service.provider` references the regional `LegalService`, and `Service.areaServed`
+  identifies the region;
+- the existence of a regional intent page does not itself create an `Offer`;
+- intent-page `Offer` nodes follow the common price-to-service binding contract. They are emitted only from
+  a real visible offer such as a published price row, with `itemOffered` referencing the actual `Service`
+  and `seller` referencing the applicable global or regional provider;
+- a search phrase, page title, or regional URL must never be interpreted as an offer by itself.
 
-This principle is accepted provisionally. Exact graph templates still depend on the unresolved general
-type mapping for practice collections, practices, services, and problems.
+These rules are normative and use the general service, provider, and offer model defined in
+`docs/json-ld-architecture-2026-07-27.md`.
 
 ## Validation Scope For V1
 

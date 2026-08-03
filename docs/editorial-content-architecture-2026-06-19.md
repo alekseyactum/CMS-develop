@@ -149,10 +149,14 @@ Additionally, `case_page` should always include:
 - `excerpt` - required plain text
 - `coverMediaId` - optional, but missing value is a warning
 - `publishedAt` - auto-filled on first publish, then editable in CMS
+- `contentModifiedAt` - backend-owned read-only timestamp of the latest material change to an already
+  published public article; absent on first publication
 - `isFeatured` - optional, default `false`
 - `practiceRef` - optional
 - `serviceRef` - optional
 - `problemRef` - optional
+- `additionalServiceTreeRefs[]` - optional CMS-owned list of additional valid
+  practice/service/problem chains; no product-level item-count limit
 
 ### Relation chain rules
 
@@ -178,6 +182,9 @@ Rules:
   - `lawyer`
   - `cms_user`
 - optional `legalReviewerLawyerRef`
+- `cms_user` is an internal editorial attribution only. It must not become a public byline, public
+  `Person`, or JSON-LD author.
+- when no lawyer author is selected, the public author is the global Actum organization.
 
 #### media
 
@@ -185,6 +192,8 @@ Rules:
 - author may be:
   - `lawyer`
   - `cms_user`
+- `cms_user` follows the same internal-only rule; when no lawyer author is selected, the public author is
+  the global Actum organization.
 
 #### case
 
@@ -199,9 +208,19 @@ No extra required type-specific metadata fields for now.
 
 #### media
 
+- `representationMode` - required enum:
+  - `actum_article`
+  - `external_reference`
 - `sourceName` - required
-- `sourceUrl` - optional, missing value is a warning
+- `sourceUrl` - required for `external_reference`; optional with a warning for `actum_article`
 - `mediaPublishedAt` - optional
+
+`representationMode` is an explicit editorial choice and must not be inferred from content length,
+`sourceUrl`, or any other populated field.
+
+- `actum_article` means the page contains an Actum-authored local `Article` about an external media work.
+- `external_reference` means the Actum `WebPage` presents an external `CreativeWork` and does not create a
+  parallel local `Article` entity.
 
 #### case
 
@@ -299,6 +318,36 @@ Common warnings:
 - unusually long `title`
 - unusually long `excerpt`
 
+`publishedAt` is the editorial first-publication/byline date and maps to JSON-LD `datePublished`.
+`contentModifiedAt` maps to `dateModified` only after a previously published article has materially
+changed. It is returned in the public snapshot and must be visibly rendered whenever it is emitted in
+JSON-LD. Editors cannot set or override `contentModifiedAt`.
+
+The backend determines a material change by comparing a normalized user-visible editorial content digest
+against the current published snapshot. The digest includes visible publication metadata, title/excerpt,
+body, images, public author/reviewer attribution, primary and additional service-tree relations, and
+type-specific case/media data. It excludes generated JSON-LD, dependency-only enrichment, snapshot ids,
+publication bookkeeping, diagnostics, and system timestamps.
+
+- First publication leaves `contentModifiedAt` empty.
+- Publishing a materially changed draft sets it to the successful publication time.
+- A technical republish or stale-dependency refresh with an unchanged visible digest preserves it.
+- A rollback that changes the live visible digest sets it to the rollback publication time.
+- Editing the visible `publishedAt` value after first publication is itself a material change.
+
+Publication dates are locale-variant-owned. Each localized editorial page has its own `publishedAt` and
+`contentModifiedAt`; creating a translation does not copy either value. An editor may deliberately choose
+the same visible `publishedAt` where editorial policy requires it, but the backend must not synchronize
+dates between locales. Publishing, editing, or rolling back one locale never changes another locale's
+dates. Localized creative works relate through `translationOfWork`, not a shared timestamp. For media
+pages, external `mediaPublishedAt` remains the external work's date and never substitutes the local Actum
+publication date.
+
+Russian and English creative works reference the published primary Ukrainian creative work through
+`translationOfWork`. The Ukrainian graph does not duplicate the inverse `workTranslation` list; reciprocal
+page discovery remains covered by published `hreflang` alternates, and publishing or withdrawing a
+translation does not make the Ukrainian snapshot stale solely for JSON-LD.
+
 ### blog-specific
 
 Errors:
@@ -312,20 +361,37 @@ Warnings:
 - no legal reviewer
 - bad author or reviewer reference
 
+The no-author warning remains an editorial-quality warning about the absence of a named lawyer author. It
+does not leave the public publication without authorship: the public payload and JSON-LD use Actum as the
+corporate author. Internal CMS-user identifiers, names, email addresses, and roles must never be copied to
+the public payload.
+
+When `legalReviewerLawyerRef` is resolved, the public page must visibly identify that lawyer as the legal
+reviewer. JSON-LD maps the relationship through `WebPage.reviewedBy` to the lawyer's stable public `Person
+@id`. Legal review does not make the lawyer an `Article.author`, `Article.contributor`, or internal
+`CreativeWork.editor`.
+
 ### media-specific
 
 Errors:
 
+- missing or unsupported `representationMode`
 - empty `sourceName`
+- empty or invalid absolute `sourceUrl` when `representationMode="external_reference"`
 - author type selected but matching author reference missing
 - both lawyer and CMS-user author refs filled at the same time
 
 Warnings:
 
 - no author
-- empty `sourceUrl`
+- empty `sourceUrl` when `representationMode="actum_article"`
 - empty `mediaPublishedAt`
 - bad author reference
+
+Existing published media snapshots are not modified or withdrawn when this field is introduced. Existing
+drafts may keep an unset mode until edited, but preview diagnostics must request classification and the next
+publication is blocked until the editor explicitly selects a mode. Migration must not guess the mode from
+the presence of a source URL or body content.
 
 ### case-specific
 
@@ -343,11 +409,11 @@ Warnings:
 
 ## Additional Service-Tree Tags
 
-Cases and reviews can belong to more than one service-tree line.
+Blog publications, media publications, cases, and reviews can belong to more than one service-tree line.
 
-The primary practice/service/problem line remains the main relation. For cases it is stored in
-`publication_meta`; for reviews it comes from the normal review reference-data fields. This primary line
-can be filled by ERP/import flows.
+The primary practice/service/problem line remains the main relation. For every editorial publication it is
+stored in `publication_meta`; for reviews it comes from the normal review reference-data fields. The
+primary line may be filled by ERP/import flows where applicable.
 
 Additional lines are CMS-owned editorial tags:
 
@@ -371,6 +437,12 @@ Rules:
 - duplicates are invalid;
 - a line that duplicates the primary relation is a warning, because it is redundant;
 - these tags are not overwritten by ERP upsert/resync.
+- there is no product-level limit on the number of additional lines; ordinary request-size and abuse
+  protection still apply;
+- the backend owns hierarchy validation and duplicate detection; clients must not recreate those rules;
+- the blog, media, and case editors use the same add/remove/reorder control for these lines;
+- an editor selects each line hierarchically, so a service is selectable only under its practice and a
+  problem only under its service.
 
 Runtime lists should match both primary and additional lines:
 
@@ -378,6 +450,11 @@ Runtime lists should match both primary and additional lines:
 - service-hierarchy review lists match reviews by primary relation or by an additional tag;
 - primary matches sort before additional matches;
 - for problem review lists, an exact additional problem match sorts before the older service-level fallback.
+
+Structured-data resolution uses the most specific selected entity in each valid line. The primary endpoint
+and every additional endpoint are deduplicated by stable `Service @id` and become publication `about`
+values. For reviews, the primary endpoint remains the sole `itemReviewed`; primary and additional endpoints
+may also appear in `Review.about` as topical service relations.
 
 ## Collection Behavior
 

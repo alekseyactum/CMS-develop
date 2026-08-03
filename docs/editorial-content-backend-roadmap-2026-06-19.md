@@ -94,12 +94,14 @@ Recommended fields:
 - `excerpt`
 - `cover_media_id`
 - `published_at`
+- `content_modified_at` nullable, backend-owned
 - `is_featured`
 - `practice_id`
 - `service_id`
 - `problem_id`
 - `source_name` nullable, for media
 - `source_url` nullable, for media
+- `representation_mode` nullable only for legacy/unclassified drafts; required for new publication
 - `media_published_at` nullable, for media
 - `erp_case_external_id` nullable, for case
 - `primary_lawyer_author_id` nullable
@@ -114,6 +116,29 @@ Important notes:
 - the row should represent the currently published snapshot only;
 - when a page is republished or rolled back, this row is rebuilt from the resulting published snapshot;
 - draft-only state should not require a second projection in the first slice.
+- `cms_user_author_id` remains internal workflow attribution and must not become a public person/byline;
+  public author fallback is the global Actum organization.
+- `content_modified_at` advances only when the normalized visible-content digest changes; technical
+  projection/snapshot rebuilds preserve it.
+
+### Table: cms_editorial_publication_service_tree_refs
+
+Use one normalized row for every primary and additional service-tree line needed by collection and related
+content queries.
+
+Recommended fields:
+
+- `relation_id`
+- `publication_id`
+- `relation_kind` (`primary`, `additional`)
+- `sort_order` (primary is always first; additional order follows saved order)
+- `practice_id`
+- `service_id` nullable
+- `problem_id` nullable
+
+The projection has no product-level item-count limit. Rebuild validates hierarchy membership, rejects
+duplicate additional lines, and preserves deterministic order. Authoring remains owned by the published
+`publication_meta` snapshot; this table is a rebuildable read projection, not a second source of truth.
 
 ### Table: cms_editorial_publication_contributors
 

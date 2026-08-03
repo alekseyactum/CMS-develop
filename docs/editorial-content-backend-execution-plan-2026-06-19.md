@@ -122,8 +122,11 @@ Implement section schemas for:
 - common required fields
 - cover media validation
 - relation-chain validation for practice/service/problem
+- shared validation for unlimited `additionalServiceTreeRefs[]` on blog, media, and case pages
+- backend-generated identity/order handling for additional lines and duplicate detection
 - type-specific contributor rules
-- type-specific media/source rules for media
+- required explicit media `representationMode` and its conditional source URL rules
+- backend-owned `contentModifiedAt` based on the normalized visible-content digest
 - type-specific author/co-author rules for case
 
 #### case_summary
@@ -224,7 +227,8 @@ Do not make frontend load giant reference datasets if a smaller selector contrac
 ### Stop if
 
 - selector endpoints start becoming full duplicate admin list screens;
-- CMS-user authoring model is still unresolved.
+- internal CMS account data starts leaking into public author/byline payloads. CMS-user attribution is
+  workflow-only; public fallback authorship is the Actum organization.
 
 ## Slice 5 - Published Projection
 
@@ -411,12 +415,16 @@ Needed for:
 
 Minimum scenarios:
 
-1. publish a `blog_page` with CMS-user author
-2. publish a `media_page` with `sourceName` and empty `sourceUrl`
-3. publish a `case_page` with only `case_summary`
-4. publish a richer `case_page` with `content_builder`
-5. rollback one editorial page and verify projection rollback
-6. preview a collection page and confirm only published items are listed
+1. publish a `blog_page` with internal CMS-user attribution and verify public corporate Actum authorship
+2. publish `media_page` in `actum_article` mode with empty `sourceUrl` and verify warning-only behavior
+3. reject `media_page` in `external_reference` mode with empty `sourceUrl`
+4. publish both media modes and verify distinct graph ownership
+5. publish blog/media/case pages with several valid additional service-tree lines
+6. publish a `case_page` with only `case_summary`
+7. publish a richer `case_page` with `content_builder`
+8. technically republish unchanged content and verify `contentModifiedAt` is preserved
+9. rollback changed content and verify projection plus `contentModifiedAt` behavior
+10. preview a collection page and confirm only published items are listed
 
 ## Suggested Merge Strategy
 
