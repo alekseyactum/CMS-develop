@@ -1563,6 +1563,7 @@ Examples:
   "relationship": {
     "role": "self_owned",
     "inheritanceStrategy": "none",
+    "effectiveStrategies": [],
     "isInherited": false,
     "sourceSectionId": null,
     "localSectionId": "section-seo"
@@ -1578,7 +1579,8 @@ Here `composition.strategy = "override"` is an internal authoring strategy, not 
   "slotKey": "price",
   "relationship": {
     "role": "child",
-    "inheritanceStrategy": "append",
+    "inheritanceStrategy": "inherit",
+    "effectiveStrategies": ["inherit", "override", "append"],
     "isInherited": true,
     "sourceSectionId": "section-price-parent",
     "localSectionId": "section-price-local"
@@ -1587,6 +1589,18 @@ Here `composition.strategy = "override"` is an internal authoring strategy, not 
 ```
 
 This is a real child section. Show inheritance only when `relationship.isInherited = true`.
+`inheritanceStrategy` remains the backward-compatible whole-section/default strategy.
+`effectiveStrategies` is the backend-computed summary of strategies actually used by the section fields.
+The backend applies every explicit `composition.fields[]` strategy and falls back to
+`composition.strategy` only for fields without an explicit strategy. The array is de-duplicated and always
+ordered as `inherit`, `override`, `append`. An unused default strategy is not included when every schema
+field has an explicit strategy. For sections without schema fields, the whole-section strategy is the one
+effective strategy. Non-child relationships expose an empty array.
+
+Use `effectiveStrategies`, not `composition` or `inheritanceStrategy`, to build compact child composition
+labels. The fixed mapping is `inherit -> I`, `override -> O`, `append -> A`, so the example above is
+`CH_IOA`. Possible subsets include `CH_I`, `CH_IO`, `CH_IA`, `CH_O`, `CH_OA`, and `CH_A`. Do not show the
+historical `CH_R` label for inheritance after adopting this field.
 
 `draftVersion` and `publishedVersion` summaries now include audit fields:
 

@@ -713,6 +713,14 @@ workflow and returns the bootstrap result plus a fresh workbench row. It exists 
 create a page directly from a not-created matrix row and immediately replace that row with backend-computed
 state, without calling the lower-level authoring endpoint and then manually refreshing the matrix.
 
+Implementation note, 2026-08-04: child workbench relationships also expose `effectiveStrategies`, a
+de-duplicated array in fixed `inherit`, `override`, `append` order. It summarizes the strategies actually
+used by schema fields after applying field-level composition over the whole-section default. A default
+strategy is omitted when every schema field explicitly uses another strategy. Sections without schema
+fields use their whole-section strategy; non-child relationships return an empty array. The legacy
+`inheritanceStrategy` remains available as the whole-section/default value for compatibility, but compact
+`CH_I` / `CH_IO` / `CH_IOA` UI labels must be derived from `effectiveStrategies` rather than from it.
+
 Implementation note, 2026-05-22: `cms-back` page workbench now exposes section editor wrappers:
 `GET /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor`,
 `PATCH /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/state`,
