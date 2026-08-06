@@ -3,6 +3,20 @@
 This document is the short source of truth for continuing the CMS work in a new Codex thread without
 loading the full previous chat history.
 
+## Current Deployment Checkpoint - 2026-08-06
+
+The complete `cms-back/develop` codebase, including the JSON-LD foundation, was promoted to `release`:
+
+- release merge commit: `d800793`;
+- Cloud Build `82646329-b0b9-4564-b750-00ea5f8fe9b8`: `SUCCESS`;
+- ready revision: `cms-back-release-00038-b2z`, serving `100%` of traffic;
+- release canonical origin: `https://actum.com.ua`;
+- JSON-LD rollout allowlist: `home_page`;
+- migration execution `cms-back-release-migrate-5l72b`: `SUCCESS`;
+- migrations `202608030001` through `202608030005` are applied to `site_release`;
+- authenticated health/readiness smoke passed with database status `ok`;
+- release `home_page` dry-run returned no records, so no release backfill was run.
+
 ## Current Deployment Checkpoint - 2026-07-29
 
 This checkpoint supersedes the older develop-only branch rule below. The release contour now exists and

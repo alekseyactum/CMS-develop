@@ -360,6 +360,19 @@ Smoke:
 - authenticated `GET /api/ready`: `200`
 - database dependency status from readiness: `ok`
 
+Structured-data rollout update on `2026-08-06`:
+
+- `cms-back/release` commit: `d800793` (`Merge develop into release`)
+- Cloud Build: `82646329-b0b9-4564-b750-00ea5f8fe9b8`, `SUCCESS`
+- ready revision: `cms-back-release-00038-b2z`, serving `100%` of traffic
+- `PUBLIC_SITE_ORIGIN=https://actum.com.ua`
+- `CMS_JSON_LD_ENABLED_PAGE_TYPES=home_page`
+- migration execution `cms-back-release-migrate-5l72b` applied migrations `202608030001` through
+  `202608030005`
+- authenticated `/api/health` and `/api/ready` returned `200`; database status was `ok`
+- the scoped `home_page` dry-run returned `total=0`, so no release snapshot backfill was required
+- the new revision had no `ERROR` log entries during rollout verification
+
 At this backend runtime point, no release frontend service, Cloud Build trigger, load balancer, IAP policy,
 import, CMS user, or public access was created.
 

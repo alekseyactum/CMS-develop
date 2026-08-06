@@ -18,19 +18,18 @@ No public frontend or admin frontend may independently reconstruct graph semanti
 
 ## Implementation State
 
-As of 2026-08-03, the first `cms-back` implementation is deployed to `develop` but deliberately not
-activated:
+As of 2026-08-06, the first `cms-back` implementation is deployed to both `develop` and `release`:
 
-- `cms-back-develop` runs commit `15a8a47` with graph builders, snapshot persistence, blocking diagnostics,
-  dependency tracking, repair inventory, and controlled backfill endpoints;
-- develop migration execution `cms-back-develop-migrate-fhpsn` applied migrations `202608030001` through
-  `202608030005` to `site_develop`; no JSON-LD migration has been run in `release`;
-- `CMS_JSON_LD_ENABLED_PAGE_TYPES` remains empty, so no page type generates or blocks publication on the
-  new contract yet;
-- a non-mutating inspection dry run for `home_page` and `contacts_page` found no `home_page` records, one
-  blocked Ukrainian contacts snapshot that requires the primary Ukrainian home Organization graph, and one
-  Russian contacts page without a current snapshot;
-- no backfill or repair republish has been performed, and `release` remains unchanged;
+- `cms-back-develop` and `cms-back-release` contain graph builders, snapshot persistence, blocking
+  diagnostics, dependency tracking, repair inventory, and controlled backfill endpoints;
+- migration `202608030001` through `202608030005` is applied to both `site_develop` and `site_release`;
+  release execution `cms-back-release-migrate-5l72b` completed successfully;
+- both deployments set `CMS_JSON_LD_ENABLED_PAGE_TYPES=home_page`; the release canonical origin is
+  `https://actum.com.ua`;
+- develop has a rebuilt current home snapshot whose public graph contains `WebPage`, `Organization`, and
+  `WebSite`;
+- the release `home_page` dry-run returned `total=0` because no release home page or current snapshot
+  exists yet, so no release backfill was run;
 - `site-front` safe script serialization and optional `cms-front` read-only diagnostics remain separate
   follow-up work and are not implemented by the backend change.
 
