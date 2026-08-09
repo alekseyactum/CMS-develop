@@ -4,6 +4,9 @@
 
 This document records the requirements accepted during the search-intent page discussion.
 
+The CMS navigation and source-scoped workbench contract was revised on 2026-08-09. The revised contract
+supersedes the earlier lazy virtual-group and one-family-at-a-time workbench design.
+
 The product requirements review is complete. This is a normative product and backend contract, not an
 implementation-status report. The intent JSON-LD templates now use the accepted organization, regional
 provider, shared `Service`, and `Offer` rules in `docs/json-ld-architecture-2026-07-27.md` together with the
@@ -443,26 +446,180 @@ They receive an explicit diagnostic and an unpublish/archive plan.
 Intent pages must not be mixed with ordinary practice/service/problem children. They are alternative landing
 pages, not another hierarchy level.
 
-Each eligible source node exposes a lazy virtual group:
+Intent pages do not create separate nodes or virtual intent groups in the hierarchical CMS menu. They are
+displayed inside the ordinary source-scoped matrix of the practice collection, practice, service, or problem
+whose search alternatives they represent.
 
-```text
-Аліменти
-├── Інтент-сторінки (2)
-│   ├── Адвокат по аліментах
-│   └── Консультація по аліментах
-├── ordinary hierarchy child
-└── ordinary hierarchy child
+The ordinary source rows remain Ukraine and the applicable regions. Each source row can be expanded to show
+the concrete intent variants for the same locale and geographic scope. In the collapsed state the source row
+shows the backend-calculated aggregate state of those variants. In the expanded state each existing intent
+variant is rendered as an ordinary page row with its own section cells, actions, diagnostics, and endpoints.
+
+`child` is only a presentation and diagnostic-roll-up concept here. An intent page is not:
+
+- a child in the service hierarchy;
+- a content-inheritance child of the source page;
+- part of the source page's own publish readiness;
+- a reason to block source publication merely because the intent draft itself is invalid.
+
+### Source-scoped read model
+
+One source-scoped matrix request must return the complete ordinary matrix and its complete intent workbench
+read model. The frontend must not fetch and merge one response per family. The initial contract deliberately
+returns full ordinary `PageWorkbenchRow` values for all existing intent variants; a summary-only or lazy-row
+mode is not part of the accepted first implementation. Backend implementation must nevertheless resolve the
+rows in batches and must not implement the contract as an unbounded sequence of heavyweight per-row matrix
+queries.
+
+Illustrative response shape:
+
+```json
+{
+  "rows": ["ordinary source rows"],
+  "intentWorkbench": {
+    "columns": ["intent page columns"],
+    "summary": {
+      "families": 2,
+      "expectedVariants": 10,
+      "existingVariants": 8,
+      "publishedVariants": 3,
+      "staleVariants": 1,
+      "blockedVariants": 2,
+      "errors": 4,
+      "warnings": 5
+    },
+    "localeDiagnostics": [],
+    "regions": [
+      {
+        "scope": { "kind": "national" },
+        "title": "Україна",
+        "summary": {
+          "families": 2,
+          "expectedVariants": 2,
+          "existingVariants": 2,
+          "publishedVariants": 2,
+          "errors": 1,
+          "warnings": 2
+        },
+        "items": []
+      },
+      {
+        "scope": { "kind": "region", "regionId": "kyiv-id" },
+        "regionSlug": "kyiv",
+        "title": "Київ",
+        "summary": {
+          "families": 2,
+          "expectedVariants": 2,
+          "existingVariants": 1,
+          "publishedVariants": 1,
+          "errors": 1,
+          "warnings": 0
+        },
+        "items": []
+      }
+    ]
+  }
+}
 ```
 
-Selecting an intent family opens one ordinary workbench matrix:
+National scope must be represented explicitly as `{ "kind": "national" }`. It must not be inferred only
+from a nullable region id. Regional scope must be represented as `{ "kind": "region", "regionId": "..." }`.
+Titles and slugs are presentation and routing data, not relationship identity.
 
-- locale tabs: UK, RU, EN;
-- rows: Ukraine and applicable regions;
-- columns: the intent page sections;
-- each row uses the concrete source-variant binding for its locale and region.
+Every `items[]` entry must include at least:
 
-Entering the family from a regional source preselects that regional row. Entering from a translated source
-preselects the matching locale. These are different views of the same family, not duplicate families.
+- a stable item key;
+- `familyId` and the family display/presentation data;
+- the exact source-variant binding;
+- the provisioning operation and expected/missing/repair state;
+- a full ordinary `PageWorkbenchRow`, or `null` when the expected variant does not yet exist;
+- page diagnostics and the non-blocking intent roll-up;
+- standard backend-provided page and section endpoints;
+- family-level endpoints for reconcile and presentation.
+
+All intent variants continue to reuse the ordinary page workbench lifecycle: editor, draft, validation,
+preview, publish, history, rollback, and locale switching. Family-level creation, region reconciliation,
+ordering, `featured`, localized short navigation titles, and future archive/restore remain family actions and
+must not be reimplemented as page actions. Each intent row therefore retains its `familyId` and an explicit
+action for opening or configuring that family.
+
+### Diagnostics and roll-up
+
+The backend owns all diagnostic aggregation. The frontend only renders the returned counters and must not
+sum family responses, infer missing variants, calculate publishability, build endpoint paths, or reconstruct
+family relationships from URLs.
+
+The diagnostic contract must distinguish:
+
+```json
+{
+  "diagnostics": {
+    "own": { "errors": 0, "warnings": 1 },
+    "linked": { "errors": 0, "warnings": 0 },
+    "intents": { "errors": 2, "warnings": 3 },
+    "rollup": { "errors": 2, "warnings": 4 }
+  }
+}
+```
+
+- `own` describes the concrete page itself and participates in that page's action readiness;
+- `linked` describes ordinary linked runtime/page data under the existing page-workbench rules;
+- `intents` describes related intent variants and is an attention/read-model scope, not a source publish gate;
+- `rollup` is the backend-calculated display total for the source row and higher navigation indicators.
+
+An invalid intent page is counted in the matching Ukraine/region summary, family summary, locale indicator,
+source page `intents` indicator, hierarchical ancestor roll-ups, the Practices group, and the open matrix
+summary. The same leaf diagnostic must be counted exactly once in every aggregate. Implementations must use
+stable diagnostic identity or an equivalent canonical leaf-state aggregation strategy rather than adding
+already aggregated parent totals together.
+
+`INTENT_LINKS_CHANGED` is the explicit exception to non-own intent diagnostics. It describes the source page
+itself: the source page's current immutable snapshot contains an outdated set of intent links. It is therefore
+an `own` stale/attention reason on the source page, even though its metadata identifies the related family.
+It does not mean that the source page is unpublished and does not silently republish it.
+
+### Regional publication counter
+
+The compact counter shown for Ukraine or a region is:
+
+```text
+published existing intent pages / all existing intent pages
+```
+
+For example, `2/2` means that two concrete intent pages currently exist for that Ukraine/region row and both
+are published. Expected but not yet created variants are not included in this denominator. They remain visible
+separately through `expectedVariants`, `existingVariants`, `missing/blocked` state, and diagnostic indicators,
+so a successful publication ratio cannot hide incomplete provisioning.
+
+### Refresh after mutation
+
+Saving, publishing, rolling back, reconciling, or otherwise changing an intent variant can change the row,
+region summary, family summary, locale summary, source indicator, ancestor roll-ups, and menu indicators.
+After every such mutation the frontend must either reload the complete source-scoped read model or call a
+backend refresh endpoint that returns the changed row together with every affected aggregate. Refreshing only
+the visible intent row is insufficient.
+
+### Matrix publication scope
+
+The existing geographic or hierarchy scope and the intent inclusion scope are independent dimensions. Bulk
+publish requests and their mandatory backend plans must therefore include an explicit `contentScope`:
+
+```text
+source_only
+intents_only
+source_and_intents
+```
+
+`source_only` is the safe default. Collapsed intent rows must never be published implicitly by an ordinary
+matrix publication action. The backend publish plan must list every concrete page and its outcome before the
+operation is executed.
+
+### Menu indicators
+
+The hierarchical menu structure remains unchanged, but its indicator contract changes. Intent pages create no
+menu nodes; their diagnostic state is included in a separate intent roll-up of the matching source page and
+its ancestors. This roll-up must preserve the distinction between source-own, regional, hierarchy-child, and
+intent diagnostics and must not double-count a diagnostic that is already represented in a lower aggregate.
 
 In addition to contextual navigation, CMS needs a global `Intent pages` audit view with filters for:
 
