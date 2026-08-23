@@ -1,5 +1,11 @@
 # Editorial Content Backend Roadmap - 2026-06-19
 
+> Historical backend roadmap. Use
+> [`editorial-content-specification-2026-08-23.md`](editorial-content-specification-2026-08-23.md) for the
+> normative product contract and
+> [`editorial-content-implementation-plan-2026-08-23.md`](editorial-content-implementation-plan-2026-08-23.md)
+> for the current delivery sequence.
+
 This document turns the agreed editorial content architecture into a practical backend implementation path.
 
 Related architecture contract:

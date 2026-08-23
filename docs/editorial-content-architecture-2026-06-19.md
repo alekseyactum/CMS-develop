@@ -1,5 +1,9 @@
 # Editorial Content Architecture - 2026-06-19
 
+> Historical architecture baseline. The finalized normative product contract is
+> [`editorial-content-specification-2026-08-23.md`](editorial-content-specification-2026-08-23.md).
+> Where the documents conflict, the 2026-08-23 specification takes precedence.
+
 This document fixes the target backend/content architecture for the editorial publication domain:
 
 - blog articles;

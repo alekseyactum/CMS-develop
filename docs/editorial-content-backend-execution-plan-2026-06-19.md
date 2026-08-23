@@ -1,5 +1,10 @@
 # Editorial Content Backend Execution Plan - 2026-06-19
 
+> Historical execution plan. The current plan is
+> [`editorial-content-implementation-plan-2026-08-23.md`](editorial-content-implementation-plan-2026-08-23.md),
+> governed by
+> [`editorial-content-specification-2026-08-23.md`](editorial-content-specification-2026-08-23.md).
+
 This document turns the editorial content roadmap into concrete backend implementation slices for
 `cms-back`.
 
