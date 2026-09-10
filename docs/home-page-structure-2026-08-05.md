@@ -129,7 +129,7 @@ locale. A locale group without a published member in that locale produces a warn
 ### 6. `home_team_cta` + `home_team_cta_lawyers`
 
 - Composite group: `home_team_cta`.
-- Purpose: the large explanatory text plus the single lawyer card shown near the top of the design.
+- Purpose: the large explanatory text plus the qualified lawyer showcase shown near the top of the design.
 - Required, fixed, and cannot be disabled.
 
 `home_team_cta`:
@@ -145,9 +145,12 @@ locale. A locale group without a published member in that locale produces a warn
 `home_team_cta_lawyers`:
 
 - Type: runtime/read-model lawyer showcase.
-- Limit: 1 lawyer.
-- Auto mode: first eligible visible lawyer in ERP/CMS order.
-- Manual mode: the selected lawyer only.
+- Limit: 5 lawyers.
+- Auto mode: top eligible visible lawyers ranked by global qualification strength across all active resolved
+  lawyer qualifications with `score > 2`.
+- Auto ordering: `MAX(score)` descending, then count of qualifying `score > 2` qualifications descending,
+  then existing ERP/CMS `sort_order`, localized/source name, and stable ID.
+- Manual mode: selected lawyers only, up to 5, with the same public eligibility and qualification threshold.
 - Reuses the existing no-navigation team CTA card behavior unless the final frontend design explicitly
   introduces lawyer-profile navigation for this block.
 

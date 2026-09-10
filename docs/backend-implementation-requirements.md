@@ -937,6 +937,28 @@ The current `service_page` backend scaffold includes:
 - required composite `service_lawyers_block` + runtime `service_lawyers`;
 - composite `lead_questionnaire` + inherited `lead_form` + runtime `lead_capture`.
 
+Product-structure checkpoint, 2026-08-05: the agreed target for `home_page` is documented in
+[`home-page-structure-2026-08-05.md`](home-page-structure-2026-08-05.md). Treat that document as the
+canonical implementation checklist for the home-page schema, bootstrap, runtime resolvers, diagnostics,
+public payload, and frontend integration. Key decisions:
+
+- the home page has a fixed non-regional composition with separate localized records for `/`, `/ru`, and
+  `/en`;
+- all main sections are fixed and enabled, while the FAQ and complete lead-form composite can be disabled;
+- practices use the complete visible ERP/CMS practice tree in existing source order and have no manual
+  selection mode;
+- lawyer, case, and publication showcases support deterministic `auto` selection or ordered `manual`
+  canonical IDs, with no auto-fill in manual mode;
+- main lawyer, case, and publication showcases are limited to eight items; the top team CTA is limited to
+  five lawyers and ranks eligible lawyers by active resolved qualification strength with `score > 2`;
+- case and publication selections use editorial locale-group IDs and resolve only the published member for
+  the requested locale;
+- the home publications stream combines published `blog_page` and `media_page` records;
+- unavailable selected objects are omitted with admin warnings and do not independently block page
+  publication;
+- global achievements, price content, and lead-form content remain inherit-only, and header/footer remain
+  outside page authoring.
+
 Product-structure amendment, 2026-06-28: the latest agreed service-hierarchy amendments are documented in
 [`service-hierarchy-page-amendments-2026-06-28.md`](service-hierarchy-page-amendments-2026-06-28.md).
 They supersede the older assumptions where relevant:
