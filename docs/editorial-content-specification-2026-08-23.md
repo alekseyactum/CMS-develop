@@ -531,6 +531,25 @@ type EditorialCard = {
   publishedAt: string;
   isFeatured: boolean;
   attribution: unknown;
+  relations: {
+    practiceId: string | null;
+    serviceId: string | null;
+    problemId: string | null;
+    practice?: EditorialCardRelation;
+    service?: EditorialCardRelation;
+    problem?: EditorialCardRelation;
+  };
+};
+
+type EditorialCardRelation = {
+  kind: 'practice' | 'service' | 'problem';
+  id: string;
+  externalId: string;
+  sourceSlug: string | null;
+  title: string;
+  displayTitle: string;
+  menuTitle: string | null;
+  sourceName: string | null;
 };
 ```
 
@@ -541,9 +560,19 @@ Attribution by kind:
 - Media `external_reference`: external source and original URL;
 - Case: primary lawyer and optional `resultLabel`.
 
-Service-tree relations remain in the projection for future filters, recommendations, and JSON-LD but are
-not required on the V1 card. A missing cover returns `cover: null`; frontend renders the standard
-placeholder.
+Service-tree card clarification (2026-09-10): primary relation IDs remain compatible, and each resolvable
+practice/service/problem also has the optional summary shown above. `home_cases` uses its `displayTitle`
+for the relation chips in the current design. The same enrichment is available in `home_publications`
+and editorial collection runtime cards; displaying chips on those surfaces remains a design choice.
+The full multi-selection tree remains separate from these primary relation summaries.
+
+Names use the containing page's locale and the existing fallback priority: nonempty localized menu
+title, localized public name, source name, then external ID. No `shortName` is needed for these chips.
+A null relation or missing reference row omits that summary, not the card; frontend skips the chip
+instead of displaying its UUID. Relations are resolved in the card-list query, not with one additional
+reference request per card. This does not change selection, ordering, or pagination.
+
+A missing cover returns `cover: null`; frontend renders the standard placeholder.
 
 Public ordering:
 

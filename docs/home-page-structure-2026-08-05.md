@@ -178,6 +178,18 @@ locale. A locale group without a published member in that locale produces a warn
 - Auto ordering: `isFeatured` first, then `publishedAt` descending, then stable ID.
 - Manual ordering: exact `selectedIds` order, without automatic supplementation.
 
+Card relation labels (2026-09-10 clarification):
+
+- Preserve `relations.practiceId`, `relations.serviceId`, and `relations.problemId` for compatibility.
+- Enrich each resolvable primary relation with `relations.practice`, `relations.service`, or
+  `relations.problem`; frontend renders the corresponding `displayTitle` as the chip text.
+- Resolve names in the home-page locale using the existing priority: nonempty `menuTitle`, localized
+  public name, source name, then external ID as the final fallback. `shortName` is not required here.
+- Null relations or missing reference records do not remove the case card. Omit the unavailable relation
+  object and its chip; do not display a UUID as a label or fetch the reference separately on the frontend.
+- This is the shared editorial-card contract used by `home_publications` and editorial collections too;
+  it does not expand the primary relation fields into the publication's full multi-selection tree.
+
 ### 8. `home_accent_text`
 
 - Type: editable page-owned accent statement.
