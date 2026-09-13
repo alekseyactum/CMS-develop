@@ -366,9 +366,15 @@ lawyer.slug = ivan-ivanov
 /en/advokaty/ivan-ivanov
 ```
 
-If an ERP source slug changes or a generated lawyer slug ever changes through a controlled maintenance
-operation, CMS must create redirects from old public URLs to the new public URLs for all affected locale
-routes. Normal editor UI must not edit these slugs.
+2026-09-13 clarification: the redirect task concerns differences between the old site's routes/slugs and
+the new site's initially ERP-sourced routes/slugs. It does not introduce editable hierarchy slugs,
+a CMS-owned `public_slug`, or a site-move workflow triggered by later ERP slug changes. Normal editor UI
+must not edit these slugs. The previous broad requirement about reacting to ERP slug changes is not a
+work order for this implementation. Exceptional future re-keying requires a separate explicit contract.
+
+Use [Redirects specification](redirects-specification-2026-09-13.md): hierarchy correspondence helps an
+external migration tool prepare concrete legacy URL-to-page mappings; public requests use the approved
+registry, not dynamic hierarchy rewriting.
 
 ## Snapshot And Stale Policy
 

@@ -53,6 +53,9 @@ implementation should port proven behavior from `notstrapitest` through typed pa
 preview/snapshot contracts, focused domain services, and tests around the preserved edge cases.
 
 See [`docs/backend-implementation-requirements.md`](docs/backend-implementation-requirements.md).
+See [`docs/redirects-specification-2026-09-13.md`](docs/redirects-specification-2026-09-13.md) for the
+approved redirect registry, CMS workflow, CSV import, public routing contract, migration-tool boundary,
+acceptance criteria, and implementation responsibilities. This is a specification, not a deployed feature.
 See [`docs/global-price-section-workbench.md`](docs/global-price-section-workbench.md) for the detailed
 global price section editor, version history, validation, and publish-impact contract.
 See [`docs/reference-data-and-runtime-model.md`](docs/reference-data-and-runtime-model.md) for the agreed
@@ -73,9 +76,11 @@ See [`docs/development-sequencing-and-module-plan.md`](docs/development-sequenci
 ## Release Contour
 
 The first production-oriented CMS runtime should be release-ready but closed to indexing until a separate
-explicit decision enables indexing. The first CMS release canonical host is `https://actum.com.ua`;
-`actum.ua` remains a prepared secondary/future migration domain until a controlled migration and redirect
-plan is approved.
+explicit decision enables indexing. The approved target as of 2026-09-13 is a single first public launch
+of the new site on `https://actum.ua`, with `actum.com.ua` retained for permanent redirects. This supersedes
+the June first-go-live domain decision; it does not change the currently running site or authorize DNS,
+runtime, indexing, or deployment changes. The redirect mechanism, populated migration map, and actual
+public cutover are separate deliverables governed by the redirect specification linked above.
 
 See [`docs/release-contour-requirements.md`](docs/release-contour-requirements.md).
 See [`docs/release-infrastructure-architecture-2026-06-28.md`](docs/release-infrastructure-architecture-2026-06-28.md)

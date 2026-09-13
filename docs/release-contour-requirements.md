@@ -3,6 +3,11 @@
 This document captures step-by-step requirements for the production-oriented CMS contour. Decisions are
 added through the question/answer process before they become implementation work.
 
+2026-09-13 amendment: [Redirects specification](redirects-specification-2026-09-13.md) is the normative
+contract for redirect management, URL migration, and the revised first public canonical host. Older
+workflow/alias wording below must be interpreted through it. No live configuration changes are approved
+by this documentation update.
+
 ## Decision Index
 
 - Decision 1: first production-oriented runtime mode.
@@ -75,10 +80,11 @@ The future primary domain is expected to be `actum.ua`.
 During development and release preparation, `actum.ua` may be used as the future primary URL, but it must
 remain closed to indexing until a separate go-live decision changes that policy.
 
-2026-06-28 amendment: this decision is superseded for the first CMS go-live because `actum.com.ua` is the
-current domain with existing Google history. The first release canonical host is `https://actum.com.ua`.
-Treat `actum.com.ua -> actum.ua` as a controlled domain migration, not as a default side effect of the CMS
-release.
+Historical 2026-06-28 decision: the first CMS go-live was to retain `https://actum.com.ua` because of its
+existing Google history. This first-launch decision is superseded by the explicit 2026-09-13 approval:
+the new site's first public launch targets `https://actum.ua` in one controlled migration. Keep
+`actum.com.ua` for permanent redirects. This remains a separately authorized cutover after readiness
+checks, never an accidental side effect of code deployment.
 
 The future migration direction is:
 
@@ -107,11 +113,12 @@ Each legacy URL should resolve to one of these outcomes:
 
 - a direct redirect to the corresponding new `actum.ua` route;
 - a deliberate redirect to the nearest relevant replacement page;
-- a documented "no equivalent" decision, handled through the chosen not-found or gone policy.
+- an explicitly approved "removed without replacement" decision, handled as `410 Gone`;
+- an unresolved decision in the migration working list, which must be resolved before public cutover.
 
-Redirects should be implemented through the CMS route alias/redirect policy or another documented routing
-layer that can be tested and inspected. They should not exist only as undocumented load balancer or web
-server rules.
+Redirects use the shared backend-owned registry and a lightweight route resolver. The server side of
+site-front emits the real HTTP response before content loading. Domain policy and old-path resolution
+are combined into one final `301`; they must not exist only as undocumented infrastructure rules.
 
 The release acceptance checks must verify:
 

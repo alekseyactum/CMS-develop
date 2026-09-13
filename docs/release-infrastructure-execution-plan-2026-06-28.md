@@ -2,6 +2,10 @@
 
 This document turns the release infrastructure architecture into an ordered implementation plan.
 
+2026-09-13 amendment: future public-launch domain checks below follow
+[Redirects specification](redirects-specification-2026-09-13.md). Historical execution records are kept;
+neither their environment values nor this plan are changed in live runtime by this documentation update.
+
 It is a planning checklist only. It does not approve or perform GCP changes. Any real work with Cloud Run,
 Cloud SQL, Cloud Build, Secret Manager, Cloud Storage, IAM, DNS, certificates, IAP, or load balancers is
 governed by `gcp-infra-playbook` and requires the required preflight before cloud state is read or
@@ -33,7 +37,7 @@ The first implementation must support:
 - git-based release deployment from `release` branches;
 - closed CMS access through IAP and CMS permissions;
 - closed/noindex public site preview before go-live;
-- canonical first public host `https://actum.com.ua`;
+- target canonical first public host `https://actum.ua`, after separately approved migration checks;
 - old public site remaining available as rollback/fallback during cutover.
 
 ## Phase 0 - Documentation And Approval Boundary
@@ -448,9 +452,10 @@ Recommended baseline:
 
 Domain policy:
 
-- first public canonical host: `https://actum.com.ua`;
-- `www.actum.com.ua`, if attached, redirects to `https://actum.com.ua`;
-- `actum.ua` is prepared as secondary/future migration domain, not first canonical;
+- target first public canonical host: `https://actum.ua`;
+- retain `actum.com.ua` for permanent redirects;
+- HTTP/HTTPS and www/non-www variants of both domains resolve known pages directly to their final
+  canonical URL, using the approved legacy map without intermediate redirects;
 - `release.actum.com.ua` is optional for closed preview and is not required in the first infrastructure
   slice.
 
@@ -467,7 +472,7 @@ Checklist:
 - [x] Configure noindex response headers before go-live.
 - [x] Configure `robots.txt` blocking policy before go-live.
 - [x] Keep sitemap disabled, empty, or non-public before go-live.
-- [ ] Confirm redirect behavior for `www` and any attached `actum.ua` host.
+- [ ] Confirm one-hop redirect behavior for all agreed host/scheme variants at the public cutover.
 
 Stop if:
 
@@ -614,9 +619,9 @@ Checklist:
 - [ ] Confirm public go-live date/window.
 - [ ] Confirm old site rollback/fallback mechanism.
 - [ ] Confirm DNS or LB traffic switch plan.
-- [ ] Confirm canonical host remains `https://actum.com.ua`.
-- [ ] Confirm redirect behavior for `www.actum.com.ua`.
-- [ ] Confirm `actum.ua` behavior for this phase.
+- [ ] Confirm the approved new-site canonical host is `https://actum.ua`.
+- [ ] Confirm permanent one-hop redirects for old paths and all agreed domain variants.
+- [ ] Complete the HTTP verification report for every address of the approved migration map.
 - [ ] Confirm Search Console and sitemap plan.
 - [ ] Confirm robots/noindex removal plan.
 - [ ] Confirm forms/integrations are working or explicitly disabled.
@@ -627,7 +632,8 @@ Checklist:
 
 Stop if:
 
-- public opening and `actum.ua` canonical migration are being bundled unintentionally;
+- public opening and `actum.ua` canonical migration are attempted without their explicit cutover
+  approval or before the agreed readiness checks pass;
 - old site rollback path is unavailable;
 - critical content is missing;
 - no one owns post-launch monitoring.

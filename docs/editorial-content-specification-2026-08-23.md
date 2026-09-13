@@ -6,6 +6,10 @@ This document supersedes conflicting product details in the June 2026 editorial 
 and execution-plan documents. Those documents remain useful as implementation history. Migration of
 legacy Actum content is deliberately excluded and requires a separate specification.
 
+2026-09-13 follow-up: [Redirects specification](redirects-specification-2026-09-13.md) now defines the
+separate shared redirect mechanism and migration-map preparation boundary for editorial and other pages.
+It does not permit changing published editorial slugs or imply that legacy content has been migrated.
+
 ## 1. Objective
 
 Build one shared editorial mechanism for three content kinds:
@@ -52,7 +56,8 @@ Not included:
 - manual collection-card ordering;
 - legacy-content migration;
 - automatic translation;
-- slug editing and redirect management after first publication.
+- slug editing after first publication; redirect management is a separate follow-up under the
+  2026-09-13 redirect specification, not a content-section operation.
 
 ## 3. Public Routes
 
@@ -83,7 +88,8 @@ Rules:
 - an external media reference still has an Actum detail page at `/media/{slug}`;
 - backend returns `publicPath`, canonical URL, and exact locale-switch URLs;
 - frontend must not reconstruct routes from page type or slug;
-- redirect handling for imported legacy URLs belongs to the separate migration specification.
+- redirect handling for imported legacy URLs follows the separate
+  [redirect specification](redirects-specification-2026-09-13.md).
 
 ## 4. Localization
 

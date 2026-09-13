@@ -127,6 +127,12 @@ Problem:  https://actum.com.ua/services/example/example-service/example-problem#
 
 ## Explicit V1 Scope Boundary: Slugs Are Immutable
 
+2026-09-13 follow-up: standalone legacy URL management is now specified in
+[Redirects specification](redirects-specification-2026-09-13.md). It does not relax the immutable-slug
+boundary below or implement automatic re-keying. Its approved future first-launch origin is
+`https://actum.ua`; historical `actum.com.ua` examples/configuration in this document are not a command
+to keep that origin at the new public launch or to change current runtime before an approved cutover.
+
 For the first JSON-LD implementation, a page-backed entity slug is treated as immutable.
 
 The following work is explicitly out of scope:

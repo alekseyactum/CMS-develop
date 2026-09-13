@@ -3,6 +3,18 @@
 This document records implementation requirements for the clean `CMS` backend, based on the reviewed
 `notstrapitest` refactoring assessments for page authoring and page preview.
 
+## Redirect Follow-Up And General Request Failure Policy - 2026-09-13
+
+[Redirects specification](redirects-specification-2026-09-13.md) defines the separately agreed route
+registry, CMS actions, imports, lightweight resolver, acceptance checks, and service implementation plan.
+It does not authorize editable hierarchy slugs, ERP-triggered route moves, or deployment.
+
+The owner also approved a general page-request rule, not a redirect-specific feature: when backend/DB
+failure or timeout prevents determining the result and no usable cached data exists, return temporary
+`503`, not a false `404`/`410` or a homepage redirect. Technical failure must not mutate route records,
+unpublish content, or be cached as a permanent absence. Usable cache remains subject to the shared cache
+policy. Public site-front response handling must preserve this distinction.
+
 ## Decision
 
 The `notstrapitest` refactoring assessments are accepted as diagnostic input, not as a direct work order

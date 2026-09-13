@@ -234,7 +234,9 @@ Manual end-to-end matrix:
 
 Do not absorb these into the implementation opportunistically:
 
-- legacy content migration and redirects;
+- legacy content migration and redirects: the separate
+  [2026-09-13 redirect specification](redirects-specification-2026-09-13.md) now defines the redirect
+  mechanism, external map-preparation tool, and staged implementation; it does not migrate content;
 - public tags, filters, and search;
 - new builder block families;
 - slug-change workflow;

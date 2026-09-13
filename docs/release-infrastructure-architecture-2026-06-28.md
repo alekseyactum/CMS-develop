@@ -106,30 +106,33 @@ Pragmatic exception:
 
 ## Domains
 
-Earlier requirements expected `actum.ua` to become the future primary domain. The current clarification is
-that `actum.com.ua` already has Google history and should not be moved lightly.
+2026-09-13 amendment: the owner explicitly replaced the June first-launch baseline with a single first
+public launch of the new site on `https://actum.ua`. See
+[Redirects specification](redirects-specification-2026-09-13.md) and the governing playbook's
+`docs/projects/cms-redirects-domain-decision-2026-09-13.md`.
 
-Confirmed SEO-safe baseline for the first public go-live:
+Approved future go-live target:
 
-- canonical host: `https://actum.com.ua`;
-- add `actum.ua` as a prepared secondary domain, but do not make it canonical until a separate migration
-  decision is approved;
-- if `actum.ua` is attached before go-live, keep it closed/noindex or redirect it to
-  `https://actum.com.ua` according to the current phase;
-- do not switch canonicals from `actum.com.ua` to `actum.ua` as a side effect of the CMS release.
+- canonical host: `https://actum.ua`;
+- retain `actum.com.ua` for permanent `301` redirects;
+- combine domain/scheme/www normalization with approved old-path mappings into one final redirect;
+- prepare and test the new site and map before a separately authorized public/indexing cutover;
+- do not change current runtime canonicals, DNS, access, or indexing as a side effect of this amendment.
 
 Why this matters:
 
 - changing the canonical domain is a domain migration, not a small launch setting;
-- `actum.com.ua -> actum.ua` can be done later, but it needs a URL inventory, 301 redirect map, Search
-  Console preparation, canonical/hreflang/sitemap changes, and post-migration monitoring;
-- doing the CMS launch and the primary-domain migration at the same time increases SEO risk.
+- the approved `actum.com.ua -> actum.ua` launch needs a URL inventory, 301 redirect map, Search Console
+  preparation, canonical/hreflang/sitemap changes, and post-migration monitoring;
+- combining CMS launch and domain migration carries additional SEO risk; the owner chose this target
+  knowingly, subject to readiness checks rather than an assumption of zero traffic fluctuation.
 
 `www` decision:
 
-- `https://actum.com.ua` is canonical;
-- `https://www.actum.com.ua`, if attached, must redirect to `https://actum.com.ua`;
-- the same decision is needed for `actum.ua` if it is attached.
+- `https://actum.ua` is the final canonical host;
+- HTTP/HTTPS and www/non-www variants of both domains are covered at public launch;
+- all known page variants lead directly to the final HTTPS/non-www URL on `actum.ua`;
+- working hostnames and required certificates are explicit launch prerequisites.
 
 ## Pre-Go-Live Preview Host
 
