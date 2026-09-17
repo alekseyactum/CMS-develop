@@ -207,6 +207,23 @@ Create draft / Save draft
 
 ## Validation Rules
 
+### Backend currency default — agreed 2026-09-17
+
+For numeric price items, the client may omit `priceCurrency`. Backend validation accepts an omitted,
+null or blank value and normalization supplies `UAH`, for every locale. The explicit normalized currency
+is included in newly saved content, resolved price payloads and JSON-LD. This applies to both global and
+page-owned price sections, including legacy numeric price shapes.
+
+Explicit currencies are preserved with trim/uppercase normalization; malformed values remain errors.
+No currency conversion is performed. `negotiable` rows remain currency-free and must not contain numeric
+prices. A client that edits explicitly foreign-currency prices must preserve their currency; omission in
+a submitted item means UAH, not inheritance from an older version.
+
+No frontend change, database migration or historical snapshot rewrite is needed for the default.
+The warning thresholds for description length are unchanged and do not block saving.
+
+### Other validation
+
 `global_price` requires a domain-specific validator beyond the generic object/list shape validator.
 
 Severity:
