@@ -7,6 +7,9 @@ slice. Public visual rendering is still a frontend task.
 
 ## Page Rules
 
+- 2026-09-17: a problem may be a visible text-only list item without this page or a slug. Creating a
+  page requires all hierarchy slugs; only a published same-locale/same-region page supplies a link.
+  See [optional problem pages](problem-optional-pages-2026-09-17.md).
 - `problem_page` is a generated service-hierarchy page:
   `/services/:practiceSlug/:serviceSlug/:problemSlug`.
 - Base pages own the editable content. Regional pages inherit editable content from the base by default.

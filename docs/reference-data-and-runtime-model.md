@@ -350,8 +350,14 @@ ERP provides source slugs for practices, services, problems, and regions. CMS st
 source data in `source_slug`.
 
 For these dictionaries there is no separate CMS-owned `public_slug`. The public route slug is the ERP
-source slug, shared across all locales. If a visible routable object has no source slug, diagnostics must
-return a critical error.
+source slug, shared across all locales. If a visible routable practice, service or region has no source
+slug, diagnostics must return a critical error.
+
+2026-09-17 problem exception: a visible problem may be a text-only list item without a source slug or
+individual page. Its missing slug is neither an error nor a warning; creating a problem page still
+requires all hierarchy slugs. Only a published page of the exact problem, locale and region enables a
+link. An uncreated problem page is not a mandatory content defect. See
+[Problems without individual pages](problem-optional-pages-2026-09-17.md).
 
 Lawyers are the exception: ERP does not provide lawyer slugs. CMS generates one stable read-only `slug`
 when the lawyer record is first created in the CMS database. That slug is not editable and must not be
