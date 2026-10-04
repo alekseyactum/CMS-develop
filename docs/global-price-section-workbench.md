@@ -9,6 +9,21 @@ Global sections -> Prices
 The screen edits the locale-specific `global_price` source section. It is not the page-owned price
 section editor used inside a concrete practice/service/problem page.
 
+## Authoring Lifecycle Revision
+
+Decision date: 2026-10-04. Status: approved target, implementation pending.
+
+The canonical target lifecycle is defined in
+[Section Authoring and Publication Contract](section-authoring-versioning-contract-2026-10-04.md).
+It supersedes the previous immediate-persistence copy/section-rollback workflow and the requirement to
+duplicate an already saved content revision on ordinary publication. This document applies that decision
+to the price editor; price fields, validation, inheritance, and snapshot impact rules are unchanged.
+
+Existing DTO examples below describe the current compatibility API unless explicitly marked as target
+requirements. They do not claim that concurrency tokens, revised capabilities, publication events, or
+same-revision publication have already been implemented. Exact new DTO names and OpenAPI changes are
+implementation deliverables of the canonical contract.
+
 ## Scope
 
 `global_price` is an independent `global_owned` section.
@@ -106,20 +121,24 @@ Rules:
 - there is no `enabled`/`disabled` item flag in the first slice;
 - deleting an item removes it from local frontend state; on draft save, the new section version contains
   the remaining `items`;
-- previously published or drafted versions still preserve deleted items in history, so rollback or
-  creating a draft from a historical version can restore them.
+- previously published or drafted versions still preserve deleted items in history. An authorized editor
+  can view one and take its editable content as the basis of a local working form; only a subsequent
+  explicit save may persist a new content version.
 
 ## Editor Opening Rules
 
-Opening the editor must not create database rows except the stable section record when it does not yet
-exist.
+Target opening/viewing is read-only. Any necessary stable section bootstrap must be an explicit separate
+operation, not a hidden consequence of viewing history or preparing a working form. The existing editor
+may ensure a missing stable section record for compatibility; it must not create a content version, and
+this exception is not the target lifecycle rule.
 
-Working content is selected like this:
+The local working form is initially populated like this:
 
-1. If `latest_draft` exists, edit `latest_draft`.
-2. If no draft exists but `current_published` exists, show a frontend-editable copy of current published
-   content. Do not create a draft until save.
-3. If neither draft nor published exists, show an empty editable structure:
+1. If a saved latest unpublished authoring version exists, use its editable content. Do not mutate that
+   saved version in place. A legacy draft already used by the current publication is not an unpublished
+   change merely because the draft row remains in storage.
+2. Otherwise, if `current_published` exists, use its editable content as a local working form.
+3. If neither exists, show an empty editable structure:
 
 ```ts
 {
@@ -127,7 +146,14 @@ Working content is selected like this:
 }
 ```
 
-The editor response should expose ready-to-render working state:
+Opening, viewing history, taking a version as the basis, or cancelling must not create a content version
+or move draft/published pointers. An empty working form follows the same rule. The selected history view
+is read-only and separate from the editable buffer; returning from history restores the buffer unchanged.
+Replacing a dirty buffer or navigating away requires explicit user confirmation. API/validation errors
+must not replace user input with server content. Autosave or recovery after tab closure/reload is not
+promised by this requirement.
+
+Current compatibility response example for ready-to-render working state:
 
 ```ts
 {
@@ -151,9 +177,13 @@ The editor response should expose ready-to-render working state:
 
 ## Save Draft Flow
 
-The editor has one real backend save operation for the current locale.
+The editor has one explicit backend save operation for the current locale. "Save" persists an immutable
+content revision; it never edits the contents of an existing saved version in place. If normalized authored
+content equals the latest saved authoring state, Save reuses that revision without inserting a duplicate.
+Saving an older different state taken as a basis creates a new revision even without additional typing.
+The exact equality scope follows the canonical contract, not resolved/runtime display content.
 
-The request accepts only editable content:
+The current request example shows the editable content projection only:
 
 ```json
 {
@@ -163,12 +193,17 @@ The request accepts only editable content:
 }
 ```
 
-Readonly header fields must not be accepted as part of save payload.
+Readonly header fields must not be accepted as part of the content payload.
 
-The save operation creates or updates the `latest_draft` for the active locale.
+The target save contract also carries the working form's source revision, the expected current authoring
+head, and retry identity. Source and expected head are distinct: taking revision 3 as a basis while the
+head is revision 5 must retain source 3 and compare against head 5. The backend must reject a stale-head
+save without changing current pointers, and retries of one operation must not create duplicate revisions.
+Persisting the accepted revision and advancing its authoring pointer must be atomic. The exact request
+field names and conflict response shape are to be specified in OpenAPI during implementation.
 
-There is no separate validate-content endpoint for this screen. The draft save endpoint returns the result
-of the attempt and diagnostics.
+The save endpoint returns the result of the attempt and diagnostics. The existing unsaved-form validation
+endpoint described below checks content without saving it.
 
 If there are no critical errors:
 
@@ -193,16 +228,16 @@ If there are critical errors:
 }
 ```
 
-In this case no draft is created or updated. The response must still return enough submitted/working
-content for the frontend to keep the form data visible.
+In this case no draft is created and no pointer is updated. The response must still return enough
+submitted/working content for the frontend to keep the form data visible.
 
-Warnings do not block saving. Critical errors block draft creation/update and publish.
+Warnings do not block saving. Critical errors block draft creation and publish.
 
 Card-level buttons in the UI must not imply server persistence. A per-item button may apply changes only
 to frontend state. The real backend operation is the global section save button:
 
 ```text
-Create draft / Save draft
+Save
 ```
 
 ## Validation Rules
@@ -325,11 +360,15 @@ Rules:
 - `error`: latest working version has critical errors;
 - `attention`: no published version exists, or there is an unpublished latest draft;
 - `warning`: warnings exist without errors/attention;
-- `ok`: a published version exists, there is no draft, and diagnostics are clean.
+- `ok`: a published version exists, there is no newer unpublished saved change, and diagnostics are clean.
+
+The mere existence of a historical or already-published draft row must not cause `attention`. Editor,
+history, locale diagnostics, and navigation must use the same published-versus-unpublished interpretation.
+Unsaved changes belong to the local form state, not to server-side publication counters.
 
 For status diagnostics:
 
-- if `latest_draft` exists, use diagnostics for `latest_draft`;
+- if a saved latest unpublished authoring version exists, use its diagnostics;
 - otherwise use diagnostics for `current_published`;
 - if neither exists, show an attention/not-created state.
 
@@ -426,21 +465,21 @@ POST /api/admin/global-sections/global_price/validate?locale=uk
 
 This mode returns `validation`, `diagnostics`, and normalized `workingContent`, but does not create or
 update a draft version and does not add a row to history. It also returns `editor: null`; refresh the
-full editor/workbench only after save/publish/rollback actions or when the user intentionally reloads
-the screen.
+full editor/workbench after persistence/publication actions or intentional reload, while preserving any
+dirty local buffer independently. Local history view/take-as-basis/cancel actions do not require a write.
 
 ## Version History
 
 The right-side history panel shows indicators for each version row only. It must not duplicate the top
 section state.
 
-The database lifecycle state remains:
+The existing database/compatibility API distinguishes:
 
 ```ts
 'draft' | 'published'
 ```
 
-The API should add a computed `versionRole`:
+Its computed compatibility `versionRole` is:
 
 ```ts
 'latest_draft' | 'draft_history' | 'current_published' | 'published_history'
@@ -449,7 +488,7 @@ The API should add a computed `versionRole`:
 A previously published version that is no longer current remains `lifecycleState = 'published'` in the
 database and appears in the UI as `versionRole = 'published_history'`.
 
-Version history rows should include:
+Current compatibility history shape (not the final target publication/event DTO):
 
 ```ts
 {
@@ -481,33 +520,50 @@ Version history rows should include:
 }
 ```
 
-Actions:
+Target action semantics, subject to section/locale/field authorization:
 
-- `latest_draft`: view, open in editor, publish;
-- `draft_history`: view, create new latest draft from this version;
-- `current_published`: view only;
-- `published_history`: view, create rollback draft from this version.
+- Every saved same-section authoring version may be viewed read-only.
+- Every such version may be taken as the basis of a local working form, including `current_published`,
+  historical published/draft versions, and a latest draft already used by publication. This is not an
+  operation that creates a section or persists a copy.
+- Publication is an explicit action on the selected eligible saved version; taking a historical version
+  as a basis does not publish it or activate its old pointer.
+- Read-only/runtime fields are display context, never made editable by taking a version as a basis.
 
-Viewing a version opens it in the main form as read-only history preview. If the current form has unsaved
-changes, the frontend should warn before switching view.
+`canView` means reading saved fields; it is not interchangeable with a site-rendering `canPreview`.
+Taking content as a basis is not section/page rollback. Current `canCreateDraftFromVersion`,
+`canOpenInEditor`, and `canRollback` names must not be blindly mapped across shared history components.
+The revised capabilities must represent these distinct operations; names and compatibility mapping are
+part of implementation, not newly available API fields promised by this document.
 
-Creating a draft from history always creates a new version and makes it the latest draft. It must not move
-old pointers backwards or mutate historical versions.
+Read-only history view must show the chosen saved content, not silently the current editor content. It
+must preserve the independent local buffer. Replacing that buffer with another basis requires confirmation
+if it has unsaved changes. Source identity is retained so explicit save can record provenance.
+
+Existing create-draft-from-version/section-rollback mutations persist a copy immediately and are legacy
+compatibility operations. The target editor must not invoke them for "Take as basis". Removing those
+endpoints requires a consumer audit and is not part of this documentation change.
 
 ## Publish And System Impact
 
 Global price publication is an independent global-section flow, not a page publish flow.
 
-Publication is triggered from the version history action for `latest_draft`. The main editor form only
-creates or updates draft content.
+Publication targets a specific eligible saved version identifier, not an implicit latest version that
+could change while the request is in flight. The main editor's Save operation is separate from publication.
 
-Publishing `latest_draft`:
+Target ordinary publication:
 
-- validates the draft again;
-- creates a new published section version;
-- updates `cms_section_current_versions.current_published_version_id`;
+- validates the selected saved revision again;
+- records a publication event referring to that same revision, with actor/time and target context;
+- updates the current publication pointer without duplicating the already saved content;
 - attempts affected page snapshot rebuild according to the global price policy;
 - returns affected pages/bindings and rebuild results in the publish response.
+
+This is the later implementation phase. During the compatibility phase the existing backend still creates
+a separate published copy of the draft. The UI must describe that current behavior honestly until the
+same-revision publication contract is implemented; old version IDs and historical snapshots stay intact.
+Separate materialization of inherited page content remains allowed where the page lifecycle requires a
+new local authored layer; it is not an ordinary copy of this already saved global revision.
 
 Affected pages are only pages whose current public snapshot would actually change:
 
@@ -545,16 +601,20 @@ Backend work:
 - add `workingVersionRole`, `readonlyContent`, `editableContent`, and `workingContent` to the editor
   payload;
 - extend history rows with computed `versionRole`, diagnostics, and actions;
-- add create-draft-from-version behavior for historical draft/published versions;
+- expose authorized saved content and unambiguous history capabilities for local take-as-basis workflow;
+- add source/head conflict checks and retry-safe atomic save behavior according to the canonical contract;
+- implement same-revision publication events in the later publication phase, preserving old history;
 - keep publish response as the source of affected snapshot rebuild status.
 
 Frontend work:
 
 - render the top state block from backend-provided `status` and `facts`;
 - use `workingContent` for visual preview/rendering and `editableContent` for form state;
-- send only `{ content: { items } }` on draft save;
+- submit only editable `{ items }` as content, plus the agreed concurrency/provenance/retry metadata;
 - treat card-level apply buttons as local UI state, not backend persistence;
 - use history actions from the backend instead of inferring what each version can do;
+- keep read-only saved-version view separate from the unsaved working buffer and from site preview;
+- never call a persisted-copy/section-rollback endpoint to populate the working buffer;
 - show publish rebuild failures from publish response.
 
 Persistence impact:
@@ -563,5 +623,6 @@ Persistence impact:
 - no item-level enabled/disabled flag in the first slice;
 - no field-level localization tables;
 - no persisted resolved overlay versions;
-- existing `cms_sections.locale`, `cms_section_versions.content_json`, and current version pointers remain
-  the storage model.
+- existing `cms_sections.locale`, content histories, version IDs, and page snapshot references must remain
+  readable. Publication-event persistence and compatibility changes belong to the canonical later-phase
+  design; this document does not require rewriting or deduplicating historical rows.

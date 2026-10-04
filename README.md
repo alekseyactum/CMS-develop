@@ -53,6 +53,10 @@ implementation should port proven behavior from `notstrapitest` through typed pa
 preview/snapshot contracts, focused domain services, and tests around the preserved edge cases.
 
 See [`docs/backend-implementation-requirements.md`](docs/backend-implementation-requirements.md).
+See [`docs/section-authoring-versioning-contract-2026-10-04.md`](docs/section-authoring-versioning-contract-2026-10-04.md)
+for the agreed section working-copy, immutable saved-version, and same-version publication target.
+It supersedes the older immediate-copy and duplicate-on-publish workflow requirements. This is a
+specification with staged compatibility and acceptance gates, not an implemented or deployed change.
 See [`docs/redirects-specification-2026-09-13.md`](docs/redirects-specification-2026-09-13.md) for the
 approved redirect registry, CMS workflow, CSV import, public routing contract, migration-tool boundary,
 acceptance criteria, and implementation responsibilities. This is a specification, not a deployed feature.
@@ -125,6 +129,12 @@ Manager, IAM, deployment pipelines, or runtime environment variables, first read
 `gcp-infra-playbook` context and run the required preflight if actual cloud state will be read or changed.
 
 ## Current Status
+
+The section authoring and publication requirements were revised on 2026-10-04. The target separates
+the unsaved client working copy, saved immutable content, publication audit, and public page snapshots.
+Implementation remains pending; the canonical contract above records its scope, confirmed no-change Save policy,
+responsibilities, and reliability checks. Existing runtime descriptions below are not evidence that
+this new workflow has shipped.
 
 Created as the clean implementation project shell.
 

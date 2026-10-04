@@ -2,6 +2,25 @@
 
 This document fixes the first release decision for site-wide layout data.
 
+## Authoring Contract Update
+
+Decision date: 2026-10-04.
+
+The target authoring lifecycle for editable `site_header` and `site_footer` content follows
+[Section Authoring and Publication Contract](section-authoring-versioning-contract-2026-10-04.md).
+It supersedes conflicting draft/copy/rollback/publication wording here. The target is not yet a claim
+about deployed behavior: legacy draft/published records and endpoint names remain compatibility facts
+until the coordinated backend/frontend upgrade.
+
+The working form is local until explicit Save. Viewing history or taking any saved editable authoring
+version of the same section as its basis does not create a stored copy. Saved history is read-only.
+Ordinary publication activates the selected saved content id and records a publication event instead
+of copying identical content into another version. Section restoration uses working form → Save →
+publish. No-op/unchanged-content policy is governed by the central contract, not this layout document.
+
+This update does not widen editable fields, implement the header flags, version the non-versioned
+contact settings, give runtime blocks a draft lifecycle, or move layout content into page snapshots.
+
 ## Core Decision
 
 Header, footer, footer practices, and contact settings are layout-level data.
@@ -73,7 +92,7 @@ The CMS sidebar should show layout/global items in the `global_sections` group
 ("Глобальные" in the UI), but the group is mixed by design:
 
 - `site_header`: versioned global section;
-- `site_footer_practices`: versioned/read-only global diagnostics workbench;
+- `site_footer_practices`: read-only runtime global diagnostics workbench, without editable version history;
 - `site_footer`: versioned global section;
 - `global_price`: versioned global section and page snapshot source;
 - `site_contact_settings`: non-versioned site settings item.
@@ -125,11 +144,14 @@ and do not need authoring lifecycle.
 `site_header` is a layout-level global section with a normal global section
 workflow:
 
-- draft;
-- publish;
-- history;
-- rollback/create draft from version;
+- local working form, persisted only by explicit Save;
+- publication of a selected saved content version;
+- read-only saved content history and publication history;
+- taking a saved version as the basis of a working form, without an immediate persisted copy;
 - diagnostics.
+
+This is the target workflow. The current draft/published persistence split and mutation endpoint names
+remain legacy compatibility details until the central authoring contract is implemented.
 
 Only minimal UI flags are versioned in the editable content:
 
@@ -154,8 +176,13 @@ The global section editor response must expose three clear content layers:
 
 - `readonlyContent`: navigation contract, services menu policy, labels, contact
   settings source, and editable field descriptions;
-- `editableContent`: only the saved/draft values that frontend may send back;
+- `editableContent`: only the saved editable values that frontend may use as a basis and send back;
 - `workingContent`: merged content for current editor display.
+
+The response field `workingContent` is not the unsaved client working form. It contains read-only
+decoration as well as editable data and must never be copied wholesale into a Save payload. Viewing
+history uses the selected saved version's editable fields without replacing the unsaved working form;
+taking it as a basis deliberately replaces that form only with the required unsaved-change protection.
 
 `readonlyContent` also exposes explicit related endpoints so the CMS frontend
 does not have to hardcode hidden relationships:
@@ -209,7 +236,7 @@ The response uses `schemaVersion = "cms.header-workbench.v1"` and contains:
 - `history`: `site_header` version history for the right-side version list;
 - `workbench`: frontend hints that say which response parts are editable and
   which are read-only;
-- `endpoints`: exact API endpoints for save draft, validate, publish, rollback,
+- `endpoints`: existing compatibility API endpoints for save draft, validate, publish, rollback,
   draft-from-version, public-content, layout preview, and contact settings;
 - `diagnostics`: header, navigation, services menu, and contact settings
   diagnostics grouped for screen-level indicators.
@@ -224,11 +251,14 @@ Use `publishedContent.workingContent` only for the "current site" comparison
 state. Do not use it as form state; the editable form still comes from
 `section.editableContent`.
 
-For the first release, header actions do not need screen-specific wrapper
-endpoints. The workbench response exposes `workbench.refreshAfterActions` with
-the same header workbench URL. After save draft, validate, publish, rollback,
-draft-from-version, or contact settings update, the CMS frontend should reload
-this workbench and replace the full screen state.
+Header actions do not need screen-specific wrapper endpoints. The workbench response exposes
+`workbench.refreshAfterActions` with the same header workbench URL. After an actual server action,
+refresh server-owned data without silently replacing the unsaved working form. Validation failures,
+contact-setting updates, and read-only history selection must not discard local edits.
+
+Legacy `rollback` and `draft-from-version` entries describe the existing compatibility API, not target
+UI operations. The target “Take as basis” action reads a saved editable version and prepares a local
+form; it does not invoke either mutation endpoint. Save and publish remain explicit separate actions.
 
 The global section validate response for `site_header` returns both generic
 `validation` and header-specific `diagnostics`. The visible CMS form should use
@@ -338,6 +368,8 @@ It is powered by practice reference data and public page availability.
 
 It does not store or version the rendered practice list. Public layout contains
 only valid/published links. Admin diagnostics explain omitted practice links.
+It has no editable working form, Save, publish, or restore controls. The authoring lifecycle update
+does not change that runtime boundary.
 
 Its editor `readonlyContent` exposes:
 
@@ -384,7 +416,7 @@ The response uses `schemaVersion = "cms.footer-workbench.v1"` and contains:
 - `mediaPolicy`: legal PDF constraints and media endpoints from the footer registry;
 - `history`: `site_footer` version history for the right-side version list;
 - `workbench`: frontend hints that identify editable and read-only response parts;
-- `endpoints`: exact API endpoints for footer save draft, validate, publish,
+- `endpoints`: existing compatibility API endpoints for footer save draft, validate, publish,
   rollback, draft-from-version, footer public-content, footer practices view,
   footer practices public-content, layout preview, contact settings, media list,
   and media upload;
@@ -403,19 +435,20 @@ Use `footerPublishedContent.workingContent` and
 comparison state. The editable footer form still comes only from
 `footerSection.editableContent`.
 
-For the first release, footer actions do not need screen-specific wrapper
-endpoints. The workbench response exposes `workbench.refreshAfterActions` with
-the same footer workbench URL. After save draft, validate, publish, rollback,
-draft-from-version, contact settings update, or legal media upload, the CMS
-frontend should reload this workbench and replace the full screen state.
+Footer actions do not need screen-specific wrapper endpoints. The workbench response exposes
+`workbench.refreshAfterActions` with the same footer workbench URL. Refresh server-owned data after
+actual server actions, but preserve unsaved editable content through history viewing, validation
+errors, contact-setting updates, and media uploads. Form replacement requires the central contract's
+unsaved-change protection. Legacy `rollback` and `draft-from-version` endpoints must not be used merely
+to create the target local working form from a saved version.
 
 ## `site_footer`
 
 `site_footer` is a layout-level editable global section for footer-owned
 settings.
 
-It declares `localeScope = "shared"`. Social URLs, legal document refs, draft,
-published version, and history are one site-wide lifecycle. The locale query on
+It declares `localeScope = "shared"`. Social URLs, legal document refs, saved content versions,
+publication state, and history are one site-wide lifecycle. The locale query on
 editor/workbench/layout endpoints remains meaningful only for localized
 read-only labels, practices, navigation, and preview routes. CMS must not show
 separate editable footer versions for `uk`, `ru`, and `en`.

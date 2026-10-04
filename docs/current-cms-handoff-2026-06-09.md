@@ -3,6 +3,21 @@
 This document is the short source of truth for continuing the CMS work in a new Codex thread without
 loading the full previous chat history.
 
+## Section Authoring Specification Update
+
+On 2026-10-04 the section editor and publication target was revised in
+[Section Authoring and Publication Contract](section-authoring-versioning-contract-2026-10-04.md).
+Read that contract before continuing section history, working-copy, save, or publication work. It
+supersedes the older instructions here to persist a copied draft immediately and duplicate content on
+ordinary publication. Local working copies do not write to the database; unchanged Save reuses the
+current saved version; the later publication stage activates the same saved content ID with a separate
+publication event. Old version IDs and public snapshots remain intact.
+
+This is a specification update, not a code change or deployment checkpoint. The implementation and
+deployment entries below retain their dates and describe earlier behavior, not completion of the new
+contract. The frontend/backend requirements, section foundation, price, header/footer, release
+requirements, and sequencing documents now link to the same target.
+
 ## Current Deployment Checkpoint - 2026-08-06
 
 The complete `cms-back/develop` codebase, including the JSON-LD foundation, was promoted to `release`:
@@ -50,6 +65,7 @@ Start the new chat with this message:
 Продолжаем проект Actum CMS. Прочитай:
 - G:\работа\Actum\develop\CMS\AGENTS.md
 - G:\работа\Actum\develop\CMS\docs\current-cms-handoff-2026-06-09.md
+- G:\работа\Actum\develop\CMS\docs\section-authoring-versioning-contract-2026-10-04.md
 
 Работаем дальше только с develop, release не трогаем. Перед GCP-проверками читать gcp-infra-playbook и
 делать preflight. Ближайшая цель: довести page workbench/matrix для practice_collection_page и

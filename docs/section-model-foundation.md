@@ -5,6 +5,22 @@ This document fixes the first release-oriented model for CMS page sections.
 It is a foundation brief for the future `cms-back/src/sections` module. It should guide code and tests
 before page authoring persistence, preview assembly, publish flow, and database tables are implemented.
 
+## Approved Target Update
+
+Decision date: 2026-10-04.
+
+[Section Authoring and Publication Contract](section-authoring-versioning-contract-2026-10-04.md) governs
+the target authoring lifecycle. This is approved specification work only, not an implementation or
+deployment claim. Normative lifecycle rules below use that target; the first-persistence schema and dated
+implementation notes are retained as current/legacy context pending a compatible migration. Existing
+saved versions and page snapshots must keep their identities and remain readable. This update does not
+authorize rewriting history, enabling edits of runtime/ERP-owned fields, or changing public page rollback.
+
+The canonical contract owns the staged transition and exact state comparison. An explicit Save identical
+to the latest saved authoring state returns that existing version without a duplicate; restoring older
+content that differs from the latest state creates a new version. Physical tables, DTO names, and
+compatibility endpoints are not newly specified or claimed implemented here.
+
 ## Purpose
 
 Sections are first-class authoring units, but public rendering remains snapshot-first.
@@ -48,10 +64,25 @@ not the content of one concrete section.
 A concrete section attached to a page, owned globally inside CMS, or backed by an external source. It has
 a stable section identity used by authoring, snapshots, diagnostics, and rollback.
 
+`WorkingCopy`
+
+Unsaved editable client state based on an empty form or an authorized saved authoring version of the same
+section. Reading history or choosing a basis has no persistence/publication effect. Runtime, ERP-owned,
+code-owned, and other read-only fields are not made editable or copied from resolved public payloads.
+
 `SectionVersion`
 
-A versioned content record for one section instance. Draft and published versions are separate historical
-states.
+An immutable saved authoring content record for one section instance. Explicit Save of changed authoring
+state creates a new version without changing the old one; unchanged state returns the latest saved
+version under the canonical comparison/concurrency rules. Ordinary publication activates that same saved
+version ID instead of creating a duplicate content record.
+
+`SectionPublication`
+
+An auditable activation event referring to a saved version, separate from its content. It distinguishes
+"published at some time" from "currently active" and records actor/time and publication context. This is
+a domain term, not a newly implemented table or DTO. Necessary first materialization of inherited local
+content during page publish remains an explicit exception to ordinary same-version activation.
 
 `SectionVersionRef`
 
@@ -87,7 +118,8 @@ footer can be inherit-only while price can allow override or append according to
 
 ## Versions And Audit
 
-Every section operation must record actor and timestamp.
+Every persisted section operation must record actor and timestamp. Local view/working-copy actions do
+not create section-version records or move authoring/publication pointers.
 
 Required operation metadata:
 
@@ -96,8 +128,16 @@ Required operation metadata:
 - published by and at;
 - archived, disabled, or rolled back by and at when those operations exist.
 
-Draft and published section versions must be distinguishable. A section version can be valid authoring
-history even when it does not activate a new public page snapshot.
+Saved unpublished content, current published selection, and historical publication events must be
+distinguishable without duplicating content solely to record publication. A saved version remains valid
+authoring history even when it does not activate a new public page snapshot. Its mere continued presence
+after publication must not be reported as a new unpublished change.
+
+Source-version provenance and the expected current head/activation are separate inputs. Save and Publish
+must reject stale expected state rather than silently replacing another editor's work. Retry-safe
+operation identity must prevent duplicate content versions and activation events after repeated requests.
+Version creation and authoring-pointer update are atomic; activation records/pointers and required page
+snapshot changes obey the transaction boundaries below. Server-side authorization remains mandatory.
 
 ## Page Schema Ownership
 
@@ -210,10 +250,15 @@ The resulting public payload separates:
 This keeps the frontend contract simple: Next.js receives one complete public payload and does not need
 to understand draft tables, authoring composition, or publish-readiness rules.
 
-## First Persistence Tables
+## First Persistence Tables and Legacy Schema
 
 The first database layer stores factual authoring and published state only. It must not move canonical
 page schemas or section schemas into editable database configuration.
+
+This inventory describes the implemented first-generation storage, not the final storage design for the
+2026-10-04 target. In particular, separate `draft`/`published` rows and the legacy pointer names remain
+compatibility facts. Publication-event storage and migration must be designed before implementation; do
+not implement the target by simply flipping an existing lifecycle flag or relinking historical snapshots.
 
 Initial persistence tables:
 
@@ -348,11 +393,13 @@ Publishing shared layout global sections validates and switches the current publ
 follow-up action is frontend/CDN layout revalidation, not affected page snapshot rebuild. Page snapshots
 remain untouched.
 
-Footer/menu rollback is implemented as a new draft/publish flow, not by moving the current pointer back to
-an old published version. If the current footer is `v3` and the editor chooses to roll back to old `v1`,
-the system creates a new draft `v4` with content copied from `v1`. If `v4` passes current validation, it
-is published into the layout payload normally. If it fails validation, `v4` remains the latest
-draft with validation diagnostics so an editor can fix it.
+Footer/menu content restoration uses a working copy followed by explicit Save and Publish, not an
+immediate persisted copy or a backward pointer move. If the current footer is `v3` and the editor takes
+old `v1` as a basis, only the unsaved form changes. After editing and explicit Save, a new saved version
+can be published under current validation. Publication activates that same saved version ID. Failed
+publication leaves the saved content and current public selection unchanged, with diagnostics. Saving an
+unchanged latest authoring state returns its existing saved version; restoring different historical
+content creates a new version, not a backward move of the authoring head.
 
 To support this audit trail, section versions should record their source where applicable, for example:
 
@@ -475,8 +522,9 @@ publish response.
 
 The current section version pointer model applies to all sections, not only global sections.
 
-`cms_section_versions` stores the version archive. Draft and published versions live in the same table and
-are distinguished by lifecycle state:
+The following enum and columns describe current/legacy persistence pending migration, not the target
+requirement to create separate content rows on publication. `cms_section_versions` currently stores draft
+and published versions in one archive distinguished by lifecycle state:
 
 ```text
 lifecycle_state: draft | published | archived
@@ -494,7 +542,10 @@ draft_updated_by
 draft_updated_at
 ```
 
-This table answers “what is current for this section?” It does not replace snapshot refs.
+This table answers “what is current for this section?” It does not replace snapshot refs. In the target,
+an immutable saved version can be both the saved authoring head and the current published selection.
+Publication history is separate; a newer unpublished change must be determined consistently in editor,
+history, workbench, and navigation rather than inferred only from a non-null legacy draft pointer.
 
 `cms_page_snapshot_section_refs` answers a different question: “which exact section version contributed
 to this historical page snapshot?”
@@ -557,13 +608,14 @@ they matter.
 Warnings are expected to be mostly field/object-specific, for example recommended text length, optional
 metadata quality, weak media metadata, or non-critical content quality concerns.
 
-Even if a draft passed validation when it was saved, publish must validate the draft again. Schema rules,
-media references, required fields, or related constraints may have changed between save and publish.
+Even if a saved version passed validation when it was saved, publish must validate that exact version
+again. Schema rules, media references, required fields, or related constraints may have changed between
+save and publish.
 
 If publish validation fails:
 
-- the draft remains a draft;
-- no new published version is created;
+- saved authoring content remains unchanged;
+- no publication activation event is committed;
 - current published section pointer does not change;
 - affected page snapshot rebuild does not start;
 - validation run and validation state record the current reasons.
@@ -571,8 +623,8 @@ If publish validation fails:
 If publish validation passes:
 
 - validation run and state record success;
-- a published section version is created from the draft content;
-- `cms_section_current_versions.current_published_version_id` is updated;
+- a publication event references the selected saved version without duplicating its content;
+- the current published pointer is updated to that same saved version atomically with activation history;
 - affected page snapshot rebuild starts according to section policy.
 
 ## Page-Owned Parent Inheritance
@@ -693,8 +745,10 @@ If a parent/source/base draft changes:
 Draft dependency metadata should record which upstream draft version a dependent binding/page was last
 reviewed or composed against.
 
-Implementation note: `cms-back` now treats both saving a new upstream draft and creating a rollback draft
-as upstream draft changes. The lifecycle flow finds dependent page-section bindings registered with the
+Legacy/current implementation note (pending the 2026-10-04 authoring migration): `cms-back` treats both
+saving a new upstream draft and immediately persisting a rollback draft as upstream draft changes. In the
+target, choosing a historical basis is local only; dependency changes follow explicit Save, not copying or
+viewing. The existing lifecycle flow finds dependent page-section bindings registered with the
 `mark_stale` dependency policy, applies field-aware inherit/append staleness rules, updates their
 `draft_stale` status and dependency refs, and returns the affected bindings to the admin API. It does not
 materialize child draft versions and it does not change published page snapshots.
@@ -776,36 +830,41 @@ example content versus metadata, while the frontend decides how to process `seo`
 
 Section publish mode is defined by schema:
 
-- `independent`: section can publish its own new published section version;
-- `with_page`: draft changes are published together with page publish.
+- `independent`: section can activate an explicitly selected saved version with a publication event;
+- `with_page`: selected saved changes are activated together with successful page publish.
 
-Even an independent section publish does not change the public site directly. Public activation always
-happens through a new complete page snapshot:
+For page content, independent section activation does not make the frontend read live authoring tables:
+the public result changes through a complete page snapshot. Layout globals are the separate established
+exception: header/footer activate through the layout payload and revalidation, without page snapshots.
 
-- changed `with_page` sections are validated during page publish and prepared for publication;
+- changed `with_page` saved versions are selected explicitly, validated during page publish, and prepared
+  for activation without copying their content to a second version;
 - source-backed `with_page` sections that contribute inherited content but have no local draft may be
-  materialized as published local versions during page publish, so downstream inheritors can point to a
-  concrete published parent section;
-- new published versions for changed `with_page` sections and the new current page snapshot must be
-  committed atomically;
+  materialized as a first concrete local content version during page publish when no suitable local saved
+  version exists, so downstream inheritors can point to a concrete activated parent section. This is new
+  resolved local content, not a duplicate created merely to label a saved version published;
+- `with_page` activation events/pointers, any necessary first local materialization, and the new current
+  page snapshot must be committed atomically;
 - independent sections used by publish-resolution must already have a published version;
 - unchanged sections stay pinned to the versions selected by publish-resolution;
 - layout refs are preserved unless the operation explicitly changes allowed layout state;
 - page-level validation runs before the new page snapshot becomes current.
 
 If a `with_page` page publish fails section validation or page-level validation, the failed attempt must
-not persist new published versions for the affected `with_page` sections and must not activate a new
-public current page snapshot.
+not commit activation events/pointers, newly materialized local versions, or a new public current page
+snapshot. Existing saved authoring versions remain unchanged.
 
-Independent section publication remains a separate flow. It may create a new published section version
-before affected page snapshots rebuild. If a later affected-page rebuild fails, the independent section
-version remains published in authoring history, but invalid page snapshots must not be activated.
+Independent section publication remains a separate flow. It may activate the selected saved version
+before affected page snapshots rebuild. If a later affected-page rebuild fails, the successful independent
+activation remains recorded, but invalid page snapshots must not be activated. The response must separate
+section activation from per-page rebuild outcomes and allow retries without creating duplicate content
+versions. Retrying dependent rebuilds is not the same operation as publishing an unchanged section again.
 
 Required independent sections must have a published version before any page depending on them can be
 published. Enabled optional independent sections must also resolve to a published version. Missing
 published versions are publish/readiness errors.
 
-Page publish prepares changed `with_page` draft sections for publication while building the new page
+Page publish prepares selected changed `with_page` saved sections for activation while building the new page
 snapshot. Enabled optional `with_page` sections must pass section validation; backend must not silently
 disable invalid enabled sections.
 Failed page publish attempts should be retained as diagnostics or audit history, not as partial published
@@ -834,12 +893,13 @@ would be published and return the same critical blockers/warnings that the real 
 
 The real page publish path:
 
-- changed `with_page` sections are validated and prepared for conversion from draft to published versions;
+- explicitly selected changed `with_page` saved versions are validated and prepared for activation;
 - independent sections are resolved only from current published versions;
 - required and enabled optional sections are validated;
 - resolved public payload is built;
-- if validation succeeds, changed `with_page` sections are committed as new published versions and a new
-  page snapshot is created and activated as current in one atomic operation.
+- if validation succeeds, `with_page` activation records/pointers, any necessary first inherited local
+  materialization, and a new page snapshot are committed and activated in one atomic operation; ordinary
+  saved versions keep their IDs and content.
 
 Publish must not accidentally include draft independent sections.
 
@@ -849,12 +909,13 @@ warnings remain visible but non-blocking.
 
 ## Global Section Rebuild Policy
 
-Publishing a `global_owned` section creates a new global section version. Public pages move to that
-version only through affected page snapshot rebuilds.
+Publishing an editable `global_owned` section activates the selected saved version and records a
+publication event without creating a duplicate content version. Public pages move to that version only
+through affected page snapshot rebuilds; layout-global public output uses the layout policy below.
 
 Global section activation is policy-driven:
 
-- global section publish itself is immediate as authoring history;
+- successful global section activation is recorded independently from downstream rebuild outcomes;
 - public page activation happens through affected page snapshot rebuild;
 - rebuild may be automatic, manually approved, or scheduled/batched depending on section policy;
 - large affected sets must be processed in batches with diagnostics;
@@ -875,11 +936,16 @@ schema for readiness diagnostics.
 
 Section lifecycle and page binding visibility are separate concepts.
 
-Section lifecycle:
+Target section/version state distinguishes:
 
-- draft;
-- published;
-- archived.
+- an unsaved working copy (not a persisted version);
+- saved authoring content and its current head;
+- the current published selection and historical activation events;
+- archival state where supported.
+
+The current `draft | published | archived` persistence enum is legacy storage terminology pending the
+compatible migration described above. It must not force content duplication on publication or make a
+historically published version indistinguishable from the currently active version.
 
 Page binding visibility:
 
@@ -906,8 +972,10 @@ current public snapshot -> selected historical snapshot
 
 It must not mutate current draft, page-section bindings, composition settings, or authoring state.
 
-Authoring rollback is a separate feature and can be implemented later. The first release must support
-public rollback through historical published snapshots.
+Restoring section authoring content is a separate workflow: read an authorized historical authoring
+version, take it as a local working-copy basis, explicitly Save, then Publish under current validation.
+Taking a basis does not persist a rollback draft or reactivate an old version directly. This does not
+change the existing public rollback workflow through historical published page snapshots.
 
 ## Initial Code Scope
 
@@ -950,7 +1018,8 @@ Requirements update as of 2026-05-11:
 - preview and publish resolution are separate modes;
 - schema decides section publish mode, disable rules, layout behavior, and composition policy.
 
-The existing `cms-back/src/sections` foundation already covers the pure rules for composition,
+Legacy/current implementation context, not completion of the 2026-10-04 target: the existing
+`cms-back/src/sections` foundation already covers the pure rules for composition,
 staleness, snapshot refs and layout. The lifecycle/persistence layer now also wires upstream draft
 propagation for `saveDraft` and section rollback drafts, plus affected snapshot planning for independent
 section publish. Automatic affected snapshot rebuild is now implemented for affected current public

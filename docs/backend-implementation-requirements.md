@@ -3,6 +3,23 @@
 This document records implementation requirements for the clean `CMS` backend, based on the reviewed
 `notstrapitest` refactoring assessments for page authoring and page preview.
 
+## Section Authoring Contract Update
+
+Decision date: 2026-10-04.
+
+[Section Authoring and Publication Contract](section-authoring-versioning-contract-2026-10-04.md) is the
+canonical approved target for editable section working copies, immutable saved versions, publication
+events, concurrency, and acceptance checks. This is a specification update, not a statement that the new
+lifecycle has been implemented or deployed. It applies to page-owned and editable global sections; it
+does not make runtime, read-only, code-owned, or ERP-owned fields editable.
+
+The normative lifecycle requirements below reflect that target. Dated implementation notes and existing
+endpoint/column names remain descriptions of the current/legacy implementation pending migration. They
+must not be used to reintroduce immediate persisted copy/rollback drafts or duplicate content versions
+on ordinary publication. An explicit Save identical to the latest saved authoring state returns that
+existing version without appending a duplicate; restoring older content that differs from the latest
+saved state creates a new version. The canonical contract defines comparison and conflict checks.
+
 ## Redirect Follow-Up And General Request Failure Policy - 2026-09-13
 
 [Redirects specification](redirects-specification-2026-09-13.md) defines the separately agreed route
@@ -190,23 +207,34 @@ page draft.
 
 Required direction:
 
-- each section has its own draft and published versions;
-- each section operation records actor and timestamp;
+- each editable section has immutable saved content versions, an explicit current saved authoring head,
+  a current published selection, and publication/activation history separate from content;
+- an unsaved working copy is client authoring state, not a persisted section version; viewing history,
+  starting empty, or taking any authorized saved authoring version of the same section as a basis must
+  not create a version or change current pointers;
+- explicit Save of changed authoring state appends a new immutable content version and records its
+  source/provenance without changing the old content; unchanged state reuses the latest saved version
+  under the canonical contract's comparison and concurrency rules;
+- each persisted section operation records actor and timestamp;
 - section publish mode is schema-defined: `independent` or `with_page`;
-- independent section publication creates a new published section version;
-- changed `with_page` draft sections are published only as part of successful page publish;
+- independent section publication validates and activates the explicitly selected saved version ID,
+  records a publication event, and must not duplicate its content into another version;
+- changed `with_page` saved sections are activated only as part of successful page publish;
 - section publication must not make the public frontend assemble a page from live section tables;
 - public runtime still reads a complete published page snapshot/public payload;
-- successful page publish commits new `with_page` published section versions and the new page snapshot
-  atomically;
-- independent section publication creates a new page snapshot where only the changed section points to the
-  new section version and unchanged sections stay pinned to their previous section versions;
+- successful page publish commits `with_page` activation events/pointers and the new page snapshot
+  atomically, including any genuinely necessary first local materialization of inherited content;
+- affected snapshot rebuild after independent section publication pins the selected saved section
+  version and keeps unchanged sections pinned to their previous versions; layout globals use separate
+  layout activation/revalidation instead of creating page snapshots;
 - page-level validation runs before a new page snapshot becomes current;
 - if critical page-level validation fails during `with_page` page publish, the attempt must not persist
-  new `with_page` published section versions or activate a new public current snapshot;
+  activation events, newly materialized local content versions, or pointer changes for that attempt;
+  already saved authoring versions remain unchanged and no new public snapshot becomes current;
 - if critical page-level validation fails after an independent section publish triggers affected page
-  snapshot rebuild, the already published independent section version remains in authoring history but the
-  invalid rebuilt page snapshot must not become current;
+  snapshot rebuild, the successful independent activation remains recorded, but the invalid rebuilt page
+  snapshot must not become current; responses distinguish activation success from per-page rebuild
+  `failed`/`skipped` outcomes and support retry without creating a content copy;
 - page rollback restores the exact historical set of section versions referenced by the selected snapshot;
 - regional inherit, override, and append behavior is section-level or field-level where the section schema
   allows it;
@@ -215,6 +243,15 @@ Required direction:
   copies;
 - preview must recompose inherited draft results from the latest upstream drafts plus local child
   override/append state.
+
+Save and Publish must check the caller's expected current state rather than silently overwrite a newer
+head/activation. Copy provenance and the expected current head are independent: a working copy may use
+old version 3 while expecting current head 5. Requests must be retry-safe; a repeated operation with the
+same identity must not append duplicate versions or activation events. Saving the content version and
+moving its authoring pointer is one transaction; publication records and their current pointers must
+also change atomically within the applicable independent/with-page boundary. Authorization and ownership
+are checked on the server, not inferred from action flags. Exact DTO and migration design remain
+implementation work, not an already available API.
 
 Section schemas must also support:
 
@@ -226,7 +263,9 @@ Section schemas must also support:
   dependencies, page snapshots, snapshot section refs, and current snapshot pointers;
 - explicit section locale, so global footer/menu sections are separate per locale instead of one
   multilingual JSON blob;
-- current section version pointers for all sections, covering current published and latest draft versions;
+- current section version pointers for all sections, distinguishing the saved authoring head from the
+  published selection; legacy `latest_draft` names must not make the existence of a saved record alone
+  mean that unpublished changes exist;
 - section validation diagnostics split into validation run history and current validation state;
 - validation issue severity split into `critical` and `warning`, where critical issues block publish and
   warnings remain visible but non-blocking;
@@ -258,8 +297,9 @@ Section schemas must also support:
 - layout revalidation for header/footer/contact settings, preserving page snapshots and page-owned drafts;
 - best-effort layout rebuild/revalidation diagnostics for failed layout refreshes, not all-or-nothing
   page publication blocking;
-- footer/menu rollback through a new draft copied from the old published version, followed by current
-  publish validation, not by moving the current published pointer back to the old version;
+- footer/menu content restoration through an unsaved working copy based on an authorized historical
+  version, explicit Save, and current publish validation; selecting the basis creates no persisted copy
+  and does not move the published pointer back to the old version;
 - automatic affected snapshot rebuild for global price publish when pages use enabled inherit, append, or
   field-level inherited/appended price composition;
 - price publish rebuild must preserve the current page snapshot and recompute only the price block from
@@ -490,7 +530,7 @@ Row endpoint contract:
 - `row.endpoints.snapshots`: snapshot history endpoint for created pages;
 - `row.endpoints.currentSnapshot`: current snapshot detail endpoint when a current snapshot exists.
 
-Cell endpoint contract:
+Cell endpoint contract (current/legacy transport names pending the 2026-10-04 contract migration):
 
 - `cell.endpoints.editor`: section editor read endpoint when the section can be opened;
 - `cell.endpoints.history`: section history endpoint when history is available;
@@ -498,7 +538,13 @@ Cell endpoint contract:
 - `cell.endpoints.saveDraft`: section draft save endpoint when draft saving is allowed;
 - `cell.endpoints.validateDraft`: section draft validation endpoint when a draft exists;
 - `cell.endpoints.publishDraft`: independent section publish endpoint when allowed;
-- `cell.endpoints.rollback`: section rollback endpoint when history is available.
+- `cell.endpoints.rollback`: legacy persisted section-rollback endpoint when exposed by the current
+  backend; the target UI must use read-only history plus a local working copy and explicit Save, not
+  call this endpoint merely to take a historical version as a basis.
+
+Do not mechanically alias history viewing to public preview, or taking a version as a basis to section
+rollback. Target action semantics and their compatibility transition are governed by the canonical
+section authoring contract; existing transport names above do not imply newly implemented endpoints.
 
 Unavailable actions must have `null` endpoints, not guessed or disabled-looking URLs. Runtime cells may stay
 without editor endpoints until a separate runtime detail API is introduced.
@@ -658,7 +704,8 @@ registered Nest page schema, and returns the reloaded editor payload. Independen
 resolve `latest_draft_version_id` and `current_published_version_id` from `cms_section_current_versions`, so
 shared sections edited outside a page binding still appear correctly in the page editor.
 
-Implementation note, 2026-05-21: `cms-back` now contains page-scoped section history and rollback endpoints:
+Legacy/current implementation note, 2026-05-21 (authoring rollback superseded by the 2026-10-04 target):
+`cms-back` contains page-scoped section history and rollback endpoints:
 `GET /api/admin/pages/{pageId}/sections/{slotKey}/editor/history` and
 `POST /api/admin/pages/{pageId}/sections/{slotKey}/editor/rollback`. History returns draft/published/archive
 section versions with audit metadata and current-version markers. Section rollback does not move the

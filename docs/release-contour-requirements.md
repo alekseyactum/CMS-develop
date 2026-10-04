@@ -8,6 +8,13 @@ contract for redirect management, URL migration, and the revised first public ca
 workflow/alias wording below must be interpreted through it. No live configuration changes are approved
 by this documentation update.
 
+2026-10-04 amendment: the
+[Section Authoring and Publication Contract](section-authoring-versioning-contract-2026-10-04.md)
+defines the target local working copy, immutable saved content, no-change Save, and same-version
+publication workflow. It supersedes conflicting section lifecycle wording below, not the public
+snapshot, environment, or authorization boundaries. Implementation remains pending; this amendment
+does not authorize deployment, database migration, or content mutation.
+
 ## Decision Index
 
 - Decision 1: first production-oriented runtime mode.
@@ -493,8 +500,11 @@ snapshot-first plus dependency tracking is insufficient.
 
 Sections are independent authoring units.
 
-Each page section must have its own draft and published versions. Every section operation must record the
-actor and timestamp, including at minimum:
+Editable sections have immutable saved authoring versions, a separate current publication, and publication
+audit. Local working copies are not database versions. View and Take as basis do not persist content;
+explicit Save creates a new version only when authoring state differs from the latest saved state.
+The legacy implementation represents draft and published versions as separate rows until the coordinated
+transition. Every persisted section operation must record the actor and timestamp, including at minimum:
 
 - create author and date;
 - update author and date;
@@ -503,28 +513,35 @@ actor and timestamp, including at minimum:
 
 Section publication does not use one universal flow. Section publish mode is schema-defined:
 
-- `independent` sections can publish their own new published section versions;
-- `with_page` sections receive new published versions only as part of successful page publish.
+- `independent` sections activate an explicitly selected saved version and record publication separately;
+- `with_page` sections activate their saved versions only as part of successful page publish;
+- ordinary publication does not duplicate the saved content solely to give it a published state;
+- first materialization of inherited/composed content may require a new local saved version when no
+  suitable authoring version exists, under the section composition rules.
 
 The public frontend must not assemble pages from live section tables or from "latest published section"
 lookups. The public frontend receives only a complete published page snapshot/public payload.
 
-Independent section publication must therefore activate public content by creating a new complete page
-snapshot:
+For page-content sections, independent publication becomes visible on affected pages through a new
+complete page snapshot. Layout globals such as header/footer retain their separate layout delivery
+contract and are not copied into page snapshots:
 
-- the changed section points to the newly published section version;
+- the changed section points to the exact saved section version activated by publication;
 - unchanged sections remain pinned to the exact section versions from the previous page snapshot;
 - page-level metadata, route, SEO, breadcrumbs, quality state, and render payload remain part of the
   complete page snapshot;
 - page-level validation still runs before the new snapshot becomes current.
 
-For `with_page` sections, successful page publish must commit the new section published versions and the
-new current page snapshot atomically. If section validation or critical page-level validation fails, the
-attempt must not persist new `with_page` published section versions and must not activate a new public
-current page snapshot.
+For `with_page` sections, successful page publish commits publication events/current activation, any
+required inherited materialization, and the new current page snapshot atomically. If section validation
+or critical page-level validation fails, the attempt must not leave a partial section publication or
+materialized result, and must not activate a new public current page snapshot. Previously saved authoring
+versions remain intact.
 
-For `independent` section publication, the published section version may remain in authoring history even
+For `independent` publication, the activated section and its publication event may remain current even
 when a later affected-page rebuild fails, but the invalid rebuilt page snapshot must not become current.
+Report section activation and affected-page outcomes separately, with retries of failed rebuilds that
+do not require artificial new section content versions.
 
 Page snapshots must reference the exact section versions used to render them. Rollback of a page must
 restore the page to a historical set of section versions, not rebuild the page from whatever section

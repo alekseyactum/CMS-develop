@@ -2,6 +2,27 @@
 
 This document fixes the first-release product and backend contract for the public site footer.
 
+## Authoring Contract Update
+
+Decision date: 2026-10-04.
+
+The target lifecycle for editable `site_footer` content is defined by
+[Section Authoring and Publication Contract](section-authoring-versioning-contract-2026-10-04.md).
+That contract takes precedence over older draft/copy/rollback/publication wording in this document.
+It is an approved implementation target, not a claim that the new lifecycle or API is already deployed.
+
+In the target workflow, viewing history and taking any saved editable authoring version of the same
+section as the basis of a working form do not create a database version. Only an explicit Save persists
+a new immutable content version. Ordinary publication activates that saved content version by its
+existing id and records a publication event; it does not make an identical published-content copy.
+Restoring old content follows working form → Save → publish, not an immediate persisted copy operation.
+Unchanged-content/no-op behavior follows the central contract and must not be inferred locally.
+
+Existing draft/published records and copy/rollback endpoint names below describe the legacy
+compatibility contract until the upgrade. Their history and identifiers must remain readable.
+This change does not turn the runtime `site_footer_practices` block or non-versioned
+`site_contact_settings` into editable/versioned content, and does not change page snapshot boundaries.
+
 ## Scope
 
 The visual footer is not one fully editable CMS constructor.
@@ -29,7 +50,7 @@ site_footer / shared
 
 `site_footer_practices` remains locale-specific because its rendered title, practice labels, and public
 routes depend on the requested locale. `site_footer` has `localeScope = "shared"`: social URLs and legal
-documents use one draft, published version, and history for the whole site.
+documents use one authoring and publication history for the whole site, not independent language copies.
 
 The `locale` query parameter is still required for `site_footer` endpoints. It controls requested-locale
 read-only labels, routes, and layout preview decoration; it does not select a separate editable footer
@@ -44,22 +65,24 @@ Both sections are:
 - not overridden per page;
 - layout-level payload sources;
 - not copied into page snapshots;
-- published without affected page snapshot rebuild.
+- served without affected page snapshot rebuild.
 
 The frontend may render them as one visual footer, but the backend must keep them as separate section
-slots and separate section histories.
+slots and ownership surfaces. Only editable `site_footer` has the authoring/publication history described
+here. `site_footer_practices` is a read-only runtime workbench, not a draft/publish editor.
 
 ## Shared Section Rules
 
-Use the normal global section rules unless this document explicitly says otherwise:
+For editable `site_footer`, use the central authoring contract and the following footer-specific rules:
 
 - errors block draft save and publish;
 - warnings do not block draft save or publish, but must be visible in diagnostics, history, and global
   menu indicators;
-- draft changes do not change the public layout payload;
-- publish creates/reuses a published section version and affects the public layout payload;
+- working-form changes and saving a content version do not change the public layout payload;
+- ordinary publication activates the selected saved content version, records a publication event, and
+  affects the public layout payload;
 - publish does not rebuild page snapshots;
-- rollback creates a new draft copied from an old published version.
+- restoring historical content starts a local working form; it does not persist a copy before Save.
 
 ## `site_footer_practices`
 
@@ -132,11 +155,14 @@ served from the layout payload, not from page payloads.
 
 It uses the normal global section lifecycle:
 
-- draft/published versions;
-- history;
+- a local working form and immutable saved content versions;
+- read-only content history and publication history;
 - validation;
-- rollback by creating a new draft from an old version;
+- restoring old content through a working form, explicit Save, and publication;
 - publish into the shared layout payload.
+
+These are target requirements. The legacy implementation still represents draft/published content as
+separate records until the lifecycle upgrade; it must not be presented as already using the target model.
 
 The footer section is a shared fixed global section:
 
@@ -263,8 +289,9 @@ Rules:
 - missing privacy/offer file is a warning and the link is omitted from public payload;
 - invalid mime/size is an error at upload/save;
 - a media file used by a published footer version/layout payload cannot be deleted;
-- rollback of `site_footer` restores the old media ids, so old published footer versions keep their
-  original documents.
+- taking a historical `site_footer` version as the basis of a working form preserves its media ids;
+  Save and publication validate those references against the current media policy. Historical saved
+  versions and publication records keep their original document references.
 
 The CMS footer editor should show each linked PDF as filename, size, upload date, and open/download
 action. Inline PDF preview is not required.
@@ -356,7 +383,7 @@ These fields are already included in the workbench startup response. The
 individual public-content endpoints exposed in `endpoints` are for targeted
 refresh/debug flows, not for the normal initial render.
 
-The workbench also exposes:
+The legacy workbench also exposes the following compatibility action names:
 
 ```ts
 workbench.refreshAfterActions = {
@@ -375,9 +402,14 @@ workbench.refreshAfterActions = {
 }
 ```
 
-This is the preferred first-release action flow. The frontend does not need
-special wrapper endpoints for footer actions: after an action succeeds or
-returns diagnostics, reload the workbench and replace the full screen state.
+The endpoint names above remain a description of the existing API, not instructions for the target UI
+to invoke persisted copy/rollback operations. The target “Take as basis” action reads the selected saved
+editable content into a local working form without a mutation request.
+
+After an actual server action, refresh the server-owned workbench data as needed. Such refreshes,
+validation errors, read-only history selection, contact-setting changes, and media-upload results must
+not silently replace or discard an unsaved working form. Reconcile or explicitly confirm replacement
+according to the central authoring contract; never unconditionally replace the full editor state.
 
 The global section validate response for `site_footer` returns both generic
 `validation` and footer-specific `diagnostics`. The visible CMS form should use
@@ -396,8 +428,11 @@ The footer workbench should:
 - show read-only preview/info for non-editable footer parts;
 - edit only social URLs and legal PDF media refs;
 - use the media upload/picker flow for legal PDF files;
-- save the full editable `site_footer` draft through the global sections API;
-- use history/rollback/publish from the same global section workflow as other globals.
+- save only the full editable `site_footer` content through the global sections API;
+- keep history viewing read-only and separate from the unsaved working form;
+- allow any saved editable version of this same section to be taken as the basis of that form;
+- use explicit Save and publication from the central global section workflow, with no persisted copy
+  or restore operation merely for starting work.
 
 The UI should not expose editable fields for phone, first-level navigation, legal labels, sitemap, or
 practice list ordering until the backend contract changes.

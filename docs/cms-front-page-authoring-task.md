@@ -5,7 +5,67 @@ This document is the first implementation task for CMS frontend page authoring s
 The backend contract is available in Swagger/OpenAPI. Use OpenAPI examples as the primary source for
 request/response shapes, especially for authoring state, preview, publish, and rollback.
 
+## Section Authoring Revision
+
+Decision date: 2026-10-04. Status: approved target, implementation pending.
+
+The canonical target behavior is now defined in
+[Section Authoring and Publication Contract](section-authoring-versioning-contract-2026-10-04.md).
+The endpoint and DTO examples in this document describe the existing compatibility API unless stated
+otherwise. They are not evidence that the revised save/capability/publication contracts have shipped.
+OpenAPI remains authoritative for currently callable shapes; the canonical contract defines the approved
+implementation target where that API still implements legacy behavior.
+
+The target section editor must distinguish:
+
+1. Read-only view of one selected saved authoring version.
+2. An unsaved local working form, initially empty or based on an authorized saved version of the same
+   section. This includes the currently published version, historical versions, and a draft already used
+   by publication. Taking content as a basis is not copying a section or creating a stored draft.
+3. Explicit Save, which persists an immutable content revision under the canonical conflict/retry rules.
+   If the normalized authored state equals the latest saved authoring state, reuse that saved revision
+   without inserting a duplicate. Taking an older, different state as a basis and saving it creates a new
+   revision even if no field was edited after taking the basis. Never mutate the source version.
+4. Explicit publication of a selected eligible saved revision. The target later publication phase records
+   a publication event for that same revision rather than copying its content to a new revision.
+
+Viewing, taking as basis, creating an empty working form, and cancelling must not create content/history
+rows or move draft/published pointers. The new editor must not call existing section rollback or
+draft-from-version mutations to implement these local actions. Those mutations remain legacy compatibility
+surface until their consumers are audited; page snapshot rollback is a different, unchanged operation.
+
+Read-only history view and site-rendering preview are separate capabilities: `canView` must not require
+`canPreview`. Taking content as a basis must not require a publication rollback capability. Current
+`canOpenInEditor`, `canCreateDraftFromVersion`, and `canRollback` fields need an explicit compatibility
+mapping, not name-based guessing. Exact revised DTO/capability names are implementation deliverables.
+
+The local buffer must survive history viewing, validation failure, request failure, and metadata/workbench
+refresh. Returning from history restores it. Replacing a dirty buffer, changing section/locale, or
+navigating away requires confirmation before discard. Autosave, cross-device sync, and recovery after
+reload/tab closure are not implied. A successful save acknowledges the submitted buffer; if the user
+continued typing while the request was in flight, those newer local edits must not be overwritten.
+
+The target save tracks both the source revision and the expected current authoring head. These are not
+the same value: content can be based on version 3 while the head observed at the start was version 5.
+The backend must reject a stale-head save without changing pointers; the UI preserves input and explains
+the conflict instead of silently retrying as an overwrite. Retry identity must prevent duplicate records
+for the same operation. Publication must identify the selected saved revision explicitly, so saving a
+newer version in parallel cannot change what is published.
+
+Editor, history, matrix, and navigation must agree on saved/unpublished/currently-published state. A draft
+row already consumed by the current publication is not an unpublished change just because it still exists.
+Unsaved local input is a separate frontend state, not server-side publication coverage.
+
+These rules do not authorize editing readonly/runtime/ERP-owned fields or copying arbitrary composed
+public payloads into local authoring content. Preserve ownership, locale scope, editable projections,
+field-level inheritance, and the source/local/resolved distinction documented below. Inherited-content
+materialization and immutable public page snapshots remain required where their existing lifecycle calls
+for them. Old saved IDs and snapshots must remain readable through the publication transition.
+
 ## Endpoints
+
+Current compatibility endpoint inventory; presence of a section `rollback` URL does not make it an
+appropriate implementation of the target local "Take as basis" action.
 
 ```text
 GET  /api/admin/page-schemas
@@ -116,9 +176,10 @@ The response contains `groups`:
   This group opens publication lists, not operational queues. Queues such as "requires review" can be
   added later as a dashboard, not mixed into the content tree.
 - `global_sections`: shared layout/global area. It contains versioned global sections
-  `site_header`, `site_footer_practices`, `site_footer`, `global_price`, `global_achievements`,
+  `site_header`, `site_footer`, `global_price`, `global_achievements`,
   `global_lead_form`, and the non-versioned settings
-  item `site_contact_settings`. The versioned sections are backed by `/api/admin/global-sections`.
+  item `site_contact_settings`, plus the readonly/runtime `site_footer_practices` workbench. The versioned
+  sections are backed by `/api/admin/global-sections`.
   `site_contact_settings` is backed by `/api/admin/site-settings/contact`. The global price editor manages
   the upper shared source; concrete generated pages expose their own page `price` slot when the page is
   opened in the workbench.
@@ -579,7 +640,7 @@ still uses `/api/admin/navigation`.
 
 ## Global Sections
 
-Use:
+Current compatibility API (apply the approved lifecycle revision above when implementing the new editor):
 
 ```text
 GET  /api/admin/global-sections?locale=uk
@@ -609,7 +670,7 @@ Do not send `content` together with `sectionVersionId`. `recordDiagnostics: true
 For global sections, `actions.canValidate` means that the section editor supports validation. It may be
 `true` even when no draft exists yet, because the frontend can validate unsaved `content`.
 
-Supported editable section keys now:
+Supported workbench keys in this compatibility slice:
 
 - `site_header`;
 - `site_footer_practices` as a read-only/global diagnostics workbench;
@@ -661,18 +722,21 @@ In the workbench response:
   when the design needs a "current site" comparison;
 - show screen indicators from `diagnostics.header`, `diagnostics.navigation`,
   `diagnostics.servicesMenu`, and `diagnostics.contactSettings`;
-- use `endpoints.*` for save/validate/publish/history/rollback/contact settings
-  rather than hardcoding URLs in the component.
+- use `endpoints.*` for supported server actions rather than hardcoding URLs in the component;
+  legacy rollback/draft-from-version URLs are not used for local "Take as basis".
 
 After header actions, use the same simple refresh rule as the footer screen:
 
 - call the action endpoint from `endpoints.*`;
 - process the immediate result and show operation diagnostics/messages;
-- then call `workbench.refreshAfterActions.path` and replace the whole screen state with the returned
-  workbench payload.
+- then call `workbench.refreshAfterActions.path` to refresh server metadata/history/current publication.
+  Do not remount or overwrite a dirty working form as an incidental result of this refresh. A save result
+  may acknowledge its submitted buffer, but must preserve edits made after that submission.
 
-`workbench.refreshAfterActions.appliesTo` lists the action keys that should trigger this reload:
+The current compatibility `workbench.refreshAfterActions.appliesTo` lists these server action keys:
 `saveDraft`, `validateDraft`, `publishDraft`, `rollback`, `draftFromVersion`, and `contactSettings`.
+Local viewing/take-as-basis/cancel is not a persistence action and must not invoke the latter legacy
+copying operations. Unsaved-form validation returns `editor: null` and preserves the local buffer.
 
 `POST /api/admin/global-sections/site_header/validate?locale=uk` returns both:
 
@@ -681,7 +745,7 @@ After header actions, use the same simple refresh rule as the footer screen:
 
 For display, an empty/legacy `site_header` may be shown with backend defaults
 `searchEnabled: true` and `contactButtonEnabled: true`. This does not weaken saving:
-when the frontend creates or updates a draft, it must submit both boolean fields explicitly.
+when the frontend saves a new immutable content version, it must submit both boolean fields explicitly.
 
 `site_footer` and `site_footer_practices` are layout-level footer sources. They are exposed through the
 global section workbench for authoring/diagnostics and through public layout payload for frontend
@@ -725,8 +789,8 @@ The footer workbench response contains the initial data for the whole screen:
 - `history`: render the footer version/history panel;
 - `diagnostics.footer`, `diagnostics.footerPractices`, and `diagnostics.contactSettings`: render screen
   badges and warnings;
-- `endpoints.*`: use backend-provided URLs for save, validate, publish, rollback, history, media, layout
-  preview, and contact settings actions.
+- `endpoints.*`: use backend-provided URLs for supported server actions, history, media, layout preview,
+  and contact settings. Do not use legacy persisted-copy/section-rollback URLs to take a working basis.
 
 When saving the footer draft from the workbench screen, send only the object referenced by
 `workbench.editableSource`, currently `footerSection.editableContent`, to
@@ -737,12 +801,13 @@ After footer actions, prefer a simple full workbench refresh instead of stitchin
 
 - call the action endpoint from `endpoints.*`;
 - process the immediate result and show operation diagnostics/messages;
-- then call `workbench.refreshAfterActions.path` and replace the whole screen state with the returned
-  workbench payload.
+- then call `workbench.refreshAfterActions.path` to refresh server state/history while preserving the
+  independent dirty working buffer and any edits made after an in-flight save was submitted.
 
-`workbench.refreshAfterActions.appliesTo` lists the action keys that should trigger this reload:
+The current compatibility `workbench.refreshAfterActions.appliesTo` lists these server action keys:
 `footerSaveDraft`, `footerValidateDraft`, `footerPublishDraft`, `footerRollback`,
 `footerDraftFromVersion`, `contactSettings`, and `mediaUpload`.
+The target local "Take as basis" action does not invoke `footerRollback` or `footerDraftFromVersion`.
 
 `POST /api/admin/global-sections/site_footer/validate?locale=uk` returns both:
 
@@ -792,11 +857,12 @@ For the global price screen:
 - the top section header (`title`, `accentText`, `description`) is read-only content from backend registry
   for the active locale;
 - editor responses should expose `readonlyContent`, `editableContent`, and full `workingContent`;
-- draft save accepts only `{ content: { items } }` and returns `saved: true | false` with diagnostics;
+- current draft save content projection is `{ content: { items } }` and returns `saved: true | false`
+  with diagnostics; target save adds the canonical provenance/head/retry metadata outside editable content;
 - per-card apply buttons are local UI state only; backend persistence happens through the global draft
   save action;
-- publishing is triggered from the history action for `latest_draft`, and publish response contains
-  affected snapshot rebuild results.
+- publication targets an explicitly selected eligible saved revision, and its response contains affected
+  snapshot rebuild results. Existing latest-draft resolution remains compatibility behavior only.
 
 The editor response includes `schema.fields`. Use it as the current backend contract for required fields
 and simple field shapes. For `global_price`, use the dedicated workbench contract above because it adds
@@ -943,7 +1009,8 @@ preview/comparison panels, published-state checks, and layout-level public paylo
 header/footer workbench startup responses already include the relevant published-content blocks, so the
 frontend normally does not need an extra initial request for those screens.
 
-Save draft:
+Current compatibility save request (editable content projection; target concurrency/provenance metadata
+will be added by the revised OpenAPI contract):
 
 ```json
 {
@@ -963,23 +1030,30 @@ Save draft:
 }
 ```
 
-Validate and publish may omit `sectionVersionId`; backend then uses the latest draft:
+The current compatibility validate/publish APIs may omit `sectionVersionId`; backend then uses the latest
+draft. The target publication flow must send the selected saved revision explicitly, not rely on this
+fallback:
 
 ```json
 {}
 ```
 
-Publishing `site_header`, `site_footer_practices`, or `site_footer` creates the new published global
-section version but does not rebuild page snapshots. These are layout-level sources, so frontend preview
-and public rendering read them through the layout payload.
+Publishing editable `site_header` or `site_footer` does not rebuild page snapshots. These are layout-level
+sources, so frontend preview and public rendering read them through the layout payload.
+`site_footer_practices` is readonly/runtime and has no save/publish lifecycle.
 
 Publishing `global_price`, `global_achievements`, or `global_lead_form` uses affected page snapshot
-rebuild: backend creates the new published global source and plans/rebuilds affected page snapshots without
+rebuild: backend activates the global source and plans/rebuilds affected page snapshots without
 touching unrelated page-owned draft sections.
 
-The publish response contains:
+In the current compatibility implementation ordinary publication creates a separate published content
+copy. The approved later phase instead records a publication event for the same saved revision and moves
+the current pointer; it must not duplicate that revision solely because of publication. This is a backend
+contract/storage transition, not a frontend assumption that can be enabled before implementation.
 
-- `publish.publishedVersionId`: the new published section version;
+The current compatibility publish response contains:
+
+- `publish.publishedVersionId`: the activated published section version;
 - `publish.affectedPages`: pages that depend on this global section; for layout globals this may be empty;
 - `publish.affectedBindings`: exact page-section bindings affected by the new section version; for layout
   globals this may be empty;
@@ -990,15 +1064,16 @@ The publish response contains:
 For the UI this means: show publish success from `publishedVersionId`. Show rebuild impact from
 `rebuiltSnapshots` only when the section actually uses snapshot rebuild, currently `global_price`,
 `global_achievements`, and `global_lead_form`.
-For `site_header`/`site_footer_practices`/`site_footer`, the important follow-up is layout preview/public
-layout refresh, not page workbench rebuild.
+For `site_header`/`site_footer`, the important follow-up is layout preview/public layout refresh, not page
+workbench rebuild. Runtime footer-practices refresh also uses layout read APIs, not a publication mutation.
 
 For inherited global page slots, affected rebuilds apply to pages that directly depend on the global
 source, normally the base non-regional generated pages. Regional pages depend on the matching base page
 local layer and should be reviewed/republished through the regional page workflow when that layer changes.
 
-All mutation responses return a fresh `editor` object. Use it to replace the current editor state after
-save, validate, publish, or rollback.
+Use returned fresh `editor` metadata to update saved/current server state after successful mutations.
+Do not replace a dirty local buffer as a side effect; failed save/validation and concurrent typing retain
+the user's input. Unsaved-form validation may return `editor: null`, as documented above.
 
 ## Basic Flow
 
@@ -1008,7 +1083,8 @@ save, validate, publish, or rollback.
 4. Bootstrap or open a concrete page from the selected row.
 5. Render `authoring.page`, editable `authoring.sections`, and read-only `authoring.runtimeSlots`.
 6. Open a concrete section through the workbench section editor endpoint.
-7. Save/validate/publish that section through the workbench section action endpoints.
+7. View history read-only or prepare a local working form from authorized editable content; save explicitly
+   and validate/publish through the workbench section action endpoints when supported.
 8. Build preview through the workbench page action endpoint.
 9. Publish a page through the workbench page action endpoint.
 10. Rollback through the workbench page action endpoint when needed.
@@ -2201,6 +2277,11 @@ For inherited price sections, `content.resolved.draft` is the editor's latest-dr
 `content.resolved.published` is the currently published result. Do not show draft-resolved content as if it
 were already public.
 
+Taking a saved version as a working basis uses its authorized raw editable/local authoring content and
+the applicable composition state, not `content.resolved.*` or an assembled page snapshot. Inherited values
+and runtime decorations must not silently become local overrides. Saving remains subject to current field
+policies and validation even when the basis is a historical version.
+
 Runtime/read-model payloads keep media ids as stable references and may also include ready-to-render URL
 fields. Current examples:
 
@@ -2250,7 +2331,7 @@ Important boundaries:
 
 ## Section Editor Actions
 
-Use these endpoints from the section edit screen:
+Current compatibility endpoints from the section edit screen:
 
 ```text
 PATCH /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/state
@@ -2276,7 +2357,8 @@ returns `previousVisibility`, the new `visibility`, and a reloaded `editor` payl
 In the workbench wrapper, read it as `response.updateState.editor` and then replace the matrix row with
 `response.workbench.row`.
 
-Draft request body:
+Current compatibility draft request body (target save also requires the canonical provenance/head/retry
+contract; its final DTO names are an implementation deliverable):
 
 ```json
 {
@@ -2287,9 +2369,11 @@ Draft request body:
 ```
 
 The backend decides whether this is a `with_page` page-owned section or an `independent` global section.
-The response returns operation metadata plus a reloaded `editor` payload. Use `response.editor` as the new
-current section state in the UI on the lower-level endpoint. In the workbench wrapper, use
-`response.saveDraft.editor` and then replace the matrix row with `response.workbench.row`.
+The response returns operation metadata plus a reloaded `editor` payload. Use `response.editor` as the
+new saved/server state on the lower-level endpoint. In the workbench wrapper, use
+`response.saveDraft.editor` and replace the matrix row with `response.workbench.row`. Preserve input on
+failure/conflict and any local edits made after the submitted save; a metadata refresh is not permission
+to discard the buffer.
 
 Validate request body:
 
@@ -2307,17 +2391,20 @@ on errors only. When `recordDiagnostics=true`, the saved warning list is visible
 `editor.diagnostics.warnings`; the matrix also exposes aggregate warning counts on the section cell and row.
 In the workbench wrapper, use `response.validation.editor` and `response.workbench.row`.
 
-Publish request body:
+Publish request body for an explicit selected eligible saved revision:
 
 ```json
 {
-  "sectionVersionId": "optional-draft-version-id"
+  "sectionVersionId": "selected-saved-version-id"
 }
 ```
 
 This endpoint is only for independent sections such as shared/global sections. Page-owned sections are
 published with the page through `POST /api/admin/pages/{pageId}/publish`.
 In the workbench wrapper, use `response.publish.editor` and `response.workbench.row`.
+The existing compatibility backend may resolve an omitted ID as latest draft; the target frontend must
+not rely on that fallback. Same-revision publication events are a later backend phase and must not be
+assumed from an old response shape.
 
 History:
 
@@ -2325,26 +2412,36 @@ History:
 GET /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/history?limit=50&offset=0
 ```
 
-The response returns version rows for the section currently opened through the page editor:
+The existing compatibility response returns version rows for the section currently opened through the
+page editor:
 
 - draft, published and archived versions;
-- version content for preview/review;
+- saved version content for read-only field review (not the public/site preview payload);
 - `changeReason` plus computed `changeOrigin`;
 - `createdBy`, `createdAt`, `publishedBy`, `publishedAt`;
 - `isCurrentDraft` and `isCurrentPublished`;
-- `canRollback`, which is true only for published versions.
+- legacy `canRollback`, which applies only to the persisted section-rollback operation, not to viewing
+  saved content or taking it as a local working basis.
 
-`changeOrigin` uses the same UI contract as global section history. Manual edits are marked as
+The target history presents separate authorized actions for read-only saved-content view and local
+"Take as basis" on every same-section saved authoring version, regardless of draft/published/current
+role. This does not authorize editing inherited readonly/runtime fields, activating an old published
+pointer, or creating a duplicate section. The history viewer must show the selected saved version and
+preserve the independent working buffer; taking a different basis prompts before replacing dirty input.
+Revised action DTO names/mapping must be agreed with the backend, not inferred from `canRollback` or
+`canPreview`.
+
+The legacy `changeOrigin` uses the same UI contract as global section history. Manual edits are marked as
 `{ code: "ME", label: null }`; rollback rows are marked as `RB#<sourceVersionNo>` and repeated rollbacks as
 `RB#<sourceVersionNo>_<repeatNo>`; draft-from-version/copy rows use `FV` with the same label pattern.
 
-Rollback:
+Legacy persisted section rollback — compatibility only, not "Take as basis":
 
 ```text
 POST /api/admin/pages/{pageId}/sections/{slotKey}/editor/rollback
 ```
 
-For the workbench UI use:
+Existing workbench compatibility wrapper:
 
 ```text
 POST /api/admin/page-workbench/pages/{pageId}/sections/{slotKey}/editor/rollback
@@ -2358,11 +2455,16 @@ Request body:
 }
 ```
 
-Rollback does not move the published pointer backwards. It creates a new draft copied from the selected
-published version and returns a reloaded `editor` payload. For page-owned sections the backend also points
+This legacy rollback does not move the published pointer backwards. It creates a new draft copied from
+the selected published version and returns a reloaded `editor` payload. For page-owned sections the backend also points
 the page binding to the new rollback draft. For independent/global sections the backend updates the section
 latest draft pointer, and pages keep their published state until a later publish/rebuild.
 In the workbench wrapper, use `response.rollback.editor` and `response.workbench.row`.
+
+The target editor must not invoke either section-rollback endpoint to populate a working form. Restoring
+historical content follows local "Take as basis" -> explicit Save -> explicit Publish, leaving the source
+and current site untouched until the corresponding operations succeed. Retiring the legacy mutation
+requires a consumer audit. This change does not retire or alter the page snapshot rollback below.
 
 The older `POST /api/admin/pages/{pageId}/sections/{slotKey}/draft` endpoint still exists for the first
 page-owned slice, but new CMS page editor UI should prefer the `/editor/draft` endpoint.

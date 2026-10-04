@@ -118,6 +118,32 @@ shared GCP resources early. Runtime and deployment decisions remain governed by 
 
 ## Implementation Sequence
 
+### Section authoring transition
+
+The 2026-10-04 section workflow revision follows
+[Section Authoring and Publication Contract](section-authoring-versioning-contract-2026-10-04.md).
+This is planned work, not an implementation status claim. Do not start by deleting historical versions
+or changing publication inserts in isolation.
+
+1. Finalize typed read/action/save/publication contracts, including the confirmed rule that saving an
+   unchanged authoring state reuses the current saved version without creating a duplicate.
+2. Add backend state consistency, save provenance, concurrency checks, retry safety, and atomic writes,
+   preserving the existing frontend compatibility surface.
+3. Deliver the local working-copy and readonly-history frontend with Yuri; taking a saved version as a
+   basis must not call a persistent copy/rollback endpoint. Verify one editor before extending the common
+   pattern to other editable section families.
+4. Change ordinary publication to activate the same saved content version with separate publication
+   audit. Preserve legacy IDs, exact historical page snapshot references, inherited materialization,
+   and with-page atomicity.
+5. Pass database concurrency/failure tests, frontend buffer-preservation tests, old-client compatibility,
+   and rollback-read compatibility before separately authorized rollout.
+
+The first authoring stages do not remove the old duplicate-on-publish behavior and must not be reported
+as completing the publication transition. Non-versioned settings, runtime/ERP fields, autosave,
+automatic conflict merging, header feature integration, and historical deduplication are out of scope.
+
+### Initial foundation sequence
+
 Prefer a low-risk foundation before moving into complex CMS behavior.
 
 Recommended early sequence:
