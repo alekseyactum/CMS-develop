@@ -2,10 +2,10 @@
 
 Decision date: 2026-10-04.
 
-Status: agreed product direction and implementation requirements, not an implemented API or completed
-rollout. This documentation change does not change service code, stored content, database schema, or
-running environments. Exact request DTOs and the persistence transition must be reviewed before code
-changes. The no-change Save policy below was explicitly confirmed by the user on the decision date.
+Status: agreed product direction and implementation requirements. A local candidate for the first
+backend stage is documented under Implementation status; this is not a completed rollout or a completed
+publication transition. The specification itself does not authorize schema execution or runtime changes.
+The no-change Save policy below was explicitly confirmed by the user on the decision date.
 
 This contract defines how CMS editors inspect section history, prepare a working copy, save immutable
 content, and publish a saved version. It applies to editable page-owned and global-owned section
@@ -302,12 +302,21 @@ reported as complete success, or rollback compatibility is unproven.
 
 ## Implementation status
 
-At the time of this specification update, no implementation or deployment of this contract has been
-performed. The preceding source review found separate legacy draft/published records, immediately
-persistent copy/section-restore operations, inconsistent history capabilities, incomplete historical
-header display, and inconsistent consumed-draft status. Those observations are a source-code baseline,
-not claims that a new live browser acceptance run or cloud verification has been completed.
+The specification was recorded before implementation. On 2026-10-04 a local backend candidate for the
+Safe authoring backend stage was prepared in `cms-back`, branch `codex/section-authoring-safe-save`.
+Its concrete wire contract and compatibility boundaries are documented in that repository at
+`docs/section-authoring-safe-save.md`.
 
-Future implementation evidence must record stage, affected endpoint/editor families, tests, remaining
-compatibility limitations, and any separately authorized rollout. Do not replace this status with
-"implemented" merely because the requirements were linked from other project documents.
+The candidate covers readonly global/page-section authoring and exact history, source provenance,
+guarded no-op Save, concurrency tokens, durable request receipts, atomic head/binding/composition and
+stale-dependency writes, and consumed-draft status. Existing clients retain legacy Save semantics unless
+they opt into the guard; the new working-copy endpoints require it. The additive receipt migration is
+prepared but has not been executed. No existing history or public snapshots were rewritten.
+
+Local compilation and all 1,259 contract/unit tests passed. A separate isolated MySQL 8.0.43 run passed
+15 real concurrency/fault checks, including both save/publication orderings, and removed its generated
+test database. The read-only migration inspector passed 27 isolated checks. Browser working-copy
+acceptance belongs to the frontend stage. The owner subsequently approved source publication,
+migration and deployment to develop, then release; actual rollout results are recorded separately in
+the governing playbook. Same-version publication and activation audit remain unimplemented future
+work; legacy draft-to-published copying is intentionally preserved.
