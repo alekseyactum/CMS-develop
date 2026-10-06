@@ -9,7 +9,7 @@ create content, publish pages, or authorize deployment.
 
 The page introduces Actum as a company across all practices. It is not a family-law landing page.
 The approved sequence is: introduction, company statement, history, founders, offices, cases,
-lawyers, media publications, and a universal contact form.
+lawyers, media publications, and the ordinary inherited global application form.
 
 ## 1. Approved Product Decisions
 
@@ -26,7 +26,11 @@ lawyers, media publications, and a universal contact form.
 | Media showcase | Media publications only, not a mixed blog/media list |
 | Regional differences | Adaptable introductory text and SEO; local offices and lower lawyer showcase; shared company history and founders |
 | Regional cases and media | Inherit national About selections by default; explicit regional manual selections are allowed |
-| Contact form | Name, phone, preferred contact method/messenger, and question description; page region accompanies the submission |
+| Contact form | Existing `global_lead_form` without page-owned fields; actual page region accompanies the submission context |
+
+2026-10-06 clarification: the contact block is the ordinary `lead_form` inherited from
+`global_lead_form`, together with the existing `lead_capture` context. There is no About-owned form,
+field schema, submit label, or form editor. The global form contract owns its fields and presentation.
 
 The remaining field names, limits, validation rules, and empty states below are implementation defaults
 chosen to fit existing CMS conventions. They are not claims that these API fields already exist.
@@ -78,7 +82,7 @@ The names below are target slot keys. Metadata does not count as a visible secti
 | 6 | `about_cases_intro`, `about_cases` | `about_cases` | Intro/selection config plus published case cards |
 | 7 | `about_lawyers_intro`, `about_lawyers` | `about_lawyers` | Intro/selection config plus eligible lawyer cards |
 | 8 | `about_media_intro`, `about_media` | `about_media` | Intro/selection config plus published media cards |
-| 9 | `about_lead_form`, `lead_capture` | `about_lead` | Page-owned universal form presentation plus runtime submission context |
+| 9 | `lead_form`, `lead_capture` | `about_lead` | Inherit-only global lead form plus existing runtime submission context |
 
 All nine sections are part of the initial fixed design and enabled. Do not add editor visibility toggles
 in the first implementation. A runtime list can be empty without removing its slot from the schema;
@@ -105,7 +109,7 @@ There is no cross-language authoring fallback and no About-specific global-secti
 | Case and media showcases | Inherit national About configuration; allow local selection override; no automatic geographic filtering |
 | Showcase headings | Inherit from national About; do not relax existing section-heading locks across other page types |
 | Showcase lead text | Inherit by default; explicit regional override allowed |
-| Form presentation | Inherit by default; local supporting text allowed; fixed universal field composition |
+| Form presentation | Inherit-only from `global_lead_form`; no national or regional page-level overrides |
 | Form context | Resolve from the actual page and locale; national has no selected page region |
 
 `about_intro.title` is the page H1, not an ordinary locked section heading. Preserve its explicit regional
@@ -263,13 +267,14 @@ Each editable intro contains `title`, optional `lead`, optional paired `ctaLabel
 About's selection settings remain independent of Home. Reuse resolver helpers where appropriate,
 but do not alias About's keys to Home slots whose locale, geography, or content-type rules differ.
 
-### 5.8 Universal Contact Form
+### 5.8 Inherited Global Application Form
 
-`about_lead_form` owns About's presentation: required `title`, optional `lead`, and optional
-`submitLabel` with the existing localized default. It is not a copy of family-law text and does not
-modify `global_lead_form` when edited. Regional supporting text may differ.
+`lead_form` inherits the existing global application form, `global_lead_form`, in the requested locale.
+Neither the national nor a regional About page owns editable form content. Change the form through
+its existing global editor; About inherits the resulting published content through the shared lifecycle.
 
-The field composition is fixed, not a new form builder:
+The expected ordinary form fields are listed for orientation; the existing global form and sender
+contract, not an About-specific schema, determine their labels, requirements, and available choices:
 
 | Field | Initial behavior |
 | --- | --- |
@@ -283,9 +288,9 @@ Contact choices, field labels, privacy wording, contact numbers, and validation 
 existing shared contracts rather than hardcoded mockup values. Supporting phones come from current
 site contact settings; About introduces no regional phone administration.
 
-`lead_capture` supplies the actual page context: `pageType`, `locale`, `pagePath`, `publicPath`,
-`regionSlug`, and an unambiguous page identity through the existing submission contract. Use a universal
-About variant rather than mislabeling it `service_hierarchy`. National context has no page region.
+`lead_capture` supplies the existing ordinary form contract with the actual `pageType`, `locale`,
+`pagePath`, `publicPath`, and `regionSlug`. Preserve sender compatibility; do not add a new About-only
+delivery endpoint or variant merely to rename the existing form. National context has no page region.
 
 Keep visitor-entered form values separate from CMS section authoring. Do not store visitor phone/name
 in section content, published payloads, URLs, analytics event payloads, or application logs. Reuse the
@@ -350,7 +355,7 @@ diagnostic data in the public page payload.
    per-card media, publication, or profile queries.
 5. Integrate inherited section dependencies, source changes, media resolution, snapshot assembly,
    preview, publication, diagnostic rollups, stale markers, and existing page rollback.
-6. Provide the universal form context and verify the real submission integration. Produce examples and
+6. Bind the ordinary global lead form and preserve its existing submission context. Produce examples and
    OpenAPI/typed DTOs for the actual implementation, including empty and invalid-selection cases.
 7. Cover route, locale-group, section-schema, runtime, validation, inheritance, and publication regressions
    before handing frontend developers a stable contract.
@@ -366,7 +371,7 @@ unnecessary merely from the page design.
 - Add/render the backend-provided About navigation and workbench with national/regional rows and all
   three locales. Use server identities and capabilities rather than hardcoded source IDs.
 - Implement supported editors for hero text, rich-text statement, timeline items, two founders with
-  media, introductory texts, selection controls, and universal-form presentation.
+  media, introductory texts, and selection controls. The inherited global form is read-only here.
 - Show history/founders read-only in regional pages, with a link to the national source. Support explicit
   regional overrides only where the schema allows them and preserve unsaved changes on context switches.
 - Reuse `auto` / `manual`, ordered pickers, media controls, diagnostics, Save/Preview/Publish behavior,
@@ -380,13 +385,13 @@ unnecessary merely from the page design.
   composites. Do not publish hardcoded `/about` mock content as a substitute for CMS data.
 - Animate only the supplied whole-team portrait pool. Keep stable IDs, server/client initial order,
   responsive framing, image fallbacks, and a reduced-motion/static mode. No ERP fetches from the browser.
-- Render the timeline, both founder bands, office list/map, three carousels, and universal form according
+- Render the timeline, both founder bands, office list/map, three carousels, and inherited global form according
   to the approved design. The lower lawyer section is company-wide legal assistance, not family-law copy.
 - Keep office-list selection and external map navigation separate. Handle multiple offices per city,
   missing markers, no local offices, and map-provider failure without hiding valid addresses.
 - Use resolved card links and images; honor empty lists and unavailable links. Do not substitute blog
   cards into the media carousel or national lawyers into an empty regional carousel.
-- Submit the four fixed form fields with validated page context through the real sender contract.
+- Submit the existing global form's fields with validated page context through the real sender contract.
   Include loading, validation error, retry, and confirmed-success states.
 - Test desktop and mobile, keyboard access, long names/translations, small portrait pools, horizontal
   overflow, reduced motion, and SSR/hydration. No overlapping cards or unreadable text.
