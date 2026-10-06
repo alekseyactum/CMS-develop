@@ -2,8 +2,48 @@
 
 This document fixes the agreed target structure for `lawyer_page`.
 
-Status on 2026-06-18: this is a product/backend target. The current `cms-back` implementation still exposes
-only a minimal `seo` + runtime `lawyer_profile` slice and must be expanded later to match this contract.
+## Current Amendment — 2026-10-06
+
+The updated lawyer layout extends the existing profile model with three CMS-owned fields:
+
+- `legalPracticeStartYear`: nullable integer year (not a date), common to all locales and editable in CMS.
+  ERP must not overwrite it. The site derives calendar years of practice at rendering time; the published
+  payload must not freeze a precomputed number of years. Unknown means hide the seniority line, not zero.
+- `experienceItems[]`: stable `experienceItemId`, localized `periodLabel`, rich description; Ukrainian
+  items own the fact set and ordering, other locales translate the same IDs. Free-text periods support
+  year-only, month/year and ongoing work without inventing precise dates.
+- `additionalEducationItems[]`: stable `additionalEducationItemId`, shared integer `year`, localized rich
+  description; separate from formal education/degree data and its search markup.
+
+The certificate is already sufficient for the layout and is not changed. Main `educationItems`, photos,
+names, role, summary, practices, cases, publications, reviews and licensing-partnership flag retain their
+existing meaning. Booking/calendar remains a separate feature, not a new biography field.
+
+New fields are optional: empty lists or an unknown start year do not block publication. Incomplete
+nonempty items are diagnosed and cannot be published as valid cards. Stable IDs, cross-locale consistency,
+year validity and order are enforced by the backend. The year must be an integer from 1 through the current
+UTC year. With only a year known, seniority is a calendar difference, not exact completed anniversaries.
+
+Legacy `experienceText` is retained. For each locale, null `experienceItems` uses legacy prose; an explicit
+empty array clears the visible experience without resurrecting old prose; nonempty items replace prose.
+The old text stays in storage. Configuring one locale must not silently erase another locale's legacy
+biography. No automatic prose-to-timeline conversion or bulk content rewrite is authorized.
+
+Storage is additive: `legal_practice_start_year` in `cms_ref_lawyers` and nullable JSON columns
+`experience_items_json` / `additional_education_items_json` in `cms_ref_lawyer_translations`.
+Existing reference admin endpoints, metadata, diagnostics and the runtime `lawyer_profile` payload are
+extended; these are still not editable page-section drafts. Dependent pages use the normal stale and
+publication workflow. Current backend details and request/response examples are maintained in
+`cms-back/docs/lawyer-page-runtime-backend.md`.
+
+The earlier sections below preserve the original June decision and rationale. Their statements that the
+profile expansion is not yet implemented, and their narrative-only experience model, are historical;
+this amendment and the current backend contract supersede them. In particular, no generic lead-form
+substitution for the separately planned appointment calendar is introduced by this work.
+
+## Original Baseline — 2026-06-18
+
+At the time of this baseline, the backend exposed only a minimal `seo` + runtime `lawyer_profile` slice.
 
 ## Page Rules
 
