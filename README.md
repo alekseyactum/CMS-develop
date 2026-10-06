@@ -64,6 +64,10 @@ See [`docs/global-price-section-workbench.md`](docs/global-price-section-workben
 global price section editor, version history, validation, and publish-impact contract.
 See [`docs/reference-data-and-runtime-model.md`](docs/reference-data-and-runtime-model.md) for the agreed
 ERP-imported reference data and runtime/read-model boundary.
+See [`docs/about-page-structure-2026-10-06.md`](docs/about-page-structure-2026-10-06.md) for the agreed
+About page structure, national/regional variants in three locales, runtime selections, universal form,
+backend/frontend responsibilities, and acceptance criteria. This is a specification, not an implemented
+or deployed page.
 See [`docs/cms-front-reference-data-task.md`](docs/cms-front-reference-data-task.md) for the first CMS
 frontend task around reference-data admin screens and endpoints.
 See [`docs/source-diagnostics-and-bulk-bootstrap-task.md`](docs/source-diagnostics-and-bulk-bootstrap-task.md)
