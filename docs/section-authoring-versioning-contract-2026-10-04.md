@@ -93,7 +93,8 @@ because the editor viewed them. Page-owned composition controls retain their exi
 
 The UI keeps selected history and the working buffer as separate state. Viewing another saved version
 must not destroy the buffer. The user must be able to return to it without a save. Saved history is
-read-only even when it is the latest version; editing always happens in the working copy.
+read-only for authored content even when it is the latest version; content editing always happens in
+the working copy. The optional editorial version name below is a separate mutable metadata exception.
 
 The working copy is visibly separate from stored history, with an unsaved indicator and either its
 source version number or an empty-source label. Before saving it has no stored version ID, saved timestamp,
@@ -110,6 +111,42 @@ otherwise it should present the current publication, or the empty state if no ve
 not mistake a legacy draft already consumed by the active publication for a new unpublished change.
 The detailed initial-focus presentation belongs to frontend implementation and must preserve these
 invariants; opening a screen does not itself persist a working copy.
+
+## Editorial version names (decision 2026-10-06)
+
+Each saved section version may have an optional user-defined internal name. It is a navigation aid
+for editors, not a public section heading, a status, or source provenance. Display the name separately
+from the system status and `Based on #N`. Do not repurpose `changeOrigin.label`.
+
+- Names are plain single-line text, up to 160 Unicode characters after outer whitespace trimming.
+  Blank input clears the name to null. Names need not be unique; version UUID and number remain the
+  identity. Render names as text, never HTML.
+- Renaming is permitted on accessible editable saved versions, including historical, archived and
+  currently published versions. A disabled local section does not prevent renaming its saved content.
+  Runtime/system-only sections and inherited source versions remain read-only in the consuming context.
+- A dedicated rename command requires section-write permission, exact version ownership and the
+  expected **name revision**. Concurrent renames conflict rather than overwrite each other. A matching
+  revision with the same normalized name is a no-op. Name author/time/revision are recorded separately
+  from original content authorship, creation time and provenance.
+- Renaming never creates a content version, changes its number/ID/content, moves heads, publishes,
+  invalidates validation, changes authoring/publication tokens, makes dependents stale or rebuilds
+  snapshots. Internal names and their audit metadata do not enter public payloads.
+- Taking a version as a basis does not rename it or copy its name into another stored version. A new
+  content version starts unnamed. The frontend may hold an intended name locally and apply it through
+  the rename command after successful content Save using the exact `savedVersionId`. If Save returns
+  an existing version (`created: false`), changing its name is an explicit rename of that same version,
+  not a reason to create a duplicate. A failed rename must not trigger another content Save.
+- A name belongs to an exact stored row, not its descendants. Legacy copy-on-publication produces a
+  separate unnamed row; the original row retains its name. Same-row publication retains the name
+  because identity stays the same. Do not infer identity from matching content or provenance.
+
+Before content Save, a local working copy still has no stored version ID, number or saved timestamp.
+The UI must distinguish unsaved content from a pending metadata rename. After a rename timeout, read
+the exact version metadata before retrying; never auto-retry with a freshly fetched revision over
+another editor's intervening name.
+
+The backend implementation/API details are maintained in `CMS-back/docs/section-authoring-safe-save.md`.
+This decision authorizes implementation, not shared-DB migration execution or deployment.
 
 ## Save contract
 
