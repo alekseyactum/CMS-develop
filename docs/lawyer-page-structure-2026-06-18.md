@@ -2,7 +2,28 @@
 
 This document fixes the agreed target structure for `lawyer_page`.
 
-## Current Amendment — 2026-10-06
+## Current Amendment — 2026-10-11: Related-Section Headings
+
+The lawyer's CMS profile may override the headings of its three runtime lists independently per locale:
+
+- `casesSectionTitle`: for example, `Справи Маргарити`;
+- `publicationsSectionTitle`: for example, `Публікації Маргарити`;
+- `reviewsSectionTitle`: for example, `Відгуки про Маргариту`.
+
+Store complete plain-text headings, not a name in a grammatical case. No automatic declension or
+cross-locale copying is introduced. Optional fields accept trimmed strings up to 255 characters or null;
+blank clears the override, omission preserves it. Missing values create no diagnostic warning and use
+generic localized fallbacks: UK `Справи` / `Публікації` / `Відгуки`, RU `Дела` / `Публикации` / `Отзывы`,
+EN `Cases` / `Publications` / `Reviews`. The lawyer cases heading deliberately omits "successful".
+
+The runtime lists remain read-only at page level: relations, filters, ordering and empty-section hiding
+are unchanged. This supersedes the baseline's system-only-title rule, not its runtime ownership model.
+Frontend renders the existing section `title`; CMS edits the three fields in the localized lawyer profile.
+ERP must not overwrite them. Title-only changes participate in stale detection; existing snapshots stay
+immutable until the normal publication/rebuild. Three additive nullable translation columns are required;
+no backfill, live migration, deploy or rebuild is authorized by this specification update alone.
+
+## Prior Amendment — 2026-10-06
 
 The updated lawyer layout extends the existing profile model with three CMS-owned fields:
 
