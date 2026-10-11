@@ -23,6 +23,22 @@ ERP must not overwrite them. Title-only changes participate in stale detection; 
 immutable until the normal publication/rebuild. Three additive nullable translation columns are required;
 no backfill, live migration, deploy or rebuild is authorized by this specification update alone.
 
+### Current year-only period contract
+
+The later approved decisions supersede the October 6 free-text/month and single-year descriptions below.
+New structured `experienceItems` and `additionalEducationItems` use the same three explicit facts:
+`startYear`, `endYear`, `isOngoing`. Months are not supported. With `isOngoing=false`, a null end year is
+a single year and a non-null end year is a closed range; ongoing items require a null end year. Years
+must be integers no later than the current UTC year, and an end cannot precede the start. A null start
+is a savable incomplete draft that blocks publication of that nonempty item.
+
+Ukrainian items own stable IDs, order and period facts; translations own descriptions and inherit those
+facts. `periodLabel` is derived per locale, never parsed back into dates. Additional-education structured
+reads also expose deprecated `year=startYear` for compatibility. Existing label-only experience and
+year-only additional education stay supported until explicitly converted; no automatic backfill or
+structured-to-legacy downgrade is allowed. These period changes use the existing JSON columns, not a
+new migration. They do not change formal `educationItems` or the separate `legalPracticeStartYear`.
+
 ## Prior Amendment — 2026-10-06
 
 The updated lawyer layout extends the existing profile model with three CMS-owned fields:
