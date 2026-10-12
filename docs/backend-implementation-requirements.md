@@ -408,6 +408,11 @@ publish/review workflows. The navigation API must not expose a separate `require
 sidebar; `attention.own.stale` is calculated as `draftChanges OR staleDependencies`.
 Publication coverage should be exposed as lightweight published/total counters where meaningful.
 
+2026-10-12 addition: this compatibility aggregate must not be the source of truth for the new
+[stale-page queue](stale-page-refresh-contract-2026-10-12.md). That contract requires independent
+unpublished-work, inherited-review, published-freshness and delivery facts, plus one permission-filtered
+attention counter for its dedicated menu entry. It does not require redesigning the existing tree.
+
 Practice/service/problem publication coverage must be split into:
 
 - `own`: whether the base non-regional page itself is published;
@@ -1056,14 +1061,15 @@ visible practice/service items whose generated pages are missing or unpublished.
 empty `practice_collection.items` rule during publish as a backend guard; other currently-empty runtime
 slots such as practice/problem cases remain allowed until their read models exist.
 
-Post-release runtime freshness decision: do not add runtime-stale tracking to the first editor/workbench
-release. Runtime slots are read-model payloads, not versioned section records, so the current system cannot
-mark them stale through section dependency tables. After the real release, add a dedicated runtime
-freshness layer: compute a stable canonical fingerprint for each resolved runtime payload during publish,
-store it with the page snapshot metadata, compare it with the current resolved payload in the workbench, and
-surface a `runtime_stale`-style warning/state. That later stage should make bulk publish include otherwise
-published pages whose runtime payload changed. Keep fingerprints free of unstable fields such as timestamps,
-non-deterministic ordering, diagnostics, and transient media URLs.
+Runtime freshness amendment, 2026-10-12: the previously deferred stage is now specified in
+[Stale page refresh contract](stale-page-refresh-contract-2026-10-12.md). Runtime slots remain read
+models, not versioned section records. Track meaningful public changes using concrete dependencies
+and selection scopes, independent of JSON-LD enablement; compare stable normalized results without
+diagnostics or incidental timestamps/URLs. Publicly meaningful dates and order remain significant.
+The target is a durable server-owned queue and scoped refresh from the published snapshot, not simply
+including more pages in a normal bulk publish that could consume saved drafts. The canonical contract
+owns timing, generation-safe acknowledgement, retries, UI, scheduler and cache delivery. This update
+does not claim those features are implemented or enable an existing worker.
 
 Implementation note, 2026-05-23: `cms-back` now exposes the first direct global sections workbench API:
 `GET /api/admin/global-sections`,

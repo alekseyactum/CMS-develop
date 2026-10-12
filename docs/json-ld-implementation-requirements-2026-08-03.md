@@ -291,6 +291,12 @@ The names are illustrative, but these constraints are mandatory:
 
 ## Stale Dependency Contract
 
+Automation amendment, 2026-10-12: [Stale page refresh contract](stale-page-refresh-contract-2026-10-12.md)
+adds a shared queue and safe automatic refresh of affected published fragments. It supersedes the
+earlier manual-only propagation rule, not the impact-based dependency requirements below. Visible
+runtime freshness must also work when JSON-LD is disabled. A JSON-LD-only rebuild must not acknowledge
+a reason that still requires changing visible runtime content.
+
 The general rule is byte-impact based:
 
 > A published page is marked stale only when a dependency change would change its resolved visible snapshot
@@ -327,7 +333,8 @@ Stale behavior:
 - stale status is advisory for the already-live snapshot unless a separate safety rule requires unpublish;
 - preview resolves current source data and shows the candidate updated graph;
 - normal publication clears stale markers covered by the new snapshot;
-- no dependency change automatically republishes a page during ordinary operation;
+- automatic dependency propagation follows the scoped published-only refresh contract linked above;
+  arbitrary full page publication and activation of editorial drafts are not authorized by a source event;
 - rollback restores the historical graph and historical dependency captures, then recalculates current
   stale diagnostics against present source state;
 - disabled optional sections register no dependency and cannot make their page stale.

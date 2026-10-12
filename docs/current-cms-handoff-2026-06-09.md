@@ -3,6 +3,20 @@
 This document is the short source of truth for continuing the CMS work in a new Codex thread without
 loading the full previous chat history.
 
+## Stale page refresh specification update
+
+On 2026-10-12 the owner agreed the
+[stale-page refresh contract](stale-page-refresh-contract-2026-10-12.md). It replaces earlier
+manual-only/runtime-freshness deferrals with scoped updates from published snapshots, one durable
+page/locale queue, one CMS screen with journal, a five-minute ERP wake-up, normal 30-minute accumulation
+and priority removal handling. Drafts and working inheritance review stay separate; cache delivery is
+a separately retryable stage. No starter-queue audit or separate queue approval is required.
+
+Read its implementation-gap matrix and acceptance criteria before coding. This is documentation,
+not rollout: no content, schema, writer mode, schedules or application runtime changed. Existing
+immutable exact effects cannot be converted into a mutable coalescing queue. Older checkpoints below
+retain their historical meaning; the governing playbook records the scheduling amendment.
+
 ## Section Authoring Specification Update
 
 On 2026-10-04 the section editor and publication target was revised in
@@ -1246,12 +1260,9 @@ Keep these visible in the next thread:
   matching. Remaining work is mostly frontend/editor UX for assigning additional tags and public rendering
   polish around those runtime lists.
 - Public site frontend integration and cache/revalidation are later-stage work.
-- Post-release runtime freshness should be a separate improvement stage, not part of the current
-  practice/workbench stabilization. Runtime/read-model slots are not versioned sections today, so reference
-  data changes do not automatically mark a page/slot stale unless they create diagnostics. The intended
-  next-stage design is to store a stable fingerprint of each resolved runtime payload in published snapshot
-  metadata and compare it with the current resolved payload, then surface `runtime_stale`-style attention
-  in the workbench and let bulk publish republish otherwise-published pages whose runtime payload changed.
+- The runtime-freshness stage previously deferred here now has the approved 2026-10-12 contract linked
+  above. Runtime blocks remain unversioned; public stale detection and scoped server-side refresh are
+  separate from editorial working versions. Do not implement it as an unrestricted bulk publication.
 - User/roles and admin permission gating are not the current focus, but the admin navigation already
   anticipates users/roles.
 - The CMS should stay understandable for editors; do not expose raw internal complexity where a simple

@@ -53,6 +53,11 @@ implementation should port proven behavior from `notstrapitest` through typed pa
 preview/snapshot contracts, focused domain services, and tests around the preserved edge cases.
 
 See [`docs/backend-implementation-requirements.md`](docs/backend-implementation-requirements.md).
+See [`docs/stale-page-refresh-contract-2026-10-12.md`](docs/stale-page-refresh-contract-2026-10-12.md)
+for the agreed safe refresh of published stale pages: one CMS queue/journal, published-only scoped
+updates, ERP scheduler wake-ups every five minutes, coalescing, retries and separate cache delivery.
+It supersedes earlier manual-only/runtime-freshness deferrals; it is a target specification, not a
+completed implementation, runtime activation or authorization to publish content.
 See [`docs/section-authoring-versioning-contract-2026-10-04.md`](docs/section-authoring-versioning-contract-2026-10-04.md)
 for the agreed section working-copy, immutable saved-version, and same-version publication target.
 It supersedes the older immediate-copy and duplicate-on-publish workflow requirements. This is a
@@ -133,6 +138,11 @@ Manager, IAM, deployment pipelines, or runtime environment variables, first read
 `gcp-infra-playbook` context and run the required preflight if actual cloud state will be read or changed.
 
 ## Current Status
+
+The stale-page refresh requirements were agreed on 2026-10-12. The canonical contract linked above
+records scope, backend/frontend/integration responsibilities and acceptance tests. Existing source
+components are only a partial foundation; no queue activation or application change accompanies this
+documentation update. No separate starter-queue audit/approval is required by the target product flow.
 
 The section authoring and publication requirements were revised on 2026-10-04. The target separates
 the unsaved client working copy, saved immutable content, publication audit, and public page snapshots.

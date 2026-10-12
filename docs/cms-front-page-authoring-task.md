@@ -5,6 +5,21 @@ This document is the first implementation task for CMS frontend page authoring s
 The backend contract is available in Swagger/OpenAPI. Use OpenAPI examples as the primary source for
 request/response shapes, especially for authoring state, preview, publish, and rollback.
 
+## Published page refresh center
+
+Decision date: 2026-10-12. The target is defined in the
+[stale-page refresh contract](stale-page-refresh-contract-2026-10-12.md), not yet a shipped API.
+Add one common menu entry and URL containing queue, journal, filters and authorized controls; do not
+embed queues or refresh controls in source editors in the first version. Backend supplies independent
+freshness/delivery facts, reasons, planned times and capabilities. The UI must distinguish ordinary
+editorial publication from safe stale refresh and snapshot success from incomplete cache delivery.
+
+Manual expedite supports one page or an explicitly selected set with count confirmation, not an
+implicit publish-all action. Accepted work continues on the backend after the browser closes; do not
+reuse a browser-side loop of ordinary page commits as the queue implementation. Full text diff and
+external notifications are out of scope. Exact routes/DTOs/errors are a backend deliverable before
+Yuri implements this screen. Existing content-tree and working-copy contracts remain unchanged.
+
 ## Section Authoring Revision
 
 Decision date: 2026-10-04. Status: approved target, implementation pending.

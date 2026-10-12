@@ -384,6 +384,11 @@ registry, not dynamic hierarchy rewriting.
 
 ## Snapshot And Stale Policy
 
+Target amendment, 2026-10-12: [Stale page refresh contract](stale-page-refresh-contract-2026-10-12.md)
+now owns automatic refresh policy, queue timing and delivery. It replaces the original manual-only and
+explicit-object-refs-only limits below as implementation requirements, not as a claim that the new
+mechanism is deployed. Existing typed source ownership and immutable snapshot rules remain unchanged.
+
 Published page snapshots store:
 
 - the complete public payload needed by the frontend;
@@ -392,18 +397,21 @@ Published page snapshots store:
 Runtime/read-model data is therefore resolved by backend before snapshot activation. The frontend still
 receives a complete public payload.
 
-When ERP updates a reference object, CMS:
+The original first-release source-change flow was:
 
 - updates the typed reference table;
 - finds pages whose current published snapshot explicitly references that object;
 - marks those pages stale / needs republish;
 - does not automatically replace the current published snapshot.
 
-Republish after ERP/source changes is manual in the first release.
+That first-release flow required manual republish. The new target detects meaningful public changes,
+including list membership changes for objects absent from the snapshot, and safely refreshes only
+the affected published fragments. It does not activate working versions or replace snapshots in place.
 
-Future dependency-index logic may detect pages that could be affected by resolver filters even when the
-object was not present in the current snapshot, but the first release uses explicit snapshot dependency
-refs only.
+Saved non-versioned CMS reference fields are approved inputs for automatic propagation; published
+versions, not saved drafts, are the trigger for versioned shared sections. The canonical contract owns
+the delay, coalescing, validation and cache-delivery rules. Concrete object and selection-scope
+dependency coverage must be verified per consumer; the old limited flow is not evidence of full coverage.
 
 ## Table Shape Direction
 

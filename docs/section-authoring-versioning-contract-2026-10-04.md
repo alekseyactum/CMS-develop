@@ -255,6 +255,12 @@ per-page outcomes separately. Retry of failed rebuilds must not be confused with
 content save. Existing stale-dependency policies, enabled state, inheritance, and page assembly remain
 backend-owned and must not be reconstructed independently in the frontend.
 
+The 2026-10-12 [stale-page refresh contract](stale-page-refresh-contract-2026-10-12.md) specifies the
+shared queue for published consumer updates. A source publication can trigger delayed/coalesced
+refresh, while source Save alone cannot publish its working content. Public freshness and working
+inheritance review remain independent. Coalescing demand never rewrites an already accepted immutable
+publication plan or receipt. This addition does not itself activate the new writer or scheduling mode.
+
 Header/footer layout delivery stays separate from page-owned snapshot content under the existing
 layout contract. Runtime slots and non-versioned settings do not acquire a fake draft/history workflow.
 
