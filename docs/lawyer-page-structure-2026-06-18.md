@@ -12,9 +12,18 @@ The lawyer's CMS profile may override the headings of its three runtime lists in
 
 Store complete plain-text headings, not a name in a grammatical case. No automatic declension or
 cross-locale copying is introduced. Optional fields accept trimmed strings up to 255 characters or null;
-blank clears the override, omission preserves it. Missing values create no diagnostic warning and use
+blank clears the override, omission preserves it. Missing values use
 generic localized fallbacks: UK `Справи` / `Публікації` / `Відгуки`, RU `Дела` / `Публикации` / `Отзывы`,
 EN `Cases` / `Publications` / `Reviews`. The lawyer cases heading deliberately omits "successful".
+
+An empty/whitespace-only heading produces `LAWYER_SECTION_TITLE_MISSING` with severity `warning`
+only when that localized runtime list has eligible items and the lawyer is visible. No warning is
+needed for an empty/hidden section. The fallback remains usable; saving and publishing are not blocked.
+This applies independently to all three headings and each locale, even if its translation row is absent.
+ERP profile/list/menu diagnostics cover all locales; page matrix, runtime inspection and page-menu
+diagnostics cover only the requested locale. These checks use current source data for the next rendering,
+not an already published snapshot. No page publication is required before reporting the warning.
+This rule supersedes the original baseline's empty-related-list warning: empty lists are valid and hidden.
 
 The runtime lists remain read-only at page level: relations, filters, ordering and empty-section hiding
 are unchanged. This supersedes the baseline's system-only-title rule, not its runtime ownership model.
