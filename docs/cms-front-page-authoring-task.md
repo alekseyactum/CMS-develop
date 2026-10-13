@@ -5,6 +5,106 @@ This document is the first implementation task for CMS frontend page authoring s
 The backend contract is available in Swagger/OpenAPI. Use OpenAPI examples as the primary source for
 request/response shapes, especially for authoring state, preview, publish, and rollback.
 
+## Matrix publication accent contract
+
+Decision date: 2026-10-13. Status: approved target; frontend and backend implementation is not certified
+by this document. This decision concerns the left accent rail of section cells and page cards in the
+matrix. It does not change sidebar counters, validation rules, publication permissions or runtime ownership.
+
+### Separate publication state from validation
+
+The rail represents publication/update attention, not validation severity. Warning and error icons,
+counts and explanations remain independent. A published section can have a green rail and a warning
+icon, including `LAWYER_SECTION_TITLE_MISSING`. Validation errors may block publication through the
+existing readiness/capability contract without overriding the rail color.
+
+| Rail | Meaning |
+| --- | --- |
+| Red | Required structure is absent, for example a required applicable section has no binding |
+| Yellow | Structure exists but action is needed: first publication, unpublished changes, inherited-source review or a detected change to published runtime |
+| Green | Published with no detected publication/update attention; not a guarantee of complete freshness coverage |
+| Grey | Disabled or not applicable, with no pending inclusion/exclusion change |
+
+Do not infer structural absence from an error count, a failed request, an empty required field or an
+empty runtime list. Those have their own diagnostic messages. Optional absent/non-applicable sections
+must not make an otherwise complete page red. Missing data or unsupported freshness checks must have an
+explicit neutral/unknown explanation, not be silently converted to disabled or confirmed fresh.
+
+Pending inclusion/exclusion changes take precedence over the disabled appearance: a section whose
+removal from the public page has not been published is yellow, not grey. Once the change is reflected in
+the published state, a disabled section is grey and does not make the page yellow. Source changes that
+cannot affect an already-disabled public section do not require refreshing its invisible content.
+
+Remove the separate `ST` badge from matrix section cells and page cards once the rail and its reasons
+cover the state. Do not remove stale facts from the API, inspection views or diagnostics, and do not
+change unrelated sidebar indicators. Yellow is broader than stale; a tooltip and the opened details
+must distinguish unpublished edits, first publication, inheritance review and published-page staleness.
+Allow all applicable reasons to be inspected when several states coexist.
+
+### Page aggregation
+
+The page card also has a left rail. Apply structural red before attention yellow. A required missing
+section makes the page red; otherwise any yellow section makes it yellow. Include page-owned reasons,
+such as first publication or a detected snapshot dependency change, even when no individual section is
+yellow. Do not color every runtime section merely because a page-level reason exists: use a known slot
+association, or leave the reason at page level.
+
+Already-disabled/non-applicable sections do not add attention by themselves. Never derive the page rail
+from validation totals. A structurally complete but never-published page is yellow; a published page
+with no detected attention is green subject to the freshness-coverage caveat above. Explain incomplete
+or unknown coverage separately rather than presenting absence of stale records as proof of freshness.
+
+The rail does not determine available commands. Keep `actions`, `endpoints` and `readiness` authoritative;
+explain unavailable actions. Yellow does not automatically enable ordinary publication or authorize a
+full editorial publish in place of safe stale refresh.
+
+### Implementation responsibilities
+
+- Frontend: keep one shared publication-state color policy in `getWorkbenchCellAccentColor` (or its
+  shared replacement), supplied with the necessary normalized section/page context. Remove validation
+  overrides from `getCellAccentColor`; it may remain as a delegating wrapper for existing callers.
+  Warning/error backgrounds must not reintroduce validation-driven publication accents.
+- Frontend: do not preserve the old mapping unchanged. It makes `disabled` yellow, treats
+  `runtime_read_model` as automatically green, and cannot distinguish all required/optional missing
+  states. Runtime cells must use actual publication/freshness facts, not just their type.
+- Backend: provide enough facts and reasons to distinguish required missing structure, pending
+  inclusion/exclusion, unpublished content, inheritance review and published runtime changes. Scope
+  reasons to a section only when that association is known. Represent unavailable freshness coverage
+  explicitly; do not invent a positive freshness check for legacy snapshots.
+- Current compatibility limitation: section cells expose `hasUnpublishedChanges` and
+  `diagnostics.stale`, while pure runtime cells are initially constructed as `runtime_read_model` with
+  empty diagnostics. Some runtime stale reasons are only returned at row level. Per-section pending
+  visibility and independent freshness coverage are not fully represented by that status enum.
+  Complete the additive API mapping and tests before declaring the matrix migration finished; exact
+  new DTO names remain a backend deliverable, not an already available contract.
+- Frontend: details must display `runtime.reasons[]` independently of whether runtime payload has
+  items. `runtime.diagnostics` contains counters, not the complete explanation. Any row-level fallback
+  must be scoped by `slotKey`; deduplicate reasons and do not turn failed detail loading into a clean bill
+  of health. Unknown status must not hide a known structural or publication-attention reason.
+
+Published-runtime detection and safe refresh remain governed by the
+[stale-page refresh contract](stale-page-refresh-contract-2026-10-12.md). This visual decision does not
+implement that mechanism or authorize deployment, automatic publication, new SQL writes or a site-wide
+historical audit.
+
+### Acceptance scenarios
+
+1. Published reviews with `LAWYER_SECTION_TITLE_MISSING` and no detected update attention: green rail,
+   warning icon/count, visible field-specific explanation even with a nonempty review list.
+2. Validation severity alone changes only diagnostics and permitted actions, not the rail.
+3. Existing unpublished content, first publication or inherited-source review: yellow with its specific
+   reason, whether or not validation warnings exist.
+4. Detected published-runtime change: affected cell is yellow when its slot is known; page is yellow
+   even if only a page-level association is available. No artificial runtime draft or version is created.
+5. Unpublished enable/disable change: yellow until applied; an already-disabled unchanged section is
+   grey and does not make the page yellow.
+6. Missing required applicable structure: red section/page. An optional absent slot alone is not red.
+7. Red structural absence takes precedence over yellow attention on the page, without hiding reasons.
+8. Unknown/unsupported freshness, including legacy snapshots, is explained explicitly. No stale record
+   or `runtime_read_model` status alone is presented as proof of complete freshness.
+9. Section/page switching and locale changes replace colors and reasons together; no stale diagnostics
+   from the previously inspected cell remain. Matrix `ST` badges are absent, details retain stale facts.
+
 ## Published page refresh center
 
 Decision date: 2026-10-12. The target is defined in the
