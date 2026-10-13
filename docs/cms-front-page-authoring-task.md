@@ -7,9 +7,11 @@ request/response shapes, especially for authoring state, preview, publish, and r
 
 ## Matrix publication accent contract
 
-Decision date: 2026-10-13. Status: approved target; frontend and backend implementation is not certified
-by this document. This decision concerns the left accent rail of section cells and page cards in the
-matrix. It does not change sidebar counters, validation rules, publication permissions or runtime ownership.
+Decision date: 2026-10-13. Status: approved policy; additive backend contract deployed to develop and
+release, frontend integration pending. See the [rollout record](cms-workbench-publication-attention-rollout-2026-10-13.md)
+for verified versions and acceptance limits. This decision concerns the left accent rail of section
+cells and page cards in the matrix. It does not change sidebar counters, validation rules, publication
+permissions or runtime ownership.
 
 ### Separate publication state from validation
 
@@ -71,12 +73,17 @@ full editorial publish in place of safe stale refresh.
   inclusion/exclusion, unpublished content, inheritance review and published runtime changes. Scope
   reasons to a section only when that association is known. Represent unavailable freshness coverage
   explicitly; do not invent a positive freshness check for legacy snapshots.
-- Current compatibility limitation: section cells expose `hasUnpublishedChanges` and
-  `diagnostics.stale`, while pure runtime cells are initially constructed as `runtime_read_model` with
-  empty diagnostics. Some runtime stale reasons are only returned at row level. Per-section pending
-  visibility and independent freshness coverage are not fully represented by that status enum.
-  Complete the additive API mapping and tests before declaring the matrix migration finished; exact
-  new DTO names remain a backend deliverable, not an already available contract.
+- Deployed additive contract: `publicationState` on current full matrix rows, cells, composite groups
+  and `runtime` inspection. `WorkbenchPublicationStateDto` exposes `state`, publication/visibility/edit/
+  inheritance/stale facts, `freshness` coverage and scoped `reasons[]`. State values are
+  `missing_structure`, `needs_attention`, `published`, `inactive`, and `unknown`. The backend contract
+  is documented in `cms-back/docs/workbench-publication-state-2026-10-13.md` and live OpenAPI.
+- Existing `status`, `diagnostics`, `actions`, `readiness` and `endpoints` remain compatible. Do not
+  infer the new rail from `runtime_read_model` or validation totals. Unscoped historic dependency
+  reasons intentionally remain page-level. Freshness remains `not_checked` when no applicable stale
+  record exists; dependency records establish partial coverage only, never a complete freshness check.
+  Lightweight sidebar rows do not compute the new field. A missing field from an older backend is not
+  proof of disabled or fresh content. The frontend migration is still a separate delivery.
 - Frontend: details must display `runtime.reasons[]` independently of whether runtime payload has
   items. `runtime.diagnostics` contains counters, not the complete explanation. Any row-level fallback
   must be scoped by `slotKey`; deduplicate reasons and do not turn failed detail loading into a clean bill
