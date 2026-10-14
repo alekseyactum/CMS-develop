@@ -125,7 +125,9 @@ At the time of this baseline, the backend exposed only a minimal `seo` + runtime
      - `fullName` required;
      - `roleLabel` required, with initial seeded defaults `Адвокат` / `Адвокат` / `Lawyer`;
      - `licenseNumber` expected; empty value is a warning for now;
-     - `practices[]` runtime list from active lawyer qualifications with `score > 1`;
+     - `practices[]` runtime list from active, resolved lawyer qualifications with `score >= 3`
+       and visible practices (`show_on_site = 1`); this profile-only threshold was updated on 2026-10-14
+       and does not change the directory filter or lawyer selection on practice/service pages;
      - `professionalSummary` required;
      - `educationItems[]` optional list;
      - `experienceText` optional.
