@@ -311,6 +311,7 @@ Rules:
 - `blockId` remains stable while the block is edited or moved;
 - array order is authoritative;
 - `blockType` belongs to a closed backend registry;
+- block-level `variant` belongs to the allowlist of that block type;
 - every block type has a typed content schema;
 - arbitrary fields, raw HTML, custom CSS, nested builders, and unknown block types are rejected;
 - an empty builder never blocks publication;
@@ -321,10 +322,12 @@ Rules:
 
 #### `heading`
 
+- block variant `default | marker`;
 - `level`: `2 | 3 | 4`;
 - `text`: required;
 - `includeInToc`: boolean;
-- backend generates a stable anchor.
+- backend generates a stable anchor;
+- `marker` selects the designed accent-marker appearance; color and geometry remain frontend styles.
 
 #### `paragraph`
 
@@ -338,20 +341,25 @@ Rules:
 
 #### `quote`
 
+- block variant `text_first | attribution_first`;
 - required text;
-- optional author and source.
+- optional author and source;
+- legacy `default | top` values remain readable as `text_first | attribution_first` respectively.
 
 #### `image`
 
+- block variant `default | horizontal | vertical`;
 - required valid `mediaId`;
 - required alt text;
 - optional caption, source, and link.
 
 #### `table`
 
+- block variant `default | comparison`;
 - typed columns and rows;
 - optional caption;
-- optional header row;
+- independent `hasHeaderRow` and `hasHeaderColumn` flags;
+- `comparison` requires exactly two columns and visible column headings;
 - merged cells are not supported in V1.
 
 #### `callout`
@@ -370,6 +378,7 @@ The following payload shapes are the backend contract. Fields not shown for a bl
 {
   "blockId": "heading-1",
   "blockType": "heading",
+  "variant": "marker",
   "content": { "level": 2, "text": "Section title", "includeInToc": true }
 }
 ```
@@ -411,6 +420,7 @@ site-relative or HTTP(S) URLs.
 {
   "blockId": "quote-1",
   "blockType": "quote",
+  "variant": "attribution_first",
   "content": { "text": "Quote text", "author": "Author", "source": "Source" }
 }
 ```
@@ -442,10 +452,16 @@ site-relative or HTTP(S) URLs.
       { "rowId": "row-1", "cells": ["Item", "100"] }
     ],
     "caption": "Optional caption",
-    "hasHeaderRow": true
+    "hasHeaderRow": true,
+    "hasHeaderColumn": false
   }
 }
 ```
+
+For an ordinary table, the two header flags are independent: both false means no headers, only
+`hasHeaderRow` marks column headings, only `hasHeaderColumn` marks the first cell of every body row as a
+row heading, and both true provide both semantics. A comparison table uses `"variant": "comparison"`,
+exactly two columns, and `hasHeaderRow: true`.
 
 ```json
 {
