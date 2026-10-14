@@ -1,5 +1,9 @@
 # CMS stale refresh backend rollout
 
+Follow-up: the separately approved [database migrations](stale-refresh-migrations-2026-10-14.md)
+were completed in both environments later on 14 October. Runtime activation remains pending.
+The deployment evidence below records the earlier code-only rollout.
+
 ## Approval and scope
 
 The owner authorized commit, push and backend deployment to develop and release on 14 October 2026.
