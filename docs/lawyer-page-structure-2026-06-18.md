@@ -125,9 +125,12 @@ At the time of this baseline, the backend exposed only a minimal `seo` + runtime
      - `fullName` required;
      - `roleLabel` required, with initial seeded defaults `Адвокат` / `Адвокат` / `Lawyer`;
      - `licenseNumber` expected; empty value is a warning for now;
-     - `practices[]` runtime list from active, resolved lawyer qualifications with `score >= 3`
-       and visible practices (`show_on_site = 1`); this profile-only threshold was updated on 2026-10-14
-       and does not change the directory filter or lawyer selection on practice/service pages;
+     - `practices[]` runtime list from active, resolved direct practice qualifications with `score >= 3`
+       and visible practices (`show_on_site = 1`); the threshold was updated on 2026-10-14, and the
+       direct-practice-only rule on 2026-10-15. All four child identity fields (`service_id`, `problem_id`,
+       `service_external_id`, `problem_external_id`) must be null. Child service/problem scores cannot
+       qualify a practice or raise its score; there is no child fallback. These profile-only rules do not
+       change the directory filter or lawyer selection on practice/service pages;
      - `professionalSummary` required;
      - `educationItems[]` optional list;
      - `experienceText` optional.
