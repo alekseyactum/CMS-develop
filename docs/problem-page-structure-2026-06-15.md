@@ -68,6 +68,8 @@ slice. Public visual rendering is still a frontend task.
     - There is no editable reviews block and no `lead`.
     - Runtime filter prioritizes exact problem relations, then falls back to the current service; regional
       pages additionally filter by region.
+    - Approved office-city addition: review items expose localized `officeCity` on national pages and
+      `null` on regional pages, following the [common public review contract](reference-data-and-runtime-model.md#review-office-city-in-public-cards).
     - Historical snapshots may still expose `problem_reviews_block`; consumers use it only as a fallback
       when the runtime payload has no `title`.
 

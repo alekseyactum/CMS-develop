@@ -172,6 +172,8 @@ At the time of this baseline, the backend exposed only a minimal `seo` + runtime
    - Read-only in CMS.
    - Title is system-defined/read-only.
    - Source: reviews linked to the current lawyer.
+   - Approved office-city addition: every review item on a personal lawyer page has `officeCity: null`,
+     following the [common public review contract](reference-data-and-runtime-model.md#review-office-city-in-public-cards).
    - Empty list is a warning, not a publish blocker; public frontend may hide the block when empty.
 
 6. `lead_form` + `lead_capture`

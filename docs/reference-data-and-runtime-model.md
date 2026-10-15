@@ -689,6 +689,69 @@ display_text
 
 The original ERP review text remains unchanged. `display_text` is the CMS-owned localized public version.
 
+#### Review office city in public cards
+
+Approved on 2026-10-15. This is the target contract for a separate implementation; this documentation
+change does not add the field to the running backend or modify existing published snapshots.
+
+Each public review item must expose `officeCity: string | null`. This is the city of the office linked
+to the review, not the review author's residence. The value is presentation context, not a new review
+selection criterion or a new CMS-editable field.
+
+The backend decides whether to include the city for each item using the target page's context:
+
+| Target page | `officeCity` |
+| --- | --- |
+| National/non-regional page, except a personal lawyer page | Localized office city, or `null` if unavailable |
+| Regional page | `null` |
+| Personal `lawyer_page`, regardless of regional context | `null` |
+
+National means absence of regional scope, not Ukrainian locale. The same rule applies to `uk`, `ru`,
+and `en`. The personal lawyer page exception takes precedence over the non-regional rule. Current
+consumers are `practice_reviews`, `service_reviews`, `problem_reviews`, and `lawyer_reviews`.
+
+Source and localization rules:
+
+- Resolve the review's linked office, then that office's linked region/city in the existing reference
+  model. Use its non-empty localized `public_name` for the target page's locale, in nominative form.
+- Do not use `prepositional_name`, parse the office name/address, or substitute the lawyer's region.
+- If the office, its region/city, or the localized name is missing/unresolved, return `null`. Blank or
+  whitespace-only names also become `null`; do not substitute another locale, an identifier, or a
+  placeholder.
+- Absence of the city does not exclude the review or create a new publication blocker.
+- Existing review eligibility, visibility, ordering, limits, and regional filtering remain unchanged.
+  In particular, regional eligibility through the linked office **or** lawyer is not narrowed by this
+  display rule.
+
+Public frontend contract:
+
+- Render the city only when `officeCity` is a non-empty string. Otherwise omit both the city and any
+  separator or empty space reserved solely for it.
+- Treat an absent `officeCity` in an older snapshot exactly like `null`.
+- Do not infer visibility from the URL, locale, or page type, and do not fetch/derive the city from
+  office or lawyer data on the frontend. The backend payload is authoritative.
+- Do not label this value as the author's city or add it to author/address structured data.
+
+The value is part of the page's review runtime payload and published snapshot. Preview and publication
+must apply the same rule. Existing snapshots are not rewritten merely by adding the contract or
+deploying its future implementation; they gain the field when their review payload is rebuilt through
+the normal publication/refresh mechanism. The implementation must account for changes to the review's
+office link, the office's region link, and the localized region/city name in existing refresh dependency
+tracking, without introducing a separate refresh queue or scheduler for this field.
+
+Acceptance criteria for implementation:
+
+1. The same eligible review has a localized city on a national practice/service/problem page and
+   `officeCity: null` on a regional page or personal lawyer page.
+2. National `uk`, `ru`, and `en` pages use their own localized name; a missing translation yields `null`.
+3. Missing/unresolved office or city and blank names yield `null`, while the review remains eligible
+   under the existing rules.
+4. A review selected for a region through its lawyer still follows existing regional eligibility,
+   even when its office belongs to another region; its city remains hidden on that regional page.
+5. Old snapshots without the field render without a placeholder or frontend error.
+6. A relevant source/name change is reflected after the normal review refresh/publication, with no
+   additional frontend lookup. Unrelated selection and ordering behavior is unchanged.
+
 ### Lawyer Qualifications
 
 Lawyer qualifications are not dictionaries. They are ranking signals.

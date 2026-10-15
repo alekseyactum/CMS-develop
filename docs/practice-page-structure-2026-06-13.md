@@ -246,6 +246,8 @@ now a standalone read-only runtime slot with a backend-owned localized title, as
 - Filters:
   - current practice identifier;
   - current region for regional pages.
+- Approved office-city addition: review items expose localized `officeCity` on national pages and
+  `null` on regional pages, following the [common public review contract](reference-data-and-runtime-model.md#review-office-city-in-public-cards).
 - Runtime order is not important for the current CMS decision.
 - Validation/diagnostics:
   - empty reviews list is a warning, not a blocker.

@@ -83,6 +83,8 @@ Public visual rendering is still a frontend task.
     - Runtime payload owns the fixed localized `title`: `Відгуки` / `Отзывы` / `Reviews`.
     - There is no editable reviews block and no `lead`.
     - First-pass runtime filter: current service + region.
+    - Approved office-city addition: review items expose localized `officeCity` on national pages and
+      `null` on regional pages, following the [common public review contract](reference-data-and-runtime-model.md#review-office-city-in-public-cards).
     - Historical snapshots may still expose `service_reviews_block`; consumers use it only as a fallback
       when the runtime payload has no `title`.
 
