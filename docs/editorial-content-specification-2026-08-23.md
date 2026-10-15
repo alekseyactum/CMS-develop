@@ -245,6 +245,35 @@ For `external_reference`:
 - duplicate lawyers are invalid;
 - `erpCaseExternalId` is optional; missing value produces a warning.
 
+### Public display data for detail pages
+
+The 2026-10-15 clarification separates editable references from resolved public display fields.
+Preview and newly assembled snapshots for `blog_page`, `media_page` and `case_page` add the following
+to the normalized `publication_meta` payload without changing its stored IDs:
+
+- `coverMediaUrl: string | null` and `cover: { mediaId, url, alt } | null`;
+- `authors: Array<{ id, fullName, roleLabel, publicPath, photoUrl }>`;
+- `primaryLawyer`: the same person shape for the explicitly selected case primary author, otherwise `null`;
+- `legalReviewer: { id, fullName, credentials } | null`.
+
+The optional person fields are nullable. Names use the requested locale's public name with ERP source
+name fallback. Only publicly visible lawyers are resolved; links require a current published profile
+in that exact locale, and photos require available uploaded media. Missing selected references are
+omitted without substituting another lawyer or the organization. Actum fallback applies only when no
+lawyer was selected for Blog or Actum-authored Media. External-reference Media exposes its source
+fields instead, with no Actum lawyer authors; its optional reviewer describes the local WebPage,
+not authorship of the external work. CMS editor identity remains private.
+
+Each content-builder image additionally receives `content.imageUrl: string | null`; its original
+`mediaId`, alt text, caption, source and link remain unchanged. Frontend renders this URL, not the ID.
+Generated display fields are not editable or sent back in section save requests. Collection-card
+payloads retain their separate existing contract.
+
+Exact publication captures resolved data during preparation and uses that capture during commit,
+without re-resolving live references. Existing published snapshots and older prepared plans are not
+rewritten automatically. Subsequent lawyer profile changes currently reach these detail-page display
+fields on a new publication, not through an automatic editorial-detail refresh handler.
+
 ## 8. Service-Tree Relations
 
 A publication may have any number of ordered relations to the service hierarchy.
