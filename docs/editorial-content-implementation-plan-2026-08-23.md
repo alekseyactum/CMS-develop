@@ -1,5 +1,35 @@
 # Editorial Content Implementation Plan - 2026-08-23
 
+## Approved Follow-Up — 2026-10-16
+
+The [current editorial specification](editorial-content-specification-2026-08-23.md) adds Blog FAQ and
+Blog-only aside recommendations. The [lawyer page specification](lawyer-page-structure-2026-06-18.md)
+also caps its entire publications block at five cards. These changes are specified, not implemented by
+this documentation update; the dated August implementation status below remains historical.
+
+Backend scope:
+
+- add optional page-owned Blog FAQ, validation, stable item identities, preview/exact-publication support,
+  one generated TOC entry and the subordinate FAQ graph;
+- add saved automatic/manual recommendation settings and resolved Blog cards, exact-locale eligibility,
+  thematic ranking, deterministic top three and manual order without automatic supplementation;
+- add the narrow published-only recommendation refresh consumer and new-candidate discovery; preserve
+  owner drafts, FAQ/body and saved-but-unpublished selection settings, and prevent refresh loops;
+- cap lawyer publications at five consistently across preview, page publication and scoped refresh;
+- verify legacy snapshots and additive authoring initialization without rewriting or auto-publishing them.
+
+CMS frontend scope: FAQ editor and normal history/save flow; auto/manual Blog selector with order and
+backend diagnostics; generated recommendation inspection. Page-owned sections activate with the page.
+
+Site frontend scope: FAQ within the same server-rendered article after its body; recommendations in an
+aside using returned cards; no extra lawyer cards or embedded pagination beyond the five-card list.
+The existing full collection pagination remains independent.
+
+Acceptance follows the new specification, including empty/disabled states, locale isolation, more than
+three/five eligible candidates, published-only refresh, draft preservation, no-op/loop prevention and
+desktop/mobile rendering. Existing imported FAQ text is converted only through an explicit content task.
+Commit, deploy, content conversion and refresh of existing snapshots require their normal separate scope.
+
 ## Implementation status - 2026-08-23
 
 The first backend convergence slice is implemented on `codex/editorial-content-v1`: finalized metadata,
@@ -241,4 +271,4 @@ Do not absorb these into the implementation opportunistically:
 - new builder block families;
 - slug-change workflow;
 - mixed editorial collection;
-- additional recommendation algorithms.
+- recommendation algorithms beyond the approved Blog auto/manual rules above.

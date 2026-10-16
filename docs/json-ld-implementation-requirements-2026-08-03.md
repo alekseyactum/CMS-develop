@@ -153,13 +153,21 @@ order to make snapshots and diffs reviewable.
 | `intent_page` | `WebPage` | same source `Service @id` as the exact bound source variant | common price offers, FAQ and visible runtime enrichments; no offer caused only by intent/region/title |
 | `lawyers_page` | `CollectionPage` | `mainEntity` is a page-owned `ItemList`; every item references a visible published lawyer `Person @id` and localized profile URL | partial item name/image may mirror the visible card; it does not own full lawyer profiles |
 | `lawyer_page` | `ProfilePage` | localized complete-enough shared `Person` description | certification, education credentials, expertise, visible cases, publications and reviews |
-| `blog_page` | `WebPage` | page-owned `BlogPosting` at `{canonicalUrl}#article` | reviewer, image, FAQ if supported, primary/additional service `about`, translation relation |
+| `blog_page` | `WebPage` | page-owned `BlogPosting` at `{canonicalUrl}#article` | reviewer, image, optional Blog FAQ fragment under the 2026-10-16 target, primary/additional service `about`, translation relation |
 | `media_page` / `actum_article` | `WebPage` | page-owned `Article` at `{canonicalUrl}#article` | external work through `about`, reviewer, services, dates and image |
 | `media_page` / `external_reference` | `WebPage` | external `CreativeWork` identified by required source URL | local `WebPage.about` service refs; no local Article and no invented external author |
 | `case_page` | `WebPage` | page-owned `Article` at `{canonicalUrl}#article`; shared real-matter `Thing` | lawyers, services, reviews, translation relation, image and dates |
 | `blog_collection_page` | `CollectionPage` | page-owned `ItemList` of published blog works | visible filters do not create entities |
 | `media_collection_page` | `CollectionPage` | page-owned `ItemList` of published media target works/pages | mode-specific target ids |
 | `case_collection_page` | `CollectionPage` | page-owned `ItemList` of published case-study articles | no draft entries |
+
+The 2026-10-16 [editorial amendment](editorial-content-specification-2026-08-23.md) requires the Blog FAQ
+graph only from enabled, visible FAQ in the same effective preview/published content as the article.
+Keep `BlogPosting` as the main work; the FAQ is a subordinate page-owned fragment, not a second page or
+replacement main entity. The article body and FAQ render within the same HTML `article`; aside
+recommendations are not `articleBody`. Disabled FAQ emits no FAQ nodes. This is an implementation target,
+not evidence that the existing editorial builder already emits the fragment. Related-list graphs must
+match visible cards, including the new maximum of five lawyer publications, rather than all candidates.
 
 `services_root` and `article_page` remain legacy routing compatibility types in the current backend type
 union, but they are not current authoring schema types. The JSON-LD builder does not silently map or infer

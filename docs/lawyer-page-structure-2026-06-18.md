@@ -2,6 +2,34 @@
 
 This document fixes the agreed target structure for `lawyer_page`.
 
+## Current Amendment — 2026-10-16: At Most Five Publications
+
+The complete `lawyer_publications` block contains at most **five** eligible publication cards. This is a
+backend payload limit, not just five cards visible in the initial frontend view, and not a five-item
+page followed by more items loaded into the same block.
+
+- Apply the limit after the existing lawyer relation, publication and locale eligibility filters and
+  deterministic ordering: Blog and Media where the lawyer is an author/co-author, featured first, then
+  public publication date descending and stable ID for ties. This amendment does not change membership
+  or introduce manual ordering; being only a legal reviewer does not add an article to this list.
+- Preview, ordinary/exact page publication and scoped stale refresh must all apply the same limit.
+- Frontend renders the returned order and must not append extra pages/cards. Empty lists remain hidden;
+  one through five eligible items are shown without padding.
+- Public collection pagination and any existing navigation to the full publication collection remain
+  separate. No new lawyer-specific pagination, author-filter route or "load more" endpoint is introduced.
+  The existing "Всі публікації" link opens the localized general Blog collection, not a lawyer-filtered list.
+- Cases, reviews and other page types retain their existing limits. The Blog-only restriction for Blog
+  recommendations is not a new restriction on lawyer publication membership.
+- Existing snapshots are not rewritten in place. Applying the cap to already-published pages belongs to
+  a separately authorized normal publication/refresh rollout, not to a schema migration or this doc push.
+
+Acceptance: fixtures with 0, 1, 5, 6 and more than 80 eligible publications; deterministic first-five
+selection after filtering; parity across preview/publication/refresh; no hidden extra cards in HTML or
+"show more" batches, and no regression in full collection pagination. A raw query limit alone is not
+acceptance. Shared query helpers must not accidentally apply five to the separate lawyer cases list.
+
+This is the approved target, not a claim that the backend/frontend change is already deployed.
+
 ## Current Amendment — 2026-10-11: Related-Section Headings
 
 The lawyer's CMS profile may override the headings of its three runtime lists independently per locale:
@@ -164,6 +192,7 @@ At the time of this baseline, the backend exposed only a minimal `seo` + runtime
    - Read-only in CMS.
    - Title is system-defined/read-only.
    - Source: publications linked to the current lawyer.
+   - At most five eligible cards in total, under the 2026-10-16 amendment; no embedded pagination.
    - Empty list is a warning, not a publish blocker; public frontend may hide the block when empty.
 
 5. `lawyer_reviews`

@@ -10,6 +10,10 @@ legacy Actum content is deliberately excluded and requires a separate specificat
 separate shared redirect mechanism and migration-map preparation boundary for editorial and other pages.
 It does not permit changing published editorial slugs or imply that legacy content has been migrated.
 
+2026-10-16 amendment: Blog detail pages gain optional structured FAQ and an aside recommendation list
+containing only Blog articles. The requirements below are approved targets; this documentation change
+does not implement them, rewrite existing content, or activate new refresh consumers.
+
 ## 1. Objective
 
 Build one shared editorial mechanism for three content kinds:
@@ -38,6 +42,7 @@ Included:
 
 - structured publication metadata;
 - a typed ordered content builder;
+- optional Blog FAQ and automatic/manual Blog-only recommendations outside the builder;
 - authors and legal reviewer relations;
 - multiple service-tree relations;
 - three independent public collections;
@@ -54,6 +59,7 @@ Not included:
 - inline CTA blocks;
 - gallery, video, arbitrary embed, or raw HTML blocks;
 - manual collection-card ordering;
+- mixed Blog/Case/Media recommendations, pinned-plus-automatic recommendation modes, and tag weights;
 - legacy-content migration;
 - automatic translation;
 - slug editing after first publication; redirect management is a separate follow-up under the
@@ -107,6 +113,8 @@ Rules:
 - locale creation copies only structural relations: authors, reviewer, service-tree relations, cover,
   external media relation, and ERP case reference;
 - localized title, excerpt, SEO, body, case summary, and editorial dates are not copied as translations;
+- Blog FAQ text and recommendation settings are authored independently per locale; a new locale starts
+  with FAQ disabled and automatic recommendations, without copying the source FAQ or manual selection;
 - only published locale variants are exposed as public alternates.
 
 ## 5. CMS Navigation And Editor
@@ -152,8 +160,10 @@ Editing rules:
 1. `seo`
 2. `publication_meta`
 3. `content_builder`
-4. optional `editorial_cta`
-5. runtime service-hierarchy relations
+4. optional `blog_faq`
+5. optional `editorial_cta`
+6. runtime service-hierarchy relations
+7. `blog_recommendations`: separate aside selection configuration and resolved recommendation list
 
 ### `media_page`
 
@@ -181,8 +191,13 @@ Public render order is fixed in V1:
 2. `case_summary` for a case;
 3. generated table of contents when applicable;
 4. `content_builder`;
-5. enabled `editorial_cta`;
-6. runtime service-hierarchy section.
+5. enabled `blog_faq` for Blog, immediately after the builder;
+6. enabled `editorial_cta`;
+7. runtime service-hierarchy section.
+
+For Blog, the body and FAQ belong to the same HTML `article` on the same URL. Recommendations are
+complementary `aside` content, not an article-body block; responsive placement belongs to the frontend
+template. Separate CMS sections do not imply separate public pages or separate HTML articles.
 
 Missing optional parts are omitted without empty placeholders. Editors reorder blocks inside
 `content_builder`, not whole page sections.
@@ -397,7 +412,8 @@ Rules:
 - optional title;
 - required text.
 
-Deferred block types include gallery, video, arbitrary embeds, inline CTA, and related-links composition.
+Deferred block types include gallery, video, arbitrary embeds, inline CTA, and inline related-links
+composition. The approved Blog recommendation aside is a separate section, not one of these blocks.
 
 ### Exact V1 block payloads
 
@@ -505,7 +521,9 @@ must preserve `blockId` when a block is edited or moved and generate a new stabl
 
 ## 11. Table Of Contents
 
-The table of contents is generated from `heading` blocks and is not independently edited.
+The table of contents is generated from `heading` blocks and is not independently edited. Blog adds one
+entry for an enabled, nonempty FAQ, using its section title and a backend-owned stable anchor. Individual
+FAQ questions are not added to the TOC in this version.
 
 Rules:
 
@@ -515,14 +533,15 @@ Rules:
 - nesting follows heading level;
 - a missing logical parent is a warning, not a publication error;
 - backend owns stable anchors;
-- Blog TOC is always enabled; no included headings produces a warning;
+- Blog TOC is always enabled; no resulting entries, including FAQ, produces a warning;
 - Media `actum_article` and Case TOC are optional and off by default;
 - Media `external_reference` TOC is always off;
-- enabled TOC with no included headings produces a warning.
+- enabled TOC with no resulting entries produces a warning.
 
 ## 12. `editorial_cta`
 
-V1 supports one fixed optional CTA section after the body, not CTA blocks inside the builder.
+V1 supports one fixed optional CTA section after the body and any enabled Blog FAQ, not CTA blocks inside
+the builder.
 
 Fields:
 
@@ -533,6 +552,91 @@ Fields:
 
 The section can be enabled or disabled. A disabled CTA is ignored. An enabled but incomplete CTA is a
 publication error.
+
+## 12a. Blog FAQ
+
+`blog_faq` is one optional, page-owned section per Blog locale, disabled by default. It reuses the
+structured FAQ model rather than adding a builder block or guessing questions from ordinary headings.
+
+- Editable fields: plain-text `title` and ordered `items` with stable question IDs, plain-text
+  `question`, and `answer` using the existing safe rich-text contract, including formatting and links.
+- The editor can add, remove, edit and reorder questions, and enable or disable the whole FAQ.
+- When enabled, a nonempty title and at least one complete question/answer pair are required. Empty
+  questions/answers and invalid item identities block publication; three questions are not a minimum.
+- A disabled FAQ has no missing-content diagnostics, public placeholder, TOC entry or FAQ graph nodes.
+- Saving and history follow the normal section lifecycle. Public activation is `with_page`, through the
+  normal page publication flow, not an independently published reusable FAQ source.
+- The frontend renders FAQ inside the same `article`, directly after the body and before CTA or
+  recommendations: section title H2, question titles H3. All answer text is present in server-rendered
+  HTML; expanding a question must not be required to fetch its answer.
+- The page remains a Blog article. Backend structured data describes the visible FAQ as a subordinate
+  fragment, following the common FAQ graph contract; it must not replace `BlogPosting` with `FAQPage`
+  or invent a separate public FAQ URL. No Google rich-result or ranking outcome is promised.
+- Existing question/answer prose remains intact until explicitly converted. Conversion must move the
+  intended text without leaving a second visible copy or automatically reclassifying unrelated headings.
+
+## 12b. Blog Recommendations
+
+`blog_recommendations` is outside `content_builder` and always renders as an aside. Its page-owned
+selection configuration follows normal saved-version/history/page-publication rules; resolved cards are
+backend-generated read-only data, never an additional editable copy of the recommended article.
+
+The default is `auto`. `manual` completely replaces automatic selection. The public list contains at
+most three eligible Blog articles in the current locale. Cases and Media are excluded in both modes,
+including articles selected manually. The current article/locale family and duplicate selections are
+excluded. Drafts, archived pages and missing published translations cannot become cards; there is no
+cross-locale fallback. An empty result is valid and hides the entire aside without a placeholder.
+
+Automatic selection:
+
+1. Read the owning article state explicitly selected for preview or captured by the publication plan.
+   A scoped refresh instead retains its current published relations/settings, never saved drafts.
+   Candidate articles always come from published projections of the same locale.
+2. Compare primary and additional chains by their deepest shared identity: same problem, then same
+   service, then same practice. Use the best single match, not a sum of matches or number of relations.
+3. Exclude candidates with no common practice/service/problem. No taxonomy means no automatic results,
+   not an unrelated newest-articles fallback. CMS explains an empty result without blocking publication.
+4. Sort by match depth descending, public `publishedAt` descending, then stable page ID ascending.
+   `isFeatured`, technical update dates and tag weights do not override thematic relevance.
+5. Select at most three distinct articles. One or two eligible results remain one or two cards.
+
+Manual selection:
+
+- Store up to three ordered Blog locale-group IDs, following the existing editorial selector convention.
+- Resolve only each selected group's currently published article in the owner's locale, retaining order.
+- Reject duplicate, own-family, wrong-kind and invalid references. An existing selected group without an
+  available published locale is omitted with an editor diagnostic; preserve the selection so its return
+  can be detected. Do not substitute a different article or automatically fill unused positions.
+
+Use the common `EditorialCard` data for title, excerpt, cover, date and backend-provided public path.
+Frontend must not fetch extra candidates, score articles, rebuild URLs or reorder the list. Cards link to
+their detail pages; this three-item aside is not a paginated collection. The existing public collections
+and their pagination remain unchanged.
+
+Exact preparation captures the selected owner configuration and resolved cards; commit uses that capture
+under the existing freshness guards rather than silently reselecting articles from live data.
+
+Refresh is part of this feature, not an implied capability of the existing resolver:
+
+- Register a narrow Blog recommendation consumer in the common stale-refresh mechanism under
+  `related_content`, with the published selection mode, selected IDs and taxonomy scope as dependencies.
+- Detect relevant published card/availability/relation changes, rollback/unpublish, and newly eligible
+  articles even if absent from the previous three cards. Manual mode tracks selected groups, including
+  temporarily unavailable selections; automatic mode tracks the selection scope, including empty lists.
+- Refresh only the recommendations and their necessary dependent graph/dependency records from the
+  current published owner snapshot. Preserve body, FAQ, metadata, CTA, selection settings and drafts.
+- Do not publish a draft configuration, introduce the new aside into an old snapshot that lacks it, or
+  fall back to full page publication. Unsupported old shapes require an explicit normal page publication.
+- Follow common batching, delay, urgent-removal, retry, no-op and cache-delivery rules. A changed
+  recommendation list alone must not be treated as a change to the owner's recommendation-card source
+  and cause reciprocal refresh loops. No separate scheduler or per-visitor reselection is introduced.
+
+Acceptance requires preview/publication parity, independent locales, disabled/incomplete FAQ checks,
+stable question IDs and one FAQ TOC entry, server-rendered article membership, both selection modes,
+0/1/2/3/>3 candidates, equal-score/date ordering, excluded self/Case/Media/draft entries, and published
+refresh after a new candidate or removal. Refresh tests must prove unchanged unrelated drafts/content,
+no-op handling and no recommendation-to-recommendation loop. Existing imported prose is not migrated by
+this specification update.
 
 ## 13. Collection Pages
 
@@ -625,7 +729,7 @@ reference request per card. This does not change selection, ordering, or paginat
 
 A missing cover returns `cover: null`; frontend renders the standard placeholder.
 
-Public ordering:
+Public collection ordering (not the Blog recommendation ranking):
 
 1. featured publications, newest first;
 2. normal publications, newest first;
@@ -682,6 +786,7 @@ Publication-blocking errors:
 - more than five authors or duplicate contributor relations;
 - missing type-required media or case fields;
 - enabled but incomplete CTA;
+- enabled but incomplete Blog FAQ or invalid Blog recommendation configuration;
 - type-specific requirements documented above.
 
 Warnings:
@@ -692,10 +797,14 @@ Warnings:
 - no named Blog or local Media author when Actum fallback is used;
 - no reviewer;
 - suspicious H2/H3/H4 hierarchy;
-- enabled TOC with no included headings;
+- enabled TOC with no resulting entries, including the Blog FAQ entry;
 - optional weak/missing case-summary values;
 - missing recommended local-media source URL;
 - empty published collection.
+
+Missing or disabled optional Blog FAQ and an empty recommendation result do not themselves produce
+publication errors. Unavailable manually selected translations are diagnosed without silently replacing
+the editor's selection.
 
 Warnings never block publication. Frontend displays diagnostics returned by backend and must not recreate
 the rules.
@@ -738,6 +847,8 @@ Target rules:
 - a previously published page cannot be hard-deleted through the normal editor;
 - archive/unpublish removes the public snapshot pointer and projection row;
 - related published collection is refreshed automatically;
+- published Blog recommendation consumers are discovered and refreshed through the narrow
+  `related_content` contract above, including priority removal of unavailable cards;
 - the old public URL returns 410 while archived;
 - history is retained;
 - restore returns the page to draft for normal validation and publication;

@@ -421,7 +421,11 @@ Provider and geography follow the page variant:
 
 - The main `WebPage.hasPart` references the FAQ fragment, and the `FAQPage.isPartOf` points back to the
   main `WebPage`.
-- `FAQPage.about` references the current `Service`.
+- On service-hierarchy and intent pages, `FAQPage.about` references the current `Service`.
+- The 2026-10-16 [Blog FAQ amendment](editorial-content-specification-2026-08-23.md) extends this fragment
+  pattern to `blog_page`: retain the page's `BlogPosting` main entity and link the FAQ's `about` to that
+  article. Do not invent a single primary `Service` for the FAQ or turn the whole article into `FAQPage`.
+  The visible FAQ remains inside the same HTML `article`; separate CMS storage is not a separate URL.
 - Every FAQ item produces one `Question` with a stable identifier based on the item's UUID rather than
   its array position:
 

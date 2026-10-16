@@ -5,6 +5,20 @@ This document is the first implementation task for CMS frontend page authoring s
 The backend contract is available in Swagger/OpenAPI. Use OpenAPI examples as the primary source for
 request/response shapes, especially for authoring state, preview, publish, and rollback.
 
+## Editorial authoring amendment 2026-10-16
+
+The [editorial specification](editorial-content-specification-2026-08-23.md) adds two Blog authoring
+surfaces: optional structured FAQ with ordered questions/answers, and auto/manual recommendation
+settings with at most three ordered Blog selections. FAQ is not a builder block and uses normal
+page-owned history/save/validation and `with_page` publication. Generated recommendation cards remain
+read-only; backend owns eligibility, ranking, locale resolution and refresh. Do not duplicate these
+algorithms in CMS or treat this approved target as an already-available API contract.
+
+On the public site FAQ remains inside the same server-rendered article; recommendations are aside
+content. Separately, the [lawyer specification](lawyer-page-structure-2026-06-18.md) caps the entire
+publications block at five returned cards, without extra reveal batches or embedded pagination. This
+does not alter administrative list pagination or public collection pagination.
+
 ## Matrix publication accent contract
 
 Decision date: 2026-10-13. Status: approved policy; additive backend contract deployed to develop and

@@ -3,6 +3,19 @@
 This document records implementation requirements for the clean `CMS` backend, based on the reviewed
 `notstrapitest` refactoring assessments for page authoring and page preview.
 
+## Editorial and lawyer list amendment 2026-10-16
+
+The [editorial specification](editorial-content-specification-2026-08-23.md) now requires optional
+page-owned Blog FAQ and Blog-only aside recommendations: auto/manual selection, at most three cards,
+exact locale, thematic ranking and a narrow published-only stale-refresh consumer. FAQ uses normal
+`with_page` activation; editable recommendation settings and read-only resolved cards form one logical
+composite, not a second publication engine. Preview, exact preparation and published snapshots must agree.
+
+The [lawyer page specification](lawyer-page-structure-2026-06-18.md) caps `lawyer_publications` at five
+eligible cards in total, consistently in the resolver and scoped refresh. It does not change lawyer
+cases, other lists, collection pagination or existing publication membership/order. These are approved
+implementation requirements; this documentation amendment is not a deployment or content rewrite.
+
 ## Section Authoring Contract Update
 
 Decision date: 2026-10-04.
