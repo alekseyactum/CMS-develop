@@ -208,7 +208,7 @@ Exit criteria:
 
 Complete:
 
-- required primary lawyer and up to four co-authors;
+- Actum Organization authorship when no lawyers are selected, or one explicit primary lawyer and up to four co-authors;
 - optional ERP case relation;
 - typed `case_summary`;
 - optional body/TOC/CTA;

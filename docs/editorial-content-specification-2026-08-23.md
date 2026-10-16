@@ -254,7 +254,8 @@ For `external_reference`:
 
 ### Case contributors and external relation
 
-- exactly one primary lawyer is required;
+- empty primary and coauthor selections use Actum Organization as the author;
+- selecting any coauthors requires exactly one explicit primary lawyer; no coauthor is silently promoted;
 - up to four ordered co-authors are allowed;
 - total lawyer count cannot exceed five;
 - duplicate lawyers are invalid;
@@ -275,7 +276,9 @@ The optional person fields are nullable. Names use the requested locale's public
 name fallback. Only publicly visible lawyers are resolved; links require a current published profile
 in that exact locale, and photos require available uploaded media. Missing selected references are
 omitted without substituting another lawyer or the organization. Actum fallback applies only when no
-lawyer was selected for Blog or Actum-authored Media. External-reference Media exposes its source
+lawyer was selected for Blog, Case or Actum-authored Media. Company-authored Cases support creation,
+saves, publication and translation; public presentation keeps `primaryLawyer: null`.
+External-reference Media exposes its source
 fields instead, with no Actum lawyer authors; its optional reviewer describes the local WebPage,
 not authorship of the external work. CMS editor identity remains private.
 
@@ -719,7 +722,8 @@ Attribution by kind:
 - Blog: public authors or Actum fallback;
 - Media `actum_article`: public authors plus source name;
 - Media `external_reference`: external source and original URL;
-- Case: primary lawyer and optional `resultLabel`.
+- Case: primary lawyer when selected and optional `resultLabel`. Organization-authored cases retain
+  nullable lawyer card fields; the Actum author object belongs to the detail payload, not a lawyer reference.
 
 Service-tree card clarification (2026-09-10): primary relation IDs remain compatible, and each resolvable
 practice/service/problem also has the optional summary shown above. `home_cases` uses its `displayTitle`
@@ -789,7 +793,7 @@ Publication-blocking errors:
 - unsupported block type or invalid block payload;
 - broken media or entity references;
 - invalid or duplicate service-tree chains;
-- more than five authors or duplicate contributor relations;
+- more than five authors, duplicate contributor relations, or case coauthors without an explicit primary lawyer;
 - missing type-required media or case fields;
 - enabled but incomplete CTA;
 - enabled but incomplete Blog FAQ or invalid Blog recommendation configuration;
@@ -800,7 +804,7 @@ Warnings:
 - missing cover;
 - empty builder where a warning is required;
 - no service-tree relations;
-- no named Blog or local Media author when Actum fallback is used;
+- no named Blog, Case or local Media author when Actum fallback is used;
 - no reviewer;
 - suspicious H2/H3/H4 hierarchy;
 - enabled TOC with no resulting entries, including the Blog FAQ entry;
