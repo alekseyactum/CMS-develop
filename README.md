@@ -77,6 +77,11 @@ See [`docs/cms-front-reference-data-task.md`](docs/cms-front-reference-data-task
 frontend task around reference-data admin screens and endpoints.
 See [`docs/source-diagnostics-and-bulk-bootstrap-task.md`](docs/source-diagnostics-and-bulk-bootstrap-task.md)
 for the project-wide source diagnostics and mass authoring-page creation task.
+See [`docs/article-import-specification-2026-10-16.md`](docs/article-import-specification-2026-10-16.md)
+for the agreed import of legacy Ukrainian articles into release drafts: blog/case classification,
+content conversion, taxonomy, authors and reviewers, future URLs, redirects, error handling and
+acceptance. The [training report](docs/article-import-training-2026-10-15.md) records the two test
+imports, known limitations and their completed cleanup; the mass import remains a separate step.
 
 ## Development Sequencing
 
