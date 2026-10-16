@@ -4,8 +4,9 @@
 
 The [current editorial specification](editorial-content-specification-2026-08-23.md) adds Blog FAQ and
 Blog-only aside recommendations. The [lawyer page specification](lawyer-page-structure-2026-06-18.md)
-also caps its entire publications block at five cards. These changes are specified, not implemented by
-this documentation update; the dated August implementation status below remains historical.
+also caps its entire publications block at five cards. The backend changes are implemented and deployed
+to develop and release; frontend integration remains a separate task. The dated August implementation
+status below remains historical. See the [rollout record](blog-faq-recommendations-rollout-2026-10-16.md).
 
 Backend scope:
 
@@ -28,7 +29,37 @@ The existing full collection pagination remains independent.
 Acceptance follows the new specification, including empty/disabled states, locale isolation, more than
 three/five eligible candidates, published-only refresh, draft preservation, no-op/loop prevention and
 desktop/mobile rendering. Existing imported FAQ text is converted only through an explicit content task.
-Commit, deploy, content conversion and refresh of existing snapshots require their normal separate scope.
+Content conversion and adoption by existing published snapshots remain separate from this backend rollout.
+
+### Backend deployment — 2026-10-16
+
+The backend now contains the FAQ schema, safe
+answer contract, TOC/graph integration, recommendation configuration/resolver and narrow stale-refresh
+consumer, exact source-scope freshness checks, and five-card lawyer limit. The implementation contract
+is `cms-back/docs/blog-faq-recommendations.md`. Commits `27cb406` (develop) and `0444045` (release)
+were pushed and deployed through the normal pipelines; both new revisions receive all service traffic.
+
+Legacy articles lacking an immutable card capture are temporarily omitted with a diagnostic (before
+the selector limit), while corrupt existing captures remain errors. This permits initial adoption
+without bulk-republication or mutually blocked automatic selections. No new DB migration or runtime
+flag is introduced. Deployment does not rewrite existing snapshots. New sections enter an article's
+published snapshot through normal page publication; frontend integration remains separate.
+Release keeps its already-enabled scheduled refresh; develop keeps its worker and commands disabled.
+The existing JSON-LD page-type allowlists still exclude Blog in both environments.
+
+Lifecycle boundary: there is currently no native page unpublish/archive command. Recommendation
+discovery/refresh accepts removal events, but a future command or authorized maintenance removal must
+capture the editorial BEFORE -> null event transactionally. Direct SQL removal is not a scheduled
+change-capture mechanism; this implementation does not add a new removal workflow.
+
+Verification: builds passed in both branches. Develop: full suite 3205 passed, zero failures, one
+existing optional MySQL diagnostics test skipped; 182 focused tests passed after push. Release: full
+suite 3187 passed, zero failures, the same optional test skipped; 176 focused tests passed after push.
+Both deployed health/readiness endpoints passed with the expected source/build and database readiness.
+Release schema and refresh-summary reads passed, including the three new Blog slots and a healthy
+scheduler heartbeat. Develop admin reads returned the existing operator-membership restriction
+`CMS_USER_NOT_FOUND`; no access was changed. Dedicated live MySQL query/concurrency/load checks and
+frontend/browser acceptance remain outside this rollout.
 
 ## Implementation status - 2026-08-23
 

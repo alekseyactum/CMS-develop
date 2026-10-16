@@ -609,6 +609,12 @@ Manual selection:
   can be detected. Do not substitute a different article or automatically fill unused positions.
 
 Use the common `EditorialCard` data for title, excerpt, cover, date and backend-provided public path.
+Compatibility: a valid published legacy article without an immutable editorial-card capture is
+temporarily unavailable for this selector. Omit it before the three-card limit and report a CMS
+warning; retain its automatic scope/manual selection so a later normal publication can make it
+eligible. Never fill the gap from live reference data or a draft. A present but corrupt capture or
+inconsistent published head remains an explicit error. This avoids mutually blocking first
+publications when all related legacy articles still lack captures.
 Frontend must not fetch extra candidates, score articles, rebuild URLs or reorder the list. Cards link to
 their detail pages; this three-item aside is not a paginated collection. The existing public collections
 and their pagination remain unchanged.
