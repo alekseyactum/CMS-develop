@@ -57,18 +57,65 @@ pipelines preserve these values; saved jobs do not inherit API flags. No startup
 | release | `2b9ff749d1d99668314b902246107edfc33c4356` | `2044ddad-360a-45b6-8f7a-d3cce15e69cb` | `cms-back-release-00115-z5f` |
 
 Both builds succeeded and health/ready confirmed the expected sources, with databases healthy.
-Both ready revisions serve 100% of traffic. The bounded release ERROR-log check returned no entries.
+At capture-first acceptance, both ready revisions served 100% of traffic. The bounded release
+ERROR-log check returned no entries.
 Operator and rollout tests passed 45/45 in each checkout after push.
 
-CMS-front exact-mode configuration is prepared independently in each environment worktree, without
-UI changes. Both targeted suites passed 8/8, changed-file formatting and ESLint passed, full ESLint
-passed. Existing whole-repository formatting failures affect 899 develop and 843 release files;
-unrelated files were not reformatted. Frontend deployment and exact cutover have not occurred.
-The owner accepted the HTML-header verification limitation; the separate request to deploy the
-configuration-only frontend change despite unrelated formatting failures is still awaiting an answer.
-Do not infer that second approval from the first one. Worker and commands remain disabled and the
-writer remains `legacy/0` in both environments. The final release-only admission patch is prepared
-locally but is not committed or pushed; never deploy it before the guarded writer transition.
+CMS-front configuration remains Yuri's responsibility. The owner subsequently confirmed Yuri is
+ready and explicitly instructed backend-only completion. No frontend source, runtime or formatting
+was changed in this completion step. Existing frontend worktree patches are preserved, not deployed
+by this task; their previous formatting results are not a backend activation gate.
+
+## Release writer transition
+
+After a fresh playbook preflight and runtime capture-policy check, the existing release operator job
+ran with explicit execute/drain/generation/actor/reason arguments. Execution
+`cms-back-release-migrate-nnnll` committed `legacy/0 -> exact/1` at `2026-10-16T02:30:15.102062Z`
+(05:30 Kyiv). The atomic report has `committed=true`, one transition audit row, zero old
+operations/plans/effects and no metadata blockers. The saved job command was not changed; this was
+not a schema migration. The owner's confirmed maintenance window and frontend readiness supplied
+the coordination precondition. The actual frontend deployment remains outside this task.
+
+Final release source `22418b9e93ccb6fb6c9b15d2f97773f92b9ece47` was committed and pushed through
+the existing release trigger. It enables only release API worker/commands; develop remains staged.
+The 45 operator/rollout tests passed before and after push.
+
+The read-only exact API check on an existing published lawyer page returned `enabled=true`,
+`supported=true`, `canPrepare=true`, `canRollback=true` and no reasons. Its current snapshot remained
+`7c2c1edb-bd3f-433a-9867-cf64c3f47a59`. This verifies admission, not a new publication or frontend UI.
+
+## Final release runtime acceptance
+
+Build `da15e249-1c09-4f34-8485-12e5c462ebbb` succeeded at 02:34:23 UTC. Ready revision
+`cms-back-release-00116-2j7` serves 100% of traffic. `/api/health` and `/api/ready` confirmed
+the exact build/source above and healthy database connectivity. The bounded ERROR-level log check
+for this new revision returned no entries.
+
+Live settings confirm worker/commands/read and all five capture flags are true; HTML cache modes
+remain `no_store` / `absent`, and dispatch audience/allowed account are unchanged. Admin summary
+reports `commandsEnabled=true`, `automaticPaused=false`, default delays of 30 minutes and a
+five-minute expected scheduler interval. Both old publication-effects schedules remain paused.
+
+The **real scheduled ERP call at 05:35 Kyiv** reached this revision with HTTP 200. Its logged response
+changed from the preceding call's `disabled` to:
+
+```json
+{
+  "status": "finished",
+  "dispatchedBatches": 0,
+  "processedStages": 0,
+  "errorCode": null
+}
+```
+
+CMS persisted `lastScheduledTickAt=2026-10-16T02:35:04.083Z`; the subsequent summary reports a
+healthy heartbeat, zero pending source events, zero queued pages and zero attention items. No manual
+dispatcher invocation, ERP scheduler trigger or service-account impersonation was used for this check.
+
+Release backend activation is complete. The observed run was empty: the next real source change
+still needs to demonstrate event-to-demand-to-publication processing and visible website delivery.
+No new snapshot/content was created merely for acceptance. Develop was not switched to exact or
+enabled for processing because its own ERP recurrence remains unverified. Frontend work remains Yuri's.
 
 ## Acceptance and rollback boundaries
 
