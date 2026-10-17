@@ -79,6 +79,8 @@ filtering. The existing release audit records one national `uk` draft
 No schema migration, content publication or data deletion is needed; this documentation correction
 does not claim a deployment. The specification retains backend/frontend responsibilities and
 acceptance criteria.
+Deployment and data-preservation evidence are recorded in
+[`docs/about-national-only-rollout-2026-10-17.md`](docs/about-national-only-rollout-2026-10-17.md).
 See [`docs/cms-front-reference-data-task.md`](docs/cms-front-reference-data-task.md) for the first CMS
 frontend task around reference-data admin screens and endpoints.
 See [`docs/source-diagnostics-and-bulk-bootstrap-task.md`](docs/source-diagnostics-and-bulk-bootstrap-task.md)
