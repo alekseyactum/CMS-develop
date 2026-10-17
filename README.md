@@ -70,9 +70,15 @@ global price section editor, version history, validation, and publish-impact con
 See [`docs/reference-data-and-runtime-model.md`](docs/reference-data-and-runtime-model.md) for the agreed
 ERP-imported reference data and runtime/read-model boundary.
 See [`docs/about-page-structure-2026-10-06.md`](docs/about-page-structure-2026-10-06.md) for the agreed
-About page structure, national/regional variants in three locales, runtime selections, universal form,
-backend/frontend responsibilities, and acceptance criteria. This is a specification, not an implemented
-or deployed page.
+About page structure and the authoritative 2026-10-17 national-only correction: `/about`, `/ru/about`,
+`/en/about` in one shared national locale group, all-Ukraine eligible offices/lawyers, own editable
+history/founders, and the ordinary inherited `global_lead_form` with all runtime dependencies preserved.
+The earlier regional decision is superseded: no regional About routes/pages, inheritance, locks or
+filtering. The existing release audit records one national `uk` draft
+(`e3338050-745a-4162-a46b-af4d15729094`), no created regional pages and `ru`/`en` placeholders only.
+No schema migration, content publication or data deletion is needed; this documentation correction
+does not claim a deployment. The specification retains backend/frontend responsibilities and
+acceptance criteria.
 See [`docs/cms-front-reference-data-task.md`](docs/cms-front-reference-data-task.md) for the first CMS
 frontend task around reference-data admin screens and endpoints.
 See [`docs/source-diagnostics-and-bulk-bootstrap-task.md`](docs/source-diagnostics-and-bulk-bootstrap-task.md)

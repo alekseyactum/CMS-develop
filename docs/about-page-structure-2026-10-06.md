@@ -1,11 +1,29 @@
 # About Page Structure and Implementation Specification
 
-Date: 2026-10-06.
+Date: 2026-10-06. Authoritative scope correction: 2026-10-17.
 
 This is the agreed product scope for `about_page`, with implementation rules for `cms-back`,
-`cms-front`, and `site-front`. It covers the national page, regional variants, all three locales,
+`cms-front`, and `site-front`. It covers the national-only page in all three locales,
 authoring, runtime data, and acceptance. Recording this specification does not implement the page,
 create content, publish pages, or authorize deployment.
+
+The 2026-10-17 correction supersedes the earlier 2026-10-06 decision to support regional About
+variants, regional inheritance/locks, and regional office/lawyer filtering. That earlier decision is
+historical, not an alternative supported contract. `about_page` has only `/about`, `/ru/about`, and
+`/en/about`, in one shared national locale group. All other section, form, runtime dependency,
+versioning, and publication contracts remain intact.
+
+The supplied existing release audit records one national `uk` draft page,
+`e3338050-745a-4162-a46b-af4d15729094`, no created regional About pages, and `ru`/`en` placeholders
+only, not created translations. No database schema migration, content publication, or data deletion
+is needed for this correction. This documentation update does not re-audit cloud state or claim that
+the correction has been deployed.
+
+The subsequent develop audit on 2026-10-17 found one historical regional `/donetsk/about` page with
+saved section versions and an active snapshot, despite `draft` on the page record. The corrected
+contract excludes that obsolete regional identity from operational About pages and public routes.
+Preserve its database records and history; this change neither deletes them nor overwrites national
+content. A page record's status alone does not establish whether a published snapshot exists.
 
 The page introduces Actum as a company across all practices. It is not a family-law landing page.
 The approved sequence is: introduction, company statement, history, founders, offices, cases,
@@ -15,18 +33,18 @@ lawyers, media publications, and the ordinary inherited global application form.
 
 | Area | Decision |
 | --- | --- |
-| Page variants | One national page and regional variants; `uk`, `ru`, and `en` for each |
+| Page variants | National only; `uk`, `ru`, and `en` in one shared national locale group; no regional pages |
 | Animated hero | Backend supplies an automatically selected runtime array of enabled lawyers with usable portraits; no manual selection |
-| Hero geography | The entire Actum team on both national and regional pages, not just the current region |
+| Hero geography | The entire eligible Actum team across Ukraine; no regional filtering |
 | Hero ordering | Randomized ordering at assembly; no need for a different order on every browser refresh |
-| Company history | Editor-managed events and order; no fixed product count |
-| Founders | Exactly two people, displayed vertically one after the other, not a carousel |
+| Company history | Own editable content per locale; editor-managed events and order; no fixed product count |
+| Founders | Own editable content per locale; exactly two people, displayed vertically one after the other, not a carousel |
 | Office map | Existing ERP offices; selecting a list item centers the map; opening Google Maps is a separate action |
 | Case, lawyer, and media showcases | Existing `auto` / `manual` selection principle; settings belong to About, not Home |
 | Media showcase | Media publications only, not a mixed blog/media list |
-| Regional differences | Adaptable introductory text and SEO; local offices and lower lawyer showcase; shared company history and founders |
-| Regional cases and media | Inherit national About selections by default; explicit regional manual selections are allowed |
-| Contact form | Existing `global_lead_form` without page-owned fields; actual page region accompanies the submission context |
+| Office and lawyer geography | Eligible offices and lawyers across Ukraine; no regional filtering in runtime or selection pickers |
+| Case and media selections | Page-owned localized About configuration; no regional inheritance or overrides |
+| Contact form | Existing `global_lead_form` without page-owned fields; national page context has no selected region |
 
 2026-10-06 clarification: the contact block is the ordinary `lead_form` inherited from
 `global_lead_form`, together with the existing `lead_capture` context. There is no About-owned form,
@@ -39,25 +57,26 @@ to the hero's full lawyer pool, history, or offices.
 
 ## 2. Routes and Page Identity
 
-| Locale | National | Regional |
-| --- | --- | --- |
-| `uk` | `/about` | `/{regionSlug}/about` |
-| `ru` | `/ru/about` | `/ru/{regionSlug}/about` |
-| `en` | `/en/about` | `/en/{regionSlug}/about` |
+| Locale | National route |
+| --- | --- |
+| `uk` | `/about` |
+| `ru` | `/ru/about` |
+| `en` | `/en/about` |
 
 - Use `about_page` as the page type and `about` as the fixed page path.
-- Enforce one authoring page per locale and region context; an empty region denotes the national page.
-- Resolve regions from existing visible ERP/CMS region records with valid slugs. Do not derive About
-  availability from practice qualifications or require practice pages to exist first.
-- A region is not an alternative language. Each national/regional identity has its own locale group.
-- Language switching preserves the region. Public alternate links include only published translations
-  of that same variant, not another region's page.
-- Canonical paths use the resolved variant path. Host selection follows the project's existing runtime
-  configuration, not a new hardcoded host in this feature.
-- Draft pages and merely possible regional variants are not public routes. Do not mass-create or
+- Enforce one national authoring page per locale, with no region context. All three locale members
+  belong to one shared national locale group; a placeholder is not a created authoring page.
+- Regional About routes and pages are unsupported. Reject regional creation/repair and route requests;
+  do not generate regional candidates or silently reinterpret a regional request as national.
+- Do not derive About availability from practice qualifications or require practice pages to exist first.
+- Language switching stays within the shared national locale group. Public alternate links include
+  only its published translations, never placeholders or drafts.
+- Canonical paths use the resolved national locale path. Host selection follows the project's existing
+  runtime configuration, not a new hardcoded host in this feature.
+- Draft pages and missing locale placeholders are not public routes. Do not mass-create or
   publish pages when a developer registers the schema or an editor opens the workbench.
 - Add normal catalog, workbench, navigation, preview, redirects, and published sitemap support.
-  Listing a possible regional row is distinct from creating its authoring page.
+  Listing a missing national locale placeholder is distinct from creating its authoring page.
 
 Header, footer, and route/language navigation remain layout responsibilities, outside editable About
 sections. Existing global About menu links are not permission to generate or publish missing pages.
@@ -91,50 +110,37 @@ public empty-state rules below determine which visual parts remain visible.
 Do not add Home's achievements, FAQ, prices, qualification questionnaire, or organization-profile editor
 to this page simply because existing resolvers contain them.
 
-## 4. Regional Inheritance
+## 4. National Content Ownership and Global Inheritance
 
-Regional authoring inherits from the national About page of the **same locale**. Reuse the existing
-base/override composition and dependency model, not frontend merging or independent copied defaults.
-There is no cross-language authoring fallback and no About-specific global-section registry.
+There is no regional About base/override composition, regional inheritance, or regional field/heading
+lock. The shared national locale group links translations; it does not make one locale the authoring
+source for another. There is no cross-language authoring fallback or About-specific global registry.
 
-| Content | Regional rule |
-| --- | --- |
-| SEO title/description/image | Inherit by default; explicit override allowed; canonical path remains regional |
-| Hero H1/subtitle and company statement | Inherit by default; explicit override allowed |
-| Hero lawyer array | Resolve the whole team; ignore regional filtering deliberately |
-| History and both founders | Inherit-only from national About in the same locale; no regional override or append |
-| Office introductory text | Inherit; allow regional lead-text override; keep the section heading inherited |
-| Office rows and markers | Resolve only offices of the current region |
-| Lower lawyer showcase | Inherit configuration by default; local manual selection allowed; always enforce regional eligibility |
-| Case and media showcases | Inherit national About configuration; allow local selection override; no automatic geographic filtering |
-| Showcase headings | Inherit from national About; do not relax existing section-heading locks across other page types |
-| Showcase lead text | Inherit by default; explicit regional override allowed |
-| Form presentation | Inherit-only from `global_lead_form`; no national or regional page-level overrides |
-| Form context | Resolve from the actual page and locale; national has no selected page region |
+SEO, H1/tagline, company statement, history, both founders, office introductory text, and showcase
+headings, lead text, CTAs and selection configuration are own editable content of each national locale
+page. History and founders are not inherit-only. Selection mode and selected IDs remain one coherent
+page-owned configuration; no regional override or append strategy is needed.
 
-`about_intro.title` is the page H1, not an ordinary locked section heading. Preserve its explicit regional
-override capability without weakening heading locks on practice/service/problem pages.
+Runtime portraits, offices and cards remain read-only and resolve across Ukraine using the eligibility
+rules below. Removing regional locks from About must not weaken locks or inheritance on
+practice/service/problem pages or other page types.
 
-For a regional lawyer block, inherited `auto` means automatic selection in the current region, not the
-national page's already resolved cards. Inherited `manual` uses the inherited IDs but still filters by
-region; omitted out-of-region selections receive diagnostics. An empty result never silently borrows
-lawyers from another region. Editors can switch to local `auto` or a local manual selection.
+`lead_form` remains inherit-only from the ordinary `global_lead_form` in the requested locale, with no
+page-owned override. `lead_capture` resolves the actual national page and locale with no selected page
+region. Existing global-form, media, runtime source and snapshot dependencies remain required.
 
-Selection mode and selected IDs are overridden as one configuration. Do not accidentally combine a
-regional mode with unrelated national IDs. This first version does not need append composition.
-
-National edits participate in existing dependency/staleness and page publication flows. Saving a base
-draft does not silently change a regional published page. Rebuilding or publishing resolves approved
-dependencies through the backend. Missing required inherited content is an actionable blocker, not an
-empty successful section or a silent language substitution.
+Edits participate in existing dependency/staleness and page publication flows. Saving a draft does not
+silently change a published snapshot. Rebuilding or publishing resolves approved dependencies through
+the backend. Missing required inherited global content remains an actionable blocker, not an empty
+successful section or a silent language substitution.
 
 ## 5. Section Fields and Behavior
 
 ### 5.1 SEO
 
 Reuse existing `seo` fields: required `title` and `description`, optional `ogImage`, and backend-owned
-canonical resolution. Regional text overrides are allowed. Do not expose a free-form canonical editor
-that can accidentally point every regional page at the national route.
+canonical resolution. Text is own editable content per locale. Do not expose a free-form canonical
+editor that can point a locale page at the wrong route.
 
 Existing structured-data support for `about_page` is not an authoring implementation. Reuse its AboutPage
 and global organization references; validate output against the assembled page. Do not create a second
@@ -180,11 +186,12 @@ order must not be counted as an authored content edit or force a new section con
 
 - `lead`: required rich text using the existing supported rich-text format and sanitization.
 - Preserve deliberate emphasis, such as a bold introductory sentence.
-- Regional pages may override the statement; no append behavior in the first version.
+- The statement is own editable content per locale; no regional override or append behavior.
 - Decorative backgrounds, typography, and shapes belong to the public frontend, not CMS fields.
 
 ### 5.4 Company History
 
+- Own editable content of each national locale page, not inherited content.
 - `title`: required section heading.
 - `lead`: optional rich-text introduction.
 - `items[]`: ordered events, at least one for publication; no hardcoded product count.
@@ -206,14 +213,14 @@ order must not be counted as an authored content edit or force a new section con
   a new ERP person entity for this feature.
 - Render both blocks vertically, alternating image/text sides as in the design. Do not implement
   carousel arrows, automatic slide replacement, or arbitrary numbers of founders.
-- Regional pages show inherited records read-only, with access to their national source.
+- Both founder records are own editable content of each national locale page, not inherited records.
 
 ### 5.6 Offices and Map
 
 `about_offices_intro` has required `title` and optional `lead`. `about_offices` is read-only.
 
-- National page: visible offices in visible regions. Regional page: the same eligibility plus exact
-  current-region filtering. No practice-competence requirement.
+- Include all eligible visible offices in visible regions across Ukraine. No current-region filtering
+  or practice-competence requirement.
 - Reuse office IDs, localized addresses, region labels, coordinates, map URLs, and existing visibility
   and validation rules. No duplicate address, coordinate, or Google Place ID inputs in this section.
 - Preserve established region/office ordering with stable ID tie-breakers. Do not collapse multiple
@@ -224,8 +231,8 @@ order must not be counted as an authored content edit or force a new section con
   when possible, with an admin warning and a disabled map-centering action.
 - Use existing backend map-link resolution and diagnostics. Do not introduce stricter Place ID rules
   or frontend URL guessing solely for About.
-- Empty regional results do not fall back to another city's offices. With no offices, omit the empty
-  map/list block and emit an admin warning. A map-provider failure must leave the address list usable.
+- With no eligible offices, omit the empty map/list block and emit an admin warning. A map-provider
+  failure must leave the address list usable.
 
 ### 5.7 Case, Lawyer, and Media Showcases
 
@@ -242,7 +249,7 @@ Each editable intro contains `title`, optional `lead`, optional paired `ctaLabel
 | Runtime list | Source | Automatic ordering | Initial limit |
 | --- | --- | --- | --- |
 | `about_cases` | Published localized `case_page` cards | Featured first, publication date descending, stable ID | 8 |
-| `about_lawyers` | Visible lawyers with published profiles in the requested locale; regional membership filter when applicable | Existing CMS/ERP sort order, existing name fallback, stable ID | 8 |
+| `about_lawyers` | Visible lawyers across Ukraine with published profiles in the requested locale; no regional filter | Existing CMS/ERP sort order, existing name fallback, stable ID | 8 |
 | `about_media` | Published localized `media_page` cards only | Featured first, publication date descending, stable ID | 8 |
 
 - Reuse canonical lawyer IDs and editorial locale-group IDs. Editorial selections resolve the
@@ -251,11 +258,11 @@ Each editable intro contains `title`, optional `lead`, optional paired `ctaLabel
   duplicates, and never supplement with automatic results.
 - The lower lawyer carousel reuses the linked-profile card eligibility. Unlike the hero, it needs a
   published localized profile. Do not accidentally impose hero-only portrait or randomness rules on it.
-- Regional lawyer membership must use the existing canonical region/office association resolver.
-  Keep selection-picker and runtime eligibility identical; do not infer region from an address string.
-- Cases and media are company-wide in automatic mode. Regional manual selection does not imply new
-  geographic editorial metadata or an invented region-classification algorithm.
-- Missing, hidden, unpublished, deleted, wrong-type, untranslated, or out-of-region selected records
+- Keep selection-picker and runtime eligibility identical across Ukraine, with no regional membership
+  filter in either `auto` or `manual` mode.
+- Cases and media are company-wide in automatic mode. Manual selections do not imply new geographic
+  editorial metadata or an invented region-classification algorithm.
+- Missing, hidden, unpublished, deleted, wrong-type, or untranslated selected records
   are omitted with specific admin warnings. Stored selections stay inspectable so editors can fix them.
 - With no public cards, hide the empty carousel and its otherwise orphaned heading/CTA. Do not block
   publication solely because a showcase is empty or contains fewer than eight eligible items.
@@ -270,8 +277,8 @@ but do not alias About's keys to Home slots whose locale, geography, or content-
 ### 5.8 Inherited Global Application Form
 
 `lead_form` inherits the existing global application form, `global_lead_form`, in the requested locale.
-Neither the national nor a regional About page owns editable form content. Change the form through
-its existing global editor; About inherits the resulting published content through the shared lifecycle.
+No About locale page owns editable form content. Change the form through its existing global editor;
+About inherits the resulting published content through the shared lifecycle.
 
 The expected ordinary form fields are listed for orientation; the existing global form and sender
 contract, not an About-specific schema, determine their labels, requirements, and available choices:
@@ -303,20 +310,22 @@ validation, and response DTO. Document any missing delivery work separately. Do 
 completion merely because the inputs render or a button shows a local success message.
 
 On validation/network errors preserve entered values; prevent duplicate in-flight submits; show success
-only after confirmed server acceptance. Region and locale must reach the receiving system correctly.
+only after confirmed server acceptance. Locale and national context (no page region) must reach the
+receiving system correctly.
 
 ## 6. Authoring and Versioning
 
-- Add About to the existing single-page navigation area, opening its national/regional workbench with
+- Add About to the existing single-page navigation area, opening its national-only workbench with
   the active page locale. Reuse matrix, section editor, diagnostics, and page preview surfaces.
-- Display the actual selected page, locale, and region; do not conflate UI language with content locale.
+- Display the actual selected national page and locale; do not offer a regional selector or conflate
+  UI language with content locale. Missing locale placeholders are not created pages.
 - Runtime portraits, offices, and resolved cards are read-only. Editable sister sections own their
   texts and selection configuration. The picker is an admin tool, not a public ERP endpoint.
-- Regional inherit-only history/founders show their source and resolved content. Do not display a Save
-  action that pretends to edit them locally.
+- History and founders use ordinary own-content editors and Save behavior per locale. Only the
+  inherited global form is edited through its global source, not locally in About.
 - Follow the [section authoring/versioning contract](section-authoring-versioning-contract-2026-10-04.md)
-  and its actually supported endpoint capabilities. History is read-only; local working copies and
-  explicit saves must not be confused with runtime results.
+  and its actually supported endpoint capabilities. Version history is read-only; local working copies
+  and explicit saves must not be confused with runtime results.
 - Do not make About an excuse to implement another section-publication mechanism or to claim the
   separate same-version publication transition has shipped. Integrate with the available shared
   lifecycle; improvements to that lifecycle retain their own acceptance gates.
@@ -330,50 +339,53 @@ references, or unresolved dependencies that prevent a valid section from being a
   invalid two-founder composition, or unusable required founder photos are errors.
 - Invalid selection mode, duplicate IDs, IDs of an invalid input shape, or more than eight selected
   showcase IDs are errors. A syntactically valid ID whose source later becomes unavailable is a warning.
-- A regional override of inherit-only content is rejected by the backend even if sent outside the UI.
+- Regional About identity/creation requests and page-owned overrides of the inherit-only global form
+  are rejected by the backend even if sent outside the UI.
 - Missing eligible portraits, an empty office list, omitted selected cards, and unavailable optional
   links are warnings with the empty-state behavior specified above.
 - An absent localized linked profile affects the lower lawyer carousel, not a non-link hero portrait.
 - Ordinary length/quality recommendations are warnings. Do not invent arbitrary blocking text-length
   rules beyond the shared storage, security, and field contracts.
 
-Diagnostics identify page, locale, region, slot, field/item, and reason. The menu, matrix, editor, and
-preview must agree for the same context. Runtime/editor warnings must not be exposed as internal
-diagnostic data in the public page payload.
+Diagnostics identify page, locale, national context (no page region), slot, field/item, and reason.
+The menu, matrix, editor, and preview must agree for the same context. Runtime/editor warnings must
+not be exposed as internal diagnostic data in the public page payload.
 
 ## 8. Backend Work
 
 1. Register `about_page`, section types, fixed slots/composite groups, localized fields, source policies,
-   and field-level regional permissions. Extend route support and the required page catalog/workbench
-   source handling; an enum entry alone is insufficient.
-2. Add idempotent explicit authoring creation/repair for national and regional variants. Keep candidate
+   and national own-content permissions. Limit route support and page catalog/workbench source handling
+   to national About locale identities; an enum entry alone is insufficient.
+2. Add idempotent explicit authoring creation/repair for national locale pages only. Keep candidate
    enumeration read-only, preserve existing content, enforce identity uniqueness and locale grouping.
-3. Implement hero, regional offices, regional lower lawyers, and media-only runtime paths. Factor out
+3. Implement all-Ukraine eligible hero, offices, lower lawyers, and media-only runtime paths. Factor out
    reusable read-model/card helpers without changing Home or Contacts behavior.
-4. Add admin selection options matching public eligibility, locale, type, region, and stable identifiers.
-   Return structured reasons for unavailable selections. Keep list queries bounded/batched and avoid
-   per-card media, publication, or profile queries.
-5. Integrate inherited section dependencies, source changes, media resolution, snapshot assembly,
+4. Add admin selection options matching public eligibility, locale, type, and stable identifiers without
+   regional filtering. Return structured reasons for unavailable selections. Keep list queries bounded/batched
+   and avoid per-card media, publication, or profile queries.
+5. Preserve inherited global-form dependencies, runtime source changes, media resolution, snapshot assembly,
    preview, publication, diagnostic rollups, stale markers, and existing page rollback.
 6. Bind the ordinary global lead form and preserve its existing submission context. Produce examples and
    OpenAPI/typed DTOs for the actual implementation, including empty and invalid-selection cases.
-7. Cover route, locale-group, section-schema, runtime, validation, inheritance, and publication regressions
-   before handing frontend developers a stable contract.
+7. Cover national routes, rejected regional identities, shared locale grouping, section-schema, runtime,
+   validation, global-form inheritance, and publication regressions before handing frontend developers
+   a stable contract.
 
-No new reference-data tables or duplicated ERP objects are prescribed. Decide whether additive storage
-changes are actually necessary during implementation; do not assume a migration is either required or
-unnecessary merely from the page design.
+No database schema migration is needed for the 2026-10-17 correction. No new reference-data tables,
+duplicated ERP objects, content publication or data deletion are required. Preserve all runtime
+dependencies, including `lawyers`, `contacts_runtime`, `editorial:case`, and `editorial:media` collection
+dependencies, together with the existing global-form, media and snapshot dependency lifecycle.
 
 ## 9. Frontend Work for Yuriy
 
 ### CMS frontend
 
-- Add/render the backend-provided About navigation and workbench with national/regional rows and all
+- Add/render the backend-provided About navigation and workbench with national-only rows and all
   three locales. Use server identities and capabilities rather than hardcoded source IDs.
 - Implement supported editors for hero text, rich-text statement, timeline items, two founders with
   media, introductory texts, and selection controls. The inherited global form is read-only here.
-- Show history/founders read-only in regional pages, with a link to the national source. Support explicit
-  regional overrides only where the schema allows them and preserve unsaved changes on context switches.
+- Edit history/founders as own content per locale, without regional source controls or locks. Preserve
+  unsaved changes on locale/context switches.
 - Reuse `auto` / `manual`, ordered pickers, media controls, diagnostics, Save/Preview/Publish behavior,
   and authorization. No separate frontend selection or inheritance algorithm.
 - Render runtime previews separately from editable content. Never write returned runtime arrays back
@@ -381,16 +393,16 @@ unnecessary merely from the page design.
 
 ### Public site frontend
 
-- Support backend-published national/regional routes in all locales and render the fixed ordered
+- Support only backend-published `/about`, `/ru/about`, and `/en/about` and render the fixed ordered
   composites. Do not publish hardcoded `/about` mock content as a substitute for CMS data.
 - Animate only the supplied whole-team portrait pool. Keep stable IDs, server/client initial order,
   responsive framing, image fallbacks, and a reduced-motion/static mode. No ERP fetches from the browser.
 - Render the timeline, both founder bands, office list/map, three carousels, and inherited global form according
   to the approved design. The lower lawyer section is company-wide legal assistance, not family-law copy.
 - Keep office-list selection and external map navigation separate. Handle multiple offices per city,
-  missing markers, no local offices, and map-provider failure without hiding valid addresses.
+  missing markers, no eligible offices, and map-provider failure without hiding valid addresses.
 - Use resolved card links and images; honor empty lists and unavailable links. Do not substitute blog
-  cards into the media carousel or national lawyers into an empty regional carousel.
+  cards into the media carousel or automatic replacements into an empty manual selection.
 - Submit the existing global form's fields with validated page context through the real sender contract.
   Include loading, validation error, retry, and confirmed-success states.
 - Test desktop and mobile, keyboard access, long names/translations, small portrait pools, horizontal
@@ -403,41 +415,44 @@ Backend and frontend can prepare in parallel, but acceptance requires their join
 
 | Scenario | Required outcome |
 | --- | --- |
-| National and regional pages in all three locales | Correct identity, path, locale, region, and fixed section order |
-| Regional locale switch | Same region; only published locale alternatives are public |
+| National pages in all three locales | Only `/about`, `/ru/about`, `/en/about`; no page region; fixed section order |
+| Locale switch | One shared national locale group; only published locale alternatives are public |
+| Regional About request or candidate enumeration | Regional routes/creation rejected; no regional rows, fallback pages, inheritance or locks |
 | Possible page or saved draft | No public route/sitemap entry until normal publication |
 | Create/repair requested twice | No duplicate page identities, bindings, or erased content |
-| Hero on two different regions | Same whole-team eligibility, not region-restricted membership |
+| Hero and office coverage | Whole-team portrait pool and all eligible offices across Ukraine; no regional filtering |
 | Visible lawyer with photo but no published profile | Can appear in hero; cannot appear as a linked lower-showcase profile |
 | Hero with 0, 1, fewer than 8, and more than 8 portraits | Graceful rendering; no fabricated duplicates or backend eight-person cap |
 | Repeated read or retry of one snapshot | Stable payload/order; no extra authored versions or writes |
 | Source visibility/media changes and normal rebuild | Affected About pages are tracked; rebuilt portrait eligibility is correct |
-| Regional history/founder edit attempt | Rejected; national same-locale source remains authoritative |
-| National draft changes | Existing public regional snapshots do not silently change |
-| Regional lower lawyers | Eligible local lawyers only in auto, inherited manual, and local manual modes |
+| History/founder editing | Own editable content per locale; no regional inheritance or locks |
+| National draft changes | Existing public snapshots do not silently change |
+| Lower lawyers and selection picker | Same all-Ukraine eligibility in auto/manual; published localized profiles required; limit eight |
 | Manual selection becomes unavailable | Warning with exact reason; omit item; no automatic replacement |
-| Regional cases/media without override | Inherit About national configuration, not Home's configuration |
+| Cases/media configuration | Own localized About configuration, independent of Home |
 | About media query/selection | Media only; no blog cards |
 | Office selection with valid/invalid coordinates | Correct marker centering, or usable text without a fake marker |
 | Two founders | Both shown vertically; no carousel or third record |
 | Form validation or network failure | No false success or lost input; duplicate in-flight submission prevented |
-| Successful national/regional form submission | Confirmed receiver acceptance with correct page, locale, and region context |
-| Menu, matrix, and editor validation | Consistent issue scope for the selected locale/region |
+| Global form ownership | Ordinary inherited `global_lead_form`; no About-owned form editor or override |
+| Successful national form submission | Confirmed receiver acceptance with correct page/locale and no selected page region |
+| Menu, matrix, and editor validation | Consistent issue scope for the selected national locale page |
+| Runtime dependency changes | Global-form, media and all About runtime dependencies still invalidate/rebuild through the existing lifecycle |
 | Existing Home, Contacts, service hierarchy, and versioning | No changed eligibility, random ordering, routes, or publication semantics |
 
-Use unit and contract tests for rules/DTOs, integration tests for inheritance, snapshot/dependency and
-submission behavior, and browser tests for CMS and public-site workflows. A successful backend build
-does not establish frontend, form-delivery, or release acceptance.
+Use unit and contract tests for rules/DTOs, integration tests for global-form inheritance,
+snapshot/dependency and submission behavior, and browser tests for CMS and public-site workflows.
+A successful backend build does not establish frontend, form-delivery, or release acceptance.
 
 ## 11. Delivery Sequence
 
-1. Backend contract and fixtures: schemas, regional identity, inheritance, validation, public payload
-   examples, selection DTOs, and the actual form integration boundary.
+1. Backend contract and fixtures: schemas, national identity/shared locale group, global-form inheritance,
+   validation, public payload examples, selection DTOs, and the actual form integration boundary.
 2. Backend implementation and tests: runtime/read-model paths, authoring/workbench, dependency handling,
    snapshot publication, and navigation/catalog integration.
 3. Yuriy: CMS authoring plus public rendering, then integration against backend fixtures and endpoints.
-4. Joint acceptance: one national and at least two different regional contexts, all three locales,
-   partial/unpublished content, empty source data, and real test submission handling.
+4. Joint acceptance: national-only behavior in all three locales, rejected regional requests,
+   partial/unpublished content and locale placeholders, empty source data, and real test submission handling.
 5. Separately approved rollout: verify the same feature and compatibility in `develop`, then `release`
    under the governing playbook. Do not bulk-publish pages, seed mock founders/history, change domains,
    open indexing, or change access as part of this documentation task.
@@ -445,7 +460,8 @@ does not establish frontend, form-delivery, or release acceptance.
 ## 12. Existing Contracts and Implementation Baseline
 
 - [Home structure and selection contract](home-page-structure-2026-08-05.md).
-- [Practice regional composition model](practice-page-structure-2026-06-13.md).
+- [Practice regional composition model](practice-page-structure-2026-06-13.md), for other page types;
+  it does not apply to national-only About.
 - [Section authoring and versioning](section-authoring-versioning-contract-2026-10-04.md).
 - [Reference data and runtime boundary](reference-data-and-runtime-model.md).
 - [Editorial content contract](editorial-content-specification-2026-08-23.md).
@@ -454,18 +470,20 @@ does not establish frontend, form-delivery, or release acceptance.
   universal contact form; this page adds no questionnaire.
 
 Implementation inspection for this specification used local `re-actum/cms-back` commit
-`18dc40a3be8796ccd4f49a2e0e6fa7046a299aa0`. This is a source-code baseline, not a new deployment report.
+`18dc40a3be8796ccd4f49a2e0e6fa7046a299aa0`. This is the historical 2026-10-06 source-code baseline,
+not a current implementation or deployment report. Required extensions below follow the authoritative
+2026-10-17 national-only correction; earlier regional extension requirements are superseded.
 
 | Existing code area | Relevant finding or required extension |
 | --- | --- |
 | `src/routing/public-route.types.ts` | `about_page` is declared |
-| `src/routing/public-route-builder.ts` | Regional About is not currently allowed; extend deliberately |
+| `src/routing/public-route-builder.ts` | Support only the three national locale routes; regional About must remain unsupported |
 | `src/page-schemas/page-schema.types.ts`, `page-schema-registry.ts` | About authoring schema is absent |
-| `src/page-workbench`, `src/pages-catalog`, `src/admin-navigation` | Integrate About national/regional source rows, actions, and diagnostics |
+| `src/page-workbench`, `src/pages-catalog`, `src/admin-navigation` | Integrate About national locale rows/placeholders, actions, and diagnostics; no regional candidates |
 | `src/runtime-resolvers/page-runtime-resolver.service.ts` | Existing Home selectors, Contacts-only map, and `service_hierarchy` lead context require scoped adaptation |
 | `src/lawyer-selection/home-lawyer-query.ts` | Home lawyer selection requires a published localized profile; do not reuse that eligibility for the hero unchanged |
 | `src/public-pages/public-pages.service.ts` | Public reads serve stored snapshots; do not introduce a hidden live reshuffle on every GET |
 | `src/structured-data` | About support exists at graph level; it does not establish schema/editor/public page completeness |
 
-No existing page type's behavior is superseded by this specification. The About-specific rules above
+No other page type's behavior is superseded by this specification. The About-specific rules above
 must be implemented and tested explicitly rather than inferred from similarly named Home slots.
