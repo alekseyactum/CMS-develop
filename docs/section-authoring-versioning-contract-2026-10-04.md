@@ -19,6 +19,12 @@ The target user workflow is:
 
 ## Scope and authority
 
+The [2026-10-18 roles and scoped publication draft](cms-roles-and-scoped-publication-specification-2026-10-18.md)
+is pending written approval. It adds role/resource restrictions, exact SEO approval before first
+publication, and isolation between SEO and content publication/restoration. Once approved and
+implemented, a full historical page rollback must not bypass those restrictions. It does not alter
+immutable history or authorize any current user-role, database, runtime or publication change.
+
 This document owns the common workflow and reliability rules. Section-specific schemas still own their
 fields, validation, locale, composition, ownership, and independent versus with-page publication policy.
 The related documents must be read with this contract:

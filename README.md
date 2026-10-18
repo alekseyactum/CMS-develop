@@ -53,6 +53,11 @@ implementation should port proven behavior from `notstrapitest` through typed pa
 preview/snapshot contracts, focused domain services, and tests around the preserved edge cases.
 
 See [`docs/backend-implementation-requirements.md`](docs/backend-implementation-requirements.md).
+See [`docs/cms-roles-and-scoped-publication-specification-2026-10-18.md`](docs/cms-roles-and-scoped-publication-specification-2026-10-18.md)
+for the role matrix and scoped publication specification pending written approval: Ukrainian role
+labels, separate page/publication/SEO/global editors, admin-only ERP and refresh commands, filtered
+journal reads, exact SEO approval before first publication, and content/SEO publication isolation.
+This is documentation only; existing users, application permissions and environments are unchanged.
 See [`docs/stale-page-refresh-contract-2026-10-12.md`](docs/stale-page-refresh-contract-2026-10-12.md)
 for the agreed safe refresh of published stale pages: one CMS queue/journal, published-only scoped
 updates, ERP scheduler wake-ups every five minutes, coalescing, retries and separate cache delivery.
