@@ -259,7 +259,20 @@ For `external_reference`:
 - up to four ordered co-authors are allowed;
 - total lawyer count cannot exceed five;
 - duplicate lawyers are invalid;
+- one optional lawyer legal reviewer through `publication_meta.legalReviewerLawyerRef`, independent
+  of the primary/coauthors and not counted in the five-author limit (18 October 2026 amendment);
+- leaving the Case reviewer empty is valid and does not introduce a new missing-reviewer warning;
+  no primary lawyer, coauthor or CMS editor is automatically assigned to this role;
 - `erpCaseExternalId` is optional; missing value produces a warning.
+
+The CMS backend stores the selected reviewer reference in section/version JSON during creation or
+metadata Save. Case translations copy the structural reference. Public preview/publication uses the
+shared resolved `legalReviewer`/`WebPage.reviewedBy` contract below, without rewriting existing public
+snapshots. The ERP reference migrator does not own this CMS editorial selection; an import client may
+provide an explicit reviewer ID through the same CMS contract. The separate default-reviewer rule
+approved for article import is not automatically applied to Cases. No database schema migration or
+backfill is needed. CMS Front must offer the existing lawyer-reference picker for Case creation and
+metadata, and must not send the generated display object back as authored content.
 
 ### Public display data for detail pages
 
@@ -805,7 +818,7 @@ Warnings:
 - empty builder where a warning is required;
 - no service-tree relations;
 - no named Blog, Case or local Media author when Actum fallback is used;
-- no reviewer;
+- no reviewer for Blog/Media (Case reviewer remains optional without a new missing-reviewer warning);
 - suspicious H2/H3/H4 hierarchy;
 - enabled TOC with no resulting entries, including the Blog FAQ entry;
 - optional weak/missing case-summary values;
