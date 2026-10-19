@@ -1,5 +1,28 @@
 # Editorial Content Implementation Plan - 2026-08-23
 
+## Approved CMS Search And Selection Follow Up 2026-10-19
+
+The owner approved the
+[CMS publication search and selection specification](cms-publication-search-and-filter-specification-2026-10-19.md).
+This is a target contract, not an implementation or deployment record. It supersedes the older
+combined administrative search/filter behavior; the dated implementation sections below remain history.
+
+CMS backend scope: independent mode semantics; saved-draft-first title/slug/lawyer-author search;
+Case-only human ERP-number search after resolving the `deal_str` source and `erpCaseExternalId`
+mapping; exact single-lawyer and full service-tree selection; existing publication-state semantics;
+server-side matching/counting before pagination and stable `createdAt desc` ordering. Reviewer and
+CMS-actor roles must not be interpreted as authors, and scope/access boundaries remain unchanged.
+
+CMS frontend scope: separate Search and Selection modes; Enter-only search; explicit Apply and immediate
+Reset for filters; current-kind/current-locale scope; separate edited/applied state for each mode;
+restore mode, conditions, pagination and scroll after opening a material. Pending conditions must not
+leak into pagination or mode restoration. Gateways and BFF must preserve the same mode semantics.
+
+Acceptance follows the dedicated specification. Public/site-front search, cross-kind search, automatic
+search on typing, combined search-plus-filter queries and editor-layout redesign are not included.
+The existing administrative page-size requirement is unchanged by this amendment. No migration,
+runtime activation or deployment is authorized by this documentation task.
+
 ## Approved Follow-Up — 2026-10-16
 
 The [current editorial specification](editorial-content-specification-2026-08-23.md) adds Blog FAQ and

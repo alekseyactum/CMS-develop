@@ -14,6 +14,12 @@ It does not permit changing published editorial slugs or imply that legacy conte
 containing only Blog articles. The requirements below are approved targets; this documentation change
 does not implement them, rewrite existing content, or activate new refresh consumers.
 
+2026-10-19 amendment: the approved
+[CMS publication search and selection specification](cms-publication-search-and-filter-specification-2026-10-19.md)
+defines independent Search and Selection modes, Enter-only search, explicitly applied filters and
+newest-created-first ordering. It supersedes conflicting administrative list requirements below;
+public collections and public search remain outside this amendment.
+
 ## 1. Objective
 
 Build one shared editorial mechanism for three content kinds:
@@ -128,6 +134,11 @@ appropriate for the UI locale, with three entries:
 
 Opening an entry shows publications of that kind, newest created first by default. Collection-page settings
 are opened from a dedicated button in that list; a fourth navigation entry is not added.
+
+Search and Selection are independent list modes under the
+[19 October 2026 specification](cms-publication-search-and-filter-specification-2026-10-19.md).
+Each mode retains its own edited and applied conditions; list navigation and return from an editor
+must not apply an unconfirmed search or filter change.
 
 The publication editor route is:
 
@@ -762,12 +773,21 @@ Public collection ordering (not the Blog recommendation ranking):
 
 CMS list behavior:
 
-- default sort: `createdAt desc`;
-- available sorts: `createdAt`, `updatedAt`, `publishedAt`, `title`;
-- search: title or slug;
-- filters: all, draft, published, errors, warnings, stale;
+- ordering in both list modes: the material's `createdAt desc`, with a stable technical ID tie-break;
+- Search: Enter-only literal case-insensitive substring matching against title, slug and any lawyer
+  author/coauthor name; Cases additionally match the resolved ERP `deal_str` number;
+- Selection: one lawyer author/coauthor, a consistent practice/service/problem branch and the existing
+  publication-state choice; conditions intersect only after Apply, with an immediate explicit Reset;
+- Search never applies Selection filters, and Selection never applies the search text;
+- matching uses current saved metadata, preferring its draft over published data; historical versions
+  and unsaved local changes are excluded;
+- preserve mode, separate edited/applied conditions, pagination and scroll on return from a material;
 - page size: 50;
-- featured ordering applies only when explicitly selected.
+- featured priority, alternative user sorts and public search are not added by this amendment.
+
+The approved modes, initial state, ERP-number dependency, frontend/backend responsibilities and
+acceptance criteria are defined in the
+[CMS publication search and selection specification](cms-publication-search-and-filter-specification-2026-10-19.md).
 
 Public pagination:
 
