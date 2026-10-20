@@ -8,8 +8,8 @@ This is a target contract, not an implementation or deployment record. It supers
 combined administrative search/filter behavior; the dated implementation sections below remain history.
 
 CMS backend scope: independent mode semantics; saved-draft-first title/slug/lawyer-author search;
-Case-only human ERP-number search after resolving the `deal_str` source and `erpCaseExternalId`
-mapping; exact single-lawyer and full service-tree selection; existing publication-state semantics;
+Case-only search of saved `case_summary.dealNumber`, whose ERP contract was approved on 20 October
+(`deals.deal_str -> CreateArticlePayload.dealNumber`); exact single-lawyer and full service-tree selection; existing publication-state semantics;
 server-side matching/counting before pagination and stable `createdAt desc` ordering. Reviewer and
 CMS-actor roles must not be interpreted as authors, and scope/access boundaries remain unchanged.
 
@@ -22,6 +22,11 @@ Acceptance follows the dedicated specification. Public/site-front search, cross-
 search on typing, combined search-plus-filter queries and editor-layout redesign are not included.
 The existing administrative page-size requirement is unchanged by this amendment. No migration,
 runtime activation or deployment is authorized by this documentation task.
+
+The number contract is resolved, but trusted ERP creation, language-group initialization and controlled
+legacy backfill still require the ERP/migrator/CMS integration. A manually entered `erpCaseExternalId`
+is not proof of that source identity. Number lookup in the editorial list must not be confused with
+integration lookup by `source.system + source.dealId`.
 
 ## Approved Follow-Up — 2026-10-16
 
