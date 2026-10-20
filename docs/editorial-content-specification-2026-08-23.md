@@ -285,6 +285,29 @@ approved for article import is not automatically applied to Cases. No database s
 backfill is needed. CMS Front must offer the existing lawyer-reference picker for Case creation and
 metadata, and must not send the generated display object back as authored content.
 
+### Administrative ERP deal number (20 October 2026 clarification)
+
+For Cases, the `publication_meta` editor displays the ERP `deals.deal_str` as read-only
+"Номер справи ERP". It comes from administrative fields on the existing `cms_pages` record, linked
+through confirmed `source.system + source.dealId`, not from editable `publication_meta` or `case_summary`
+content. No separate table is added: one existing page stores the source fields and all translations
+resolve them through their locale group, including translations created later.
+The input contract retains `CreateArticlePayload.dealNumber`; earlier placement in
+`case_summary.dealNumber` is superseded. ERP owns the value; CMS stores the last trusted value
+locally in `erp_deal_number` for display and Case-only search. Linked language variants use the same
+source value. Updates preserve the ordinary page `updated_at` and `updated_by`.
+
+Editor API enrichment is outside `content`; ordinary section Save/history restore cannot write the
+number. Trusted synchronization updates do not create section versions, change SEO approval or page
+publication/staleness, or require republishing. The number is administrative-only and is not added to
+public payloads/snapshots, JSON-LD, title or slug. Missing numbers do not block editing/publication;
+do not substitute `erpCaseExternalId`, the judicial `case_summary.caseNumber`, or a generated value.
+Editor reads/search use the local projection, without synchronous ERP requests.
+
+This is an approved target contract, not implemented integration or deployment. See the
+[search and selection specification](cms-publication-search-and-filter-specification-2026-10-19.md)
+for integration dependencies and acceptance criteria.
+
 ### Public display data for detail pages
 
 The 2026-10-15 clarification separates editable references from resolved public display fields.

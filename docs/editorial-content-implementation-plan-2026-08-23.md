@@ -8,8 +8,10 @@ This is a target contract, not an implementation or deployment record. It supers
 combined administrative search/filter behavior; the dated implementation sections below remain history.
 
 CMS backend scope: independent mode semantics; saved-draft-first title/slug/lawyer-author search;
-Case-only search of saved `case_summary.dealNumber`, whose ERP contract was approved on 20 October
-(`deals.deal_str -> CreateArticlePayload.dealNumber`); exact single-lawyer and full service-tree selection; existing publication-state semantics;
+Case-only search of the deal number from administrative ERP fields on the existing page record, whose input
+contract was approved on 20 October (`deals.deal_str -> CreateArticlePayload.dealNumber`);
+read-only display in the `publication_meta` editor outside editable content; exact single-lawyer
+and full service-tree selection; existing publication-state semantics;
 server-side matching/counting before pagination and stable `createdAt desc` ordering. Reviewer and
 CMS-actor roles must not be interpreted as authors, and scope/access boundaries remain unchanged.
 
@@ -23,10 +25,19 @@ search on typing, combined search-plus-filter queries and editor-layout redesign
 The existing administrative page-size requirement is unchanged by this amendment. No migration,
 runtime activation or deployment is authorized by this documentation task.
 
-The number contract is resolved, but trusted ERP creation, language-group initialization and controlled
-legacy backfill still require the ERP/migrator/CMS integration. A manually entered `erpCaseExternalId`
-is not proof of that source identity. Number lookup in the editorial list must not be confused with
-integration lookup by `source.system + source.dealId`.
+The owner's 20 October clarification supersedes storage in `case_summary.dealNumber`: ERP is the
+source of truth and CMS keeps the last trusted value in `cms_pages.erp_deal_number`, shared through
+the confirmed source identity, not in localized section content/history or public snapshots. No new
+table is required: one page in the locale group stores the ERP fields and every translation resolves
+that same row, including later-created translations. ERP updates preserve ordinary page audit timestamps.
+Trusted ERP creation, subsequent projection updates, language-group linkage and controlled legacy
+backfill still require the ERP/migrator/CMS integration and aligned integration documentation.
+Changing the projection does not create a section version, invalidate SEO approval or trigger page
+publication/staleness. Editor reads and number search use the local projection without synchronous
+ERP availability. A manually entered `erpCaseExternalId` is not proof of source identity.
+Number lookup in the editorial list must not be confused with integration lookup by
+`source.system + source.dealId`. CMS Front displays the number read-only in publication metadata
+without sending it in Save; absent numbers do not block editing or publication.
 
 ## Approved Follow-Up — 2026-10-16
 
