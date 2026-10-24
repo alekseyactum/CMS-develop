@@ -2,6 +2,10 @@
 
 This document fixes the agreed first backend/editor structure for `problem_page`.
 
+2026-10-24 amendment: lawyer lists and both team CTA slots use only qualifications for the exact
+problem with `score > 1`, without parent or sibling fallback. Service-wide lawyer selection is no
+longer used. See [exact qualification selection](lawyer-exact-qualification-selection-2026-10-24.md).
+
 Status on 2026-06-15: implemented in `cms-back` schema/runtime as the first usable problem-page workbench
 slice. Public visual rendering is still a frontend task.
 
@@ -83,8 +87,10 @@ slice. Public visual rendering is still a frontend task.
 14. `problem_lawyers_block` + `problem_lawyers`
     - Composite group: `problem_lawyers`.
     - Editable title/lead plus runtime lawyer list.
-    - Lawyer runtime uses the current practice/service/problem route context and existing qualification
-      rules.
+    - Lawyer runtime requires an active/resolved qualification for the exact current practice + service
+      + problem with `score > 1`, plus the existing visibility and region restrictions.
+    - Practice, service and sibling-problem scores do not count. Missing/ineligible exact qualifications
+      have no fallback. Duplicate exact qualifications use their maximum score and yield one lawyer card.
 
 15. `lead_questionnaire` + `lead_form` + `lead_capture`
     - Composite group: `lead_block`.

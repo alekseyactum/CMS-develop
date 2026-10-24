@@ -763,6 +763,7 @@ external_id
 lawyer_external_id
 practice_external_id
 service_external_id
+problem_external_id
 score
 ```
 
@@ -780,6 +781,13 @@ score = null -> do not use
 score <= 1 -> do not use
 score > 1 -> may be used for selection/ranking
 ```
+
+Since 2026-10-24, thematic lawyer lists and both team CTA slots use only the exact page-level
+qualification: direct practice for `practice_page`, direct service for `service_page`, exact problem for
+`problem_page`, each with `score > 1`. Child, parent and sibling scores do not substitute it or raise its
+score; absent/ineligible exact qualifications have no fallback. This does not change the separate
+profile, directory, Home/About or structured-data rules. See the
+[agreed selection contract and acceptance cases](lawyer-exact-qualification-selection-2026-10-24.md).
 
 ### Region Qualifications
 

@@ -2,6 +2,10 @@
 
 This document fixes the agreed first backend/editor structure for `service_page`.
 
+2026-10-24 amendment: lawyer lists and both team CTA slots use only direct qualifications for the exact
+service with `score > 1`, excluding parent-practice and child-problem scores, without fallback.
+See [exact qualification selection](lawyer-exact-qualification-selection-2026-10-24.md).
+
 Status on 2026-06-16: implemented in `cms-back` as the first usable service-page workbench/editor slice.
 Public visual rendering is still a frontend task.
 
@@ -105,8 +109,10 @@ Public visual rendering is still a frontend task.
     - Required.
     - Editable title/lead plus runtime lawyer list.
     - Public cards link to lawyer profile pages.
-    - Lawyer runtime uses current practice + service + region context and existing qualification rules.
-    - Competence threshold remains `score > 1`.
+    - Lawyer runtime uses the exact current practice + service and the existing region restrictions.
+    - Only direct service qualifications count: problem ID and external ID must both be null.
+    - Competence threshold is `score > 1`; no practice/problem fallback. Duplicate exact qualifications
+      use their maximum score and yield one card per lawyer.
 
 18. `lead_questionnaire` + `lead_form` + `lead_capture`
     - Composite group: `lead_block`.

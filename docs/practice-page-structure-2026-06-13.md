@@ -2,6 +2,10 @@
 
 This document fixes the agreed target structure for `practice_page`.
 
+2026-10-24 amendment: lawyer lists and both team CTA slots use only direct qualifications for the exact
+practice with `score > 1`, without service/problem scores or fallback. This supersedes the 2026-10-22
+subtree threshold. See [exact qualification selection](lawyer-exact-qualification-selection-2026-10-24.md).
+
 It is a product/implementation target for the next page-workbench pass. It does not mean every slot below
 is already implemented in backend code exactly this way.
 
@@ -218,10 +222,10 @@ now a standalone read-only runtime slot with a backend-owned localized title, as
   - `lead` optional rich text/plain text.
   - optional secondary/help text if the frontend design needs it.
 - Runtime lawyer source:
-  - lawyers linked to the practice;
+  - lawyers with a direct qualification for the exact practice, excluding service/problem qualifications;
   - active/show-on-site lawyers only;
   - regional rows filter by region and lawyer competence;
-  - competence score must be greater than 1.
+  - direct practice competence score must be greater than 1; no parent/child fallback.
 - Validation/diagnostics:
   - empty lawyer collection is a warning, not a blocker;
   - bad/missing photo is a warning and should use frontend fallback;
@@ -348,11 +352,12 @@ now a standalone read-only runtime slot with a backend-owned localized title, as
 
 - Type: runtime/read-model list.
 - Runtime source:
-  - lawyers linked to current practice;
+  - lawyers with a direct qualification for the exact current practice;
   - active/show-on-site lawyers only;
   - regional rows filter by region and lawyer competence;
-  - competence score must be greater than 1;
-  - one lawyer may have multiple competencies, match by any eligible competence.
+  - direct practice competence score must be greater than 1; service/problem scores do not count;
+  - duplicate exact practice qualifications use the maximum score and yield one lawyer card;
+  - no fallback if the direct qualification is missing or ineligible.
 - Card behavior:
   - lawyer card links to the lawyer public page;
   - missing or unpublished lawyer page renders disabled/non-link and produces admin warning.
