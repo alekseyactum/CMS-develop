@@ -283,8 +283,83 @@ The `about` dropdown contains system links:
 - media;
 - cases.
 
-If a top-level or about-dropdown system page is not published, the public layout
-keeps the item but marks it as disabled and emits admin diagnostics.
+If a system link's destination page is not published, the public layout keeps
+the link but marks it as disabled, returns `href: null`, and emits admin diagnostics.
+The About dropdown container follows the availability rule below, not the
+publication state of the About page alone.
+
+#### About Dropdown Interaction Contract
+
+Decision date: 2026-11-05. This clarification supersedes any interpretation of
+the top-level About item as a page link or a link with a separate arrow action.
+It does not remove or change the standalone About page.
+
+The entire top-level About label and chevron are one disclosure control:
+
+- it only opens/closes the submenu, on desktop, sticky header, and mobile;
+- it is a `button` with `type="button"`, not an anchor or router link;
+- it has no navigation URL: public/admin layout return `kind: "dropdown"` and
+  `href: null` for this parent;
+- it must not navigate to `/about`, change the route/hash, or redirect on click,
+  touch, Enter, or Space. Hover may supplement, but not replace, explicit activation.
+
+The submenu has exactly these four system-owned links, in this order:
+
+| Key | Ukrainian label | National Ukrainian route |
+| --- | --- | --- |
+| `about` | Про нас | `/about` |
+| `blog` | Блог | `/blog` |
+| `media` | Ми в ЗМІ | `/media` |
+| `cases` | Наші справи | `/cases` |
+
+Russian and English use the existing localized labels and published routes from
+layout data. Do not hardcode Ukrainian paths in frontend components. The About
+page keeps `/about`, `/ru/about`, and `/en/about`; only the parent control stops
+being a link. Footer links and page links to About are unchanged. Removing
+`cases` from this submenu would be a separate product-scope change.
+
+Children retain their individual publication checks. Unpublished children stay
+in their fixed position with `disabled: true` and `href: null`; they must not
+navigate or receive a fabricated fallback URL. The parent has
+`disabled: false` when at least one child is enabled. If all four children are
+disabled, the parent remains present with `disabled: true`. Do not require a
+published `/about` page to open a menu whose Blog, Media, or Cases link is available.
+Do not emit a missing-page warning for the container as if it were a second About
+link; retain the appropriate diagnostics for its actual children.
+
+The disclosure exposes `aria-expanded` and `aria-controls`. Enter/Space toggle
+it, Tab reaches enabled child links, and Escape closes it and returns focus to
+the trigger. Closing an outside-click menu must not steal focus from the clicked
+control. Activating a child closes the menu and follows that child's URL. Keep
+the existing page-owned active-navigation key `about` for About/Blog/Media/Cases.
+
+#### Implementation Owners And Acceptance
+
+- CMS-back (our task): correct the system navigation registry/read-only metadata
+  and `SiteLayoutService.resolveNavigation`. Model the parent as a container,
+  not an About page destination; return `href: null` consistently from public
+  layout and admin preview/workbench. Derive parent availability from children.
+  Keep the four child page bindings, routes, labels, diagnostics, and active-key
+  policy. Cover every locale, About-unpublished/Blog-published, all-unpublished,
+  stable child order, and public/admin parity with regression tests.
+- Site-front (Yuriy): implement the disclosure in the shared header navigation
+  and mobile variant, including the sticky header. Use backend `children` and
+  their availability instead of drawing only an arrow next to an About link.
+  Never navigate using the parent's `href`, including while an older backend
+  still returns `/about`. Accept both legacy non-null and corrected null parent
+  URLs. Cover pointer/touch, keyboard/focus, disabled links, all locales, route
+  changes, mobile/desktop/sticky rendering, and no regression in Services.
+- CMS-front (Yuriy, only if needed): ensure the read-only header preview describes
+  a dropdown container without a parent destination. Do not introduce editable
+  navigation, URL fields, or another authoring/publication flow. No CMS-front
+  code change is needed if it already renders these backend fields correctly.
+
+Roll out the compatible site-front behavior before switching the backend parent
+URL to null, or coordinate the releases so existing link-only rendering is not
+left with a null URL. This document records requirements, not completed code or
+deployment. Navigation is system-owned: this change requires no SQL migration,
+page republication, or saving/publishing a new `site_header` content version.
+Do not extend this clarification to the Services mega-menu's parent-link policy.
 
 ### Services Mega Menu
 

@@ -820,6 +820,14 @@ Supported workbench keys in this compatibility slice:
 the services mega menu, phone, work time, language policy, and mobile layout are read-only/runtime data.
 It is not part of any page authoring section list.
 
+The 2026-11-05 [About dropdown interaction contract](site-layout-and-header-requirements.md#about-dropdown-interaction-contract)
+clarifies that the top-level About item is a disclosure-only container with
+`kind: "dropdown"` and `href: null`, not a link to the About page. Its four children
+remain About, Blog, Media, and Cases, with individual published-page availability.
+The read-only CMS preview must reflect this distinction, without adding editable
+navigation fields. Backend and site-front implementation responsibilities and
+acceptance checks are recorded in the linked layout specification.
+
 Preferred startup endpoint for the dedicated header screen:
 
 ```text
