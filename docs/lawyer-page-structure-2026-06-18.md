@@ -201,8 +201,10 @@ At the time of this baseline, the backend exposed only a minimal `seo` + runtime
    - Read-only in CMS.
    - Title is system-defined/read-only.
    - Source: reviews linked to the current lawyer.
-   - Approved office-city addition: every review item on a personal lawyer page has `officeCity: null`,
-     following the [common public review contract](reference-data-and-runtime-model.md#review-office-city-in-public-cards).
+   - 2026-11-05 amendment: personal lawyer review cards also expose localized `officeCity` and
+     `officeMapsUrl` for the review's original office, not the lawyer's current office. City is the
+     top-right map link, or plain text without a map. No "All reviews" CTA. Follow the
+     [common public review contract](reference-data-and-runtime-model.md#review-office-city-in-public-cards).
    - Empty list is a warning, not a publish blocker; public frontend may hide the block when empty.
 
 6. `lead_form` + `lead_capture`

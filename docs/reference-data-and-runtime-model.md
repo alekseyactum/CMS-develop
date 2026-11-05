@@ -691,24 +691,17 @@ The original ERP review text remains unchanged. `display_text` is the CMS-owned 
 
 #### Review office city in public cards
 
-Approved on 2026-10-15. This is the target contract for a separate implementation; this documentation
-change does not add the field to the running backend or modify existing published snapshots.
+Amended and approved on 2026-11-05. This replaces the 2026-10-15 restriction that hid the office city
+on regional pages and personal lawyer pages. Documentation publication alone does not deploy code or
+rewrite existing published snapshots.
 
-Each public review item must expose `officeCity: string | null`. This is the city of the office linked
-to the review, not the review author's residence. The value is presentation context, not a new review
-selection criterion or a new CMS-editable field.
+Every public review item exposes `officeCity: string | null` and `officeMapsUrl: string | null`.
+The city belongs to the original office linked to this review, not the author's residence, the
+viewed page's region or the lawyer's current office. This is presentation context, not a new review
+selection criterion or CMS-editable review field.
 
-The backend decides whether to include the city for each item using the target page's context:
-
-| Target page | `officeCity` |
-| --- | --- |
-| National/non-regional page, except a personal lawyer page | Localized office city, or `null` if unavailable |
-| Regional page | `null` |
-| Personal `lawyer_page`, regardless of regional context | `null` |
-
-National means absence of regional scope, not Ukrainian locale. The same rule applies to `uk`, `ru`,
-and `en`. The personal lawyer page exception takes precedence over the non-regional rule. Current
-consumers are `practice_reviews`, `service_reviews`, `problem_reviews`, and `lawyer_reviews`.
+The same contract applies to `practice_reviews`, `service_reviews`, `problem_reviews` and
+`lawyer_reviews`, on national and regional pages, in `uk`, `ru` and `en`.
 
 Source and localization rules:
 
@@ -718,39 +711,56 @@ Source and localization rules:
 - If the office, its region/city, or the localized name is missing/unresolved, return `null`. Blank or
   whitespace-only names also become `null`; do not substitute another locale, an identifier, or a
   placeholder.
-- Absence of the city does not exclude the review or create a new publication blocker.
+- `officeMapsUrl` resolves only from this review's original office. Prefer its stored, valid HTTPS
+  Google Maps place URL. Otherwise construct an official Maps Search URL from its nonempty
+  `googlePlaceId` and available original office name/address, with proper URL encoding. Do not perform
+  live Google requests, geocoding or redirect expansion to build a card.
+- Reject unsafe/non-Google URLs, credentials, non-HTTPS schemes and generic Google redirect URLs.
+  A missing/unusable office map and Place ID produce `officeMapsUrl: null`, not another office's URL.
+- If `officeCity` is null, `officeMapsUrl` is also null: this contract has no anonymous map-link label.
+- Missing city/map data does not exclude the review or create a new publication blocker.
 - Existing review eligibility, visibility, ordering, limits, and regional filtering remain unchanged.
   In particular, regional eligibility through the linked office **or** lawyer is not narrowed by this
   display rule.
 
 Public frontend contract:
 
-- Render the city only when `officeCity` is a non-empty string. Otherwise omit both the city and any
-  separator or empty space reserved solely for it.
-- Treat an absent `officeCity` in an older snapshot exactly like `null`.
-- Do not infer visibility from the URL, locale, or page type, and do not fetch/derive the city from
-  office or lawyer data on the frontend. The backend payload is authoritative.
+- Show the city in the top-right corner of each review card. When both fields are nonempty, the city
+  is a link to `officeMapsUrl`, opening in a new tab with appropriate external-link protection.
+- A known city without a map link remains plain text. Unknown city means no label, link or placeholder.
+- This placement also applies to regional pages and personal lawyer pages; do not hide the city by
+  page type or infer it from the URL. Do not perform extra office/region lookups on the frontend.
+- An absent field in an older snapshot is equivalent to null. The backend payload is authoritative.
 - Do not label this value as the author's city or add it to author/address structured data.
+- Remove "All reviews" / "Usi vidhuky" / "Vse otzyvy" and their `/reviews` routes as section CTAs
+  everywhere; an internal all-reviews page is not part of this scope.
+- The office map is not an author profile or a specific review URL. Do not make the author's name a
+  misleading office link, or put the office URL into `Review.url`, `author.url` or `author.sameAs`.
+- Do not collect individual review permalinks for this task. Preserve original `authorUrl` data and
+  existing Google attribution obligations; they are separate from the new city navigation.
 
 The value is part of the page's review runtime payload and published snapshot. Preview and publication
 must apply the same rule. Existing snapshots are not rewritten merely by adding the contract or
-deploying its future implementation; they gain the field when their review payload is rebuilt through
+deploying its future implementation; they gain the fields when their review payload is rebuilt through
 the normal publication/refresh mechanism. The implementation must account for changes to the review's
-office link, the office's region link, and the localized region/city name in existing refresh dependency
-tracking, without introducing a separate refresh queue or scheduler for this field.
+office link, the office's region/map/Place ID/name/address, and the localized region/city name in
+existing refresh dependency tracking. All four consumers, including regional/lawyer pages, must update
+without publishing unrelated content or SEO drafts. No separate queue/scheduler or migration is required.
+Changing Google API integration in ERP is not required to link a known office; a possible Business
+Profile API migration is a separate product/integration task.
 
 Acceptance criteria for implementation:
 
-1. The same eligible review has a localized city on a national practice/service/problem page and
-   `officeCity: null` on a regional page or personal lawyer page.
-2. National `uk`, `ru`, and `en` pages use their own localized name; a missing translation yields `null`.
-3. Missing/unresolved office or city and blank names yield `null`, while the review remains eligible
-   under the existing rules.
-4. A review selected for a region through its lawyer still follows existing regional eligibility,
-   even when its office belongs to another region; its city remains hidden on that regional page.
-5. Old snapshots without the field render without a placeholder or frontend error.
-6. A relevant source/name change is reflected after the normal review refresh/publication, with no
-   additional frontend lookup. Unrelated selection and ordering behavior is unchanged.
+1. All four consumers expose the original office's localized city and map, including national,
+   regional and personal lawyer pages. No selection/order/aggregate behavior changes.
+2. Exact `uk`, `ru`, `en` localization is used; missing translations yield null, not a language fallback.
+3. Known city/missing map renders plain text; unknown office/city leaves the review without city/link.
+4. A review selected through a lawyer in a different region links to its actual original office.
+5. Old snapshots with missing fields/null city remain readable and refreshable. No fake labels/URLs.
+6. Map/Place ID/name/address and localized city changes reach relevant published consumers via the
+   existing refresh mechanism. Unrelated drafts and the author's identity remain unchanged.
+7. No all-reviews CTA, specific-review URL collection or office URL substituted into author/Review
+   JSON-LD. Preview and publication use the same card contract.
 
 ### Lawyer Qualifications
 
