@@ -96,6 +96,11 @@ content conversion, taxonomy, authors and reviewers, future URLs, redirects, err
 acceptance. The [training report](docs/article-import-training-2026-10-15.md) records the two test
 imports, known limitations and their completed cleanup; the mass import remains a separate step.
 
+See [`docs/media-import-specification-2026-11-06.md`](docs/media-import-specification-2026-11-06.md)
+for the agreed Media import: full text, per-item representation mode, embedded YouTube players,
+lawyers displayed as participants through existing author relations, verified source dates,
+ordinary non-featured drafts, and the required video/frontend preparation.
+
 ## Development Sequencing
 
 Implementation should proceed from small, low-risk, release-grade slices toward the complex CMS loop.
