@@ -14,6 +14,135 @@ the canonical service repositories:
 - `re-actum/cms-front`;
 - `re-actum/cms-back`.
 
+## Website specifications
+
+Use this index to find website requirements and their implementation contracts. Edit requirements in the
+linked source documents, not here. The [project docs](docs/) contain the shared specifications and
+historical records; service-specific acceptance criteria and API contracts stay in their service
+repositories.
+
+### Shared product and CMS requirements
+
+- Site shell: [layout, header and contacts](docs/site-layout-and-header-requirements.md),
+  [footer and legal documents](docs/site-footer-section-workbench.md),
+  [global price section](docs/global-price-section-workbench.md),
+  [lead questionnaire](docs/lead-questionnaire-contract-2026-07-16.md).
+- Standalone pages: [Home](docs/home-page-structure-2026-08-05.md),
+  [About](docs/about-page-structure-2026-10-06.md),
+  [Career](docs/career-page-backend-requirements-2026-09-17.md),
+  [License / partnership requirements](docs/license-page-backend-requirements-2026-09-27.md) and
+  [page contract](docs/license-page-backend-contract-2026-09-27.md), including
+  [the accent heading amendment](docs/license-hero-accent-title-rollout-2026-09-30.md#scope-and-source).
+- Service hierarchy: [practices](docs/practice-page-structure-2026-06-13.md),
+  [services](docs/service-page-structure-2026-06-16.md),
+  [problems](docs/problem-page-structure-2026-06-15.md),
+  [hierarchy amendments](docs/service-hierarchy-page-amendments-2026-06-28.md),
+  [optional problem pages](docs/problem-optional-pages-2026-09-17.md),
+  [intent page families](docs/intent-page-family-requirements-2026-07-30.md).
+- Lawyers, offices and reviews: [lawyer profile pages](docs/lawyer-page-structure-2026-06-18.md),
+  [exact lawyer qualification selection](docs/lawyer-exact-qualification-selection-2026-10-24.md),
+  [reference data and public read models](docs/reference-data-and-runtime-model.md).
+- Blog, media and cases: [editorial content requirements](docs/editorial-content-specification-2026-08-23.md),
+  [editorial architecture](docs/editorial-content-architecture-2026-06-19.md),
+  [CMS publication search and filters](docs/cms-publication-search-and-filter-specification-2026-10-19.md),
+  [article import](docs/article-import-specification-2026-10-16.md),
+  [media import](docs/media-import-specification-2026-11-06.md).
+- Routing, SEO and locales: [redirects](docs/redirects-specification-2026-09-13.md),
+  [JSON-LD architecture](docs/json-ld-architecture-2026-07-27.md) and
+  [implementation requirements](docs/json-ld-implementation-requirements-2026-08-03.md),
+  [Ukrainian-source translation](docs/cms-uk-source-translation-specification-2026-11-03.md).
+- CMS authoring and publishing: [backend requirements](docs/backend-implementation-requirements.md),
+  [section model](docs/section-model-foundation.md),
+  [section authoring and versioning](docs/section-authoring-versioning-contract-2026-10-04.md),
+  [roles and scoped publication](docs/cms-roles-and-scoped-publication-specification-2026-10-18.md),
+  [stale-page refresh](docs/stale-page-refresh-contract-2026-10-12.md),
+  [runtime and global section indicators](docs/runtime-global-section-indicators-2026-09-18.md).
+- CMS-front tasks: [page and section authoring](docs/cms-front-page-authoring-task.md),
+  [reference data](docs/cms-front-reference-data-task.md), [users](docs/cms-front-users-task.md),
+  [source diagnostics and bulk page bootstrap](docs/source-diagnostics-and-bulk-bootstrap-task.md).
+
+### Site-front specifications and acceptance criteria
+
+- Forms: [global forms and integration testing](https://github.com/re-actum/site-front/blob/develop/specs/FEAT-global-site-forms.md),
+  [working form delivery](https://github.com/re-actum/site-front/blob/develop/specs/FEAT-site-form-delivery.md)
+  ([AC-7 and other acceptance criteria](https://github.com/re-actum/site-front/blob/develop/specs/FEAT-site-form-delivery.md#acceptance-criteria)).
+- Directory: [lawyer filters](https://github.com/re-actum/site-front/blob/develop/specs/FEAT-lawyers-directory-filters.md) (draft).
+- Rendering and UI: [schema-based page builders](https://github.com/re-actum/site-front/blob/develop/specs/FEAT-page-builder-sets.md),
+  [removing MUI/Emotion](https://github.com/re-actum/site-front/blob/develop/specs/FEAT-remove-mui.md),
+  [design tokens](https://github.com/re-actum/site-front/blob/develop/docs/design-tokens.md),
+  [typography](https://github.com/re-actum/site-front/blob/develop/docs/type-scale.md).
+- Public routing and content: [redirect handling](https://github.com/re-actum/site-front/blob/develop/docs/redirect-routing.md),
+  [optional problem links](https://github.com/re-actum/site-front/blob/develop/docs/problem-links.md),
+  [editorial video](https://github.com/re-actum/site-front/blob/develop/docs/editorial-video.md),
+  [editorial data constraints](https://github.com/re-actum/site-front/blob/develop/docs/editorial-backend-gaps.md).
+- [Full site-front specs directory](https://github.com/re-actum/site-front/tree/develop/specs) ·
+  [technical documentation](https://github.com/re-actum/site-front/tree/develop/docs).
+
+### CMS-back website and integration contracts
+
+- Forms: [global forms and snapshot bindings](https://github.com/re-actum/cms-back/blob/develop/docs/global-site-forms-implementation.md),
+  [integration-test API](https://github.com/re-actum/cms-back/blob/develop/docs/site-form-integration-api.md),
+  [working delivery and ERP transport](https://github.com/re-actum/cms-back/blob/develop/docs/site-form-delivery-2026-11-05.md),
+  [legacy career application API](https://github.com/re-actum/cms-back/blob/develop/docs/career-applications.md).
+- Pages and shared UI: [Home](https://github.com/re-actum/cms-back/blob/develop/docs/home-page-backend-implementation.md),
+  [About](https://github.com/re-actum/cms-back/blob/develop/docs/about-page-backend.md) and
+  [single heading](https://github.com/re-actum/cms-back/blob/develop/docs/about-single-heading-transition.md),
+  [Career](https://github.com/re-actum/cms-back/blob/develop/docs/career-backend.md),
+  [License / partnership](https://github.com/re-actum/cms-back/blob/develop/docs/license-page-backend-contract-2026-09-27.md),
+  [intent pages](https://github.com/re-actum/cms-back/blob/develop/docs/intent-pages-backend-implementation-plan.md),
+  [optional problem pages](https://github.com/re-actum/cms-back/blob/develop/docs/problem-optional-pages.md),
+  [sitemap](https://github.com/re-actum/cms-back/blob/develop/docs/sitemap-page-backend.md),
+  [contact map coordinates](https://github.com/re-actum/cms-back/blob/develop/docs/contacts-map-coordinates.md),
+  [public footer PDF links](https://github.com/re-actum/cms-back/blob/develop/docs/public-footer-legal-links.md).
+- Lawyers and reviews: [public lawyer profile data](https://github.com/re-actum/cms-back/blob/develop/docs/lawyer-page-runtime-backend.md),
+  [directory ranking and order editor](https://github.com/re-actum/cms-back/blob/develop/docs/tasks/lawyers-directory-ranking-and-order-editor-20261105.md),
+  [partnership flag](https://github.com/re-actum/cms-back/blob/develop/docs/lawyer-license-partnership.md),
+  [review office links](https://github.com/re-actum/cms-back/blob/develop/docs/review-office-links-2026-11-05.md),
+  [review reconciliation API](https://github.com/re-actum/cms-back/blob/develop/docs/review-reconciliation-api-2026-10-23.md).
+- Editorial: [public presentation](https://github.com/re-actum/cms-back/blob/develop/docs/editorial-public-presentation.md),
+  [FAQ and recommendations](https://github.com/re-actum/cms-back/blob/develop/docs/blog-faq-recommendations.md),
+  [video block](https://github.com/re-actum/cms-back/blob/develop/docs/editorial-video-block.md),
+  [admin list and search](https://github.com/re-actum/cms-back/blob/develop/docs/editorial-admin-list-facade.md),
+  [filter options](https://github.com/re-actum/cms-back/blob/develop/docs/editorial-filter-options-api-2026-10-27.md),
+  [author names and photos](https://github.com/re-actum/cms-back/blob/develop/docs/editorial-author-display-frontend-task-2026-10-28.md),
+  [ERP case articles integration](https://github.com/re-actum/cms-back/blob/develop/docs/deal-articles-client-handoff-2026-10-30.md)
+  and [CMS workflow](https://github.com/re-actum/cms-back/blob/develop/docs/deal-articles-admin-workflow-2026-11-04.md).
+- Routing, SEO and media: [locale alternates](https://github.com/re-actum/cms-back/blob/develop/docs/public-page-locale-alternates.md),
+  [lawyer canonical URLs](https://github.com/re-actum/cms-back/blob/develop/docs/lawyer-auto-canonical.md),
+  [lawyer SEO image](https://github.com/re-actum/cms-back/blob/develop/docs/lawyer-seo-image.md),
+  [redirects API](https://github.com/re-actum/cms-back/blob/develop/docs/redirects-backend-contract-2026-09-13.md),
+  [structured data readiness](https://github.com/re-actum/cms-back/blob/develop/docs/structured-data-publish-readiness.md),
+  [public media delivery](https://github.com/re-actum/cms-back/blob/develop/docs/durable-media-serving.md),
+  [signed preview](https://github.com/re-actum/cms-back/blob/develop/docs/signed-site-preview.md).
+- Authoring and publication: [safe section saves](https://github.com/re-actum/cms-back/blob/develop/docs/section-authoring-safe-save.md),
+  [content readiness](https://github.com/re-actum/cms-back/blob/develop/docs/section-content-readiness.md),
+  [publication API](https://github.com/re-actum/cms-back/blob/develop/docs/publication-http-contract.md),
+  [scoped SEO and content](https://github.com/re-actum/cms-back/blob/develop/docs/scoped-seo-publication-api-2026-10-18.md),
+  [unified diagnostics and repair](https://github.com/re-actum/cms-back/blob/develop/docs/unified-diagnostics-and-publication-repair-2026-10-24.md),
+  [page refresh API](https://github.com/re-actum/cms-back/blob/develop/docs/stale-refresh-http-contract.md),
+  [refresh pause and resume](https://github.com/re-actum/cms-back/blob/develop/docs/page-refresh-pause-frontend-task-2026-10-27.md).
+- Translation: [Ukrainian-source workflow](https://github.com/re-actum/cms-back/blob/develop/docs/uk-source-translations.md),
+  [Cloud Translation EU](https://github.com/re-actum/cms-back/blob/develop/docs/cloud-translation-eu.md),
+  [frontend and migrator integration tasks](https://github.com/re-actum/cms-back/blob/develop/docs/autotranslation-integration-tasks-2026-11-04.md).
+- [Full CMS-back technical documentation](https://github.com/re-actum/cms-back/tree/develop/docs).
+
+### Cross-repository specifications and amendments
+
+- [AC-7 correction: delivery without a trusted client key](https://github.com/re-actum/site-front/blob/d7769cf8542e1e24a9e3c236fa807df8b122bc40/specs/FEAT-site-form-delivery.md#acceptance-criteria)
+  ([docs-only commit](https://github.com/re-actum/site-front/commit/d7769cf8542e1e24a9e3c236fa807df8b122bc40);
+  not yet merged into `site-front/develop`).
+- Forms (site, CMS and ERP): [global forms integration requirements](https://github.com/re-actum/erp_backend/blob/tz/docs/tasks/site-cms-global-forms-integration-spec-20261102.md),
+  [frontend integration task](https://github.com/re-actum/erp_backend/blob/tz/docs/tasks/site-cms-global-forms-frontend-task-20261102.md)
+  and [working delivery requirements](https://github.com/re-actum/erp_backend/blob/tz/docs/tasks/site-cms-form-delivery-spec-20261104.md).
+- Case articles (ERP and CMS): [publication requirements and the ERP deal number](https://github.com/re-actum/erp_backend/blob/tz/docs/tasks/deal-article-publication-spec-20261013.md),
+  [ERP backend task](https://github.com/re-actum/erp_backend/blob/tz/docs/tasks/backend-erp-deal-article-20261013.md),
+  [migrator task](https://github.com/re-actum/erp_backend/blob/tz/docs/tasks/migrator-deal-article-20261013.md)
+  and [ERP design task](https://github.com/re-actum/erp_backend/blob/tz/docs/tasks/design-erp-deal-article-20261013.md).
+- Amendments to shared UI and authoring:
+  [About menu disclosure](https://github.com/re-actum/cms-back/blob/4e5b681f5cc19d944360cf9db9e9e88ce3cf6c42/docs/about-header-dropdown-contract-2026-11-05.md),
+  [independent price text overrides](https://github.com/re-actum/cms-back/blob/01b6512b1d8dee17036d6480803d90bfddfc31d1/docs/price-text-overrides-rollout-2026-11-05.md#scope)
+  and [locale navigation in the CMS workbench](https://github.com/alekseyactum/CMS-develop/commit/b415a0917f3983ec1047a5359f30847504c3af76).
+
 ## Goal
 
 Build an Actum-controlled CMS for legal-site content where editors can manage structured pages, preview
