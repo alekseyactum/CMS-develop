@@ -65,7 +65,7 @@ repositories.
 
 - Forms: [global forms and integration testing](https://github.com/re-actum/site-front/blob/develop/specs/FEAT-global-site-forms.md),
   [working form delivery](https://github.com/re-actum/site-front/blob/develop/specs/FEAT-site-form-delivery.md)
-  ([AC-7 and other acceptance criteria](https://github.com/re-actum/site-front/blob/develop/specs/FEAT-site-form-delivery.md#acceptance-criteria)).
+  ([acceptance criteria, including AC-7: delivery without a trusted client key](https://github.com/re-actum/site-front/blob/develop/specs/FEAT-site-form-delivery.md#acceptance-criteria)).
 - Directory: [lawyer filters](https://github.com/re-actum/site-front/blob/develop/specs/FEAT-lawyers-directory-filters.md) (draft).
 - Rendering and UI: [schema-based page builders](https://github.com/re-actum/site-front/blob/develop/specs/FEAT-page-builder-sets.md),
   [removing MUI/Emotion](https://github.com/re-actum/site-front/blob/develop/specs/FEAT-remove-mui.md),
@@ -128,9 +128,6 @@ repositories.
 
 ### Cross-repository specifications and amendments
 
-- [AC-7 correction: delivery without a trusted client key](https://github.com/re-actum/site-front/blob/d7769cf8542e1e24a9e3c236fa807df8b122bc40/specs/FEAT-site-form-delivery.md#acceptance-criteria)
-  ([docs-only commit](https://github.com/re-actum/site-front/commit/d7769cf8542e1e24a9e3c236fa807df8b122bc40);
-  not yet merged into `site-front/develop`).
 - Forms (site, CMS and ERP): [global forms integration requirements](https://github.com/re-actum/erp_backend/blob/tz/docs/tasks/site-cms-global-forms-integration-spec-20261102.md),
   [frontend integration task](https://github.com/re-actum/erp_backend/blob/tz/docs/tasks/site-cms-global-forms-frontend-task-20261102.md)
   and [working delivery requirements](https://github.com/re-actum/erp_backend/blob/tz/docs/tasks/site-cms-form-delivery-spec-20261104.md).
