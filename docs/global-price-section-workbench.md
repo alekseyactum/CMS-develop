@@ -298,8 +298,8 @@ priceMode:
 description:
 - required
 - < 50: warning
-- 50..200: ok
-- 201..399: warning
+- 50..249: ok
+- 250..399: warning
 - >= 400: error
 ```
 
