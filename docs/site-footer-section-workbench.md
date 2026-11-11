@@ -208,6 +208,12 @@ Backend does not store, version, validate, or publish them in `site_footer`.
 They are simple site settings without draft/publish/snapshot lifecycle and are reused by header, footer,
 contacts, and forms.
 
+The [2026-11-11 Contacts specification](contacts-page-structure-and-company-contacts-2026-11-11.md)
+renames their UI to "Контакти компанії" and adds optional corporate, quality, and media contacts.
+It also makes the published `site_footer.socialUrls` a source for the Contacts page's readonly
+`contacts_details` projection. Publishing changed social links queues that dependent projection
+for refresh with pauses preserved; it does not publish page-owned drafts or duplicate editable URLs.
+
 ## Site Navigation Links
 
 Footer navigation links are first-level site links, not free editor-entered URLs.

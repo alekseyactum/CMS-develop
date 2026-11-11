@@ -67,6 +67,12 @@ Layout payload is the source of truth for:
 Changing layout-level data must not republish all pages. Later the backend will
 trigger frontend/CDN revalidation for layout tags or layout HTML cache.
 
+The [2026-11-11 Contacts specification](contacts-page-structure-and-company-contacts-2026-11-11.md)
+adds one scoped exception: the Contacts page captures a readonly projection of its shared phone,
+department contacts, social links, and fixed career links. Changed sources refresh that projection
+through the existing page-refresh queue, respecting pauses and preserving all authored drafts.
+This does not copy the whole layout into pages or change layout-level revalidation elsewhere.
+
 ## Admin Menu Placement
 
 The CMS sidebar should show layout/global items in the `global_sections` group
@@ -95,8 +101,13 @@ It stores:
 - primary phone;
 - display phone;
 - work time `{ from, to }`;
+- optional corporate email, quality-department phone/email, and media-contact phone/email,
+  as specified in the [2026-11-11 extension](contacts-page-structure-and-company-contacts-2026-11-11.md);
 - `updatedAt`;
 - `updatedBy`.
+
+The UI name is "Контакти компанії" (formerly "Телефон і час"). The resource key and settings API
+remain unchanged. These public contacts are independent of form-delivery recipients and sender settings.
 
 It does not have:
 
@@ -105,8 +116,11 @@ It does not have:
 - section version history;
 - rollback;
 - inheritance;
-- page snapshot refs;
-- stale state.
+- section-version refs or an authored snapshot lifecycle;
+- its own stale state.
+
+Consumer pages may record a source revision/digest for dependency refresh; this does not create
+settings drafts, section versions, or a separate settings Publish command.
 
 It is used by:
 

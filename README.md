@@ -61,6 +61,9 @@ See [`docs/cms-front-reference-data-task.md`](docs/cms-front-reference-data-task
 frontend task around reference-data admin screens and endpoints.
 See [`docs/source-diagnostics-and-bulk-bootstrap-task.md`](docs/source-diagnostics-and-bulk-bootstrap-task.md)
 for the project-wide source diagnostics and mass authoring-page creation task.
+See [`docs/contacts-page-structure-and-company-contacts-2026-11-11.md`](docs/contacts-page-structure-and-company-contacts-2026-11-11.md)
+for the agreed Contacts page structure, shared Company Contacts settings, and the readonly additional
+contacts block. Maps integration, final copy, and runtime rollout are outside that specification change.
 
 ## Development Sequencing
 

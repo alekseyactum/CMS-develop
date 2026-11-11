@@ -153,9 +153,10 @@ Page-specific content/runtime slots:
 
 - `lawyers_page` has `lawyers_header`, `lawyers_filter`, and `lawyers_listing`;
 - `lawyer_page` has `lawyer_profile`;
-- `contacts_page` has `contacts_header` and `contacts_map`.
+- `contacts_page` has `contacts_header`, `contacts_map`, and the fixed runtime `contacts_details` block,
+  as amended by [the 2026-11-11 Contacts specification](contacts-page-structure-and-company-contacts-2026-11-11.md).
 
-`lawyers_filter`, `lawyers_listing`, `lawyer_profile`, and `contacts_map` are runtime/reference slots.
+`lawyers_filter`, `lawyers_listing`, `lawyer_profile`, `contacts_map`, and `contacts_details` are runtime/reference slots.
 They are part of the page schema, but their data comes from CMS public read models or directories, not
 from normal editable `section_versions`. A page snapshot should store the slot/source reference and the
 backend should resolve the allowed public read model data while building the public payload.
