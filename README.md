@@ -41,6 +41,7 @@ repositories.
   [intent page families](docs/intent-page-family-requirements-2026-07-30.md).
 - Lawyers, offices and reviews: [lawyer profile pages](docs/lawyer-page-structure-2026-06-18.md),
   [exact lawyer qualification selection](docs/lawyer-exact-qualification-selection-2026-10-24.md),
+  [office map placeholders and Google launch limits](docs/office-map-placeholders-and-google-budget-specification-2026-11-11.md),
   [reference data and public read models](docs/reference-data-and-runtime-model.md).
 - Blog, media and cases: [editorial content requirements](docs/editorial-content-specification-2026-08-23.md),
   [editorial architecture](docs/editorial-content-architecture-2026-06-19.md),
