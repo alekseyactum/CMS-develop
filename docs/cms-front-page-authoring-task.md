@@ -869,6 +869,15 @@ In the workbench response:
 - use `endpoints.*` for supported server actions rather than hardcoding URLs in the component;
   legacy rollback/draft-from-version URLs are not used for local "Take as basis".
 
+Services clarification (2026-11-12): render that readonly practice -> service ->
+problem tree, not the registry policy in `readonlyContent.servicesMenu`. Display
+`layoutPreview.diagnostics.servicesMenu` with its server counts and candidate
+issues. The tree remains visible to an administrator even when the public
+container is disabled. Expected text-only problems without a slug are omitted
+without diagnostics, not tasks to create missing pages. Header version selection
+must not present this current runtime tree as historical version content. See
+[Services availability and diagnostics](site-layout-and-header-requirements.md#services-availability-and-diagnostics-2026-11-12).
+
 After header actions, use the same simple refresh rule as the footer screen:
 
 - call the action endpoint from `endpoints.*`;

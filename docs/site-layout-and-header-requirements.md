@@ -359,7 +359,8 @@ URL to null, or coordinate the releases so existing link-only rendering is not
 left with a null URL. This document records requirements, not completed code or
 deployment. Navigation is system-owned: this change requires no SQL migration,
 page republication, or saving/publishing a new `site_header` content version.
-Do not extend this clarification to the Services mega-menu's parent-link policy.
+The Services mega-menu has its own availability contract below; its optional
+catalog link is separate from opening the menu.
 
 ### Services Mega Menu
 
@@ -382,9 +383,59 @@ Inclusion rules:
 
 If an enabled object is missing label/slug/parent/published page, public layout
 omits it from the mega menu and admin diagnostics warn about the issue.
+Exception: a problem without its own slug is an expected text-only object, not
+a standalone-page candidate. Omit it before checking menu-candidate inputs;
+its absence produces no menu warning/error and does not require creating a page.
+This includes null, empty and whitespace-only slugs. Existing reference-data
+validation outside the menu is not weakened.
 
 Frontend owns visual column layout. Backend returns a structured tree, not
 columns.
+
+#### Services Availability And Diagnostics: 2026-11-12
+
+This clarification supersedes treating the Services container's availability as
+the publication state of the catalog page alone.
+
+- `header.navigation` keeps the `services` item with `kind: "mega_menu"`.
+- Its `disabled` is false exactly when `header.servicesMenu.items` has at least
+  one available root item. An available practice is enough even without children.
+  An empty tree disables disclosure, even when the catalog itself is published.
+- Its `href` is the published catalog URL in the requested locale, or null when
+  that catalog is unavailable. Do not fabricate `/services` or another language's
+  URL to make disclosure work. Catalog navigation and menu opening are independent.
+- An unavailable catalog does not produce
+  `SITE_HEADER_SYSTEM_PAGE_NOT_PUBLISHED` for `navigation.services`: it is not a
+  prerequisite for opening a non-empty menu. Other navigation diagnostics remain.
+- The tree still contains only visible, labeled, routable, published nodes in the
+  requested locale, attached to available parents. Ordering and the three levels
+  practice -> service -> problem are unchanged; drafts never become menu links.
+- Slugless problems are not missing-content tasks. Do not generate or publish
+  their pages, invent slugs, or list them as warnings in the menu preview.
+  Genuine diagnostics for standalone-page candidates remain visible.
+
+CMS-front displays the readonly current user-facing tree from
+`GET /api/admin/site-layout/header-workbench?locale=uk|ru|en`, using
+`layoutPreview.header.servicesMenu.items`. Show real candidate diagnostics from
+`layoutPreview.diagnostics.servicesMenu`, including `issues`, `errorCount` and
+`warningCount`. `readonlyContent.servicesMenu` is policy metadata, not the tree.
+This is current runtime data, not historical content of a selected header version.
+Refreshing it must not replace unsaved header settings.
+
+Site-front must allow the Services disclosure when the item is not disabled and
+the supplied tree is non-empty, including when `href` is null. Remove any
+requirement for a catalog URL in the disclosure condition. Respect disabled state
+on desktop, sticky and mobile; use only supplied URLs for actual navigation.
+This clarification does not add an "All services" link or change catalog routes.
+
+Acceptance: exercise every combination of catalog publication and publication of
+the practice/service/problem chain in UK/RU/EN. Public layout, admin preview and
+header workbench must agree. With a published practice and unpublished catalog,
+the tree opens and the catalog URL remains null; with an empty tree it cannot open.
+Null/empty/whitespace problem slugs generate no menu diagnostics, while genuine
+missing parent/label/route and unpublished page diagnostics remain for eligible
+candidates. Source changes apply on the next layout read, without header Save,
+page republication, SQL migration, or changes to runtime flags.
 
 ### Search
 

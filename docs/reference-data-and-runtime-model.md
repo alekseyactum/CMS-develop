@@ -359,6 +359,11 @@ requires all hierarchy slugs. Only a published page of the exact problem, locale
 link. An uncreated problem page is not a mandatory content defect. See
 [Problems without individual pages](problem-optional-pages-2026-09-17.md).
 
+2026-11-12 menu clarification: slugless problems are excluded from Services menu
+candidates without warning/error. This does not change text-only items in parent
+page lists or the existing validation of practices, services and page-capable
+problems. See the [Services availability contract](site-layout-and-header-requirements.md#services-availability-and-diagnostics-2026-11-12).
+
 Lawyers are the exception: ERP does not provide lawyer slugs. CMS generates one stable read-only `slug`
 when the lawyer record is first created in the CMS database. That slug is not editable and must not be
 regenerated when the lawyer name changes.
