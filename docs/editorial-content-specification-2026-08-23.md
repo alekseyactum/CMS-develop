@@ -20,6 +20,11 @@ defines independent Search and Selection modes, Enter-only search, explicitly ap
 newest-created-first ordering. It supersedes conflicting administrative list requirements below;
 public collections and public search remain outside this amendment.
 
+2026-11-12 amendment: [unpublication and restoration](editorial-unpublish-restore-specification-2026-11-12.md)
+defines admin-only, whole-locale-family removal for detail materials, HTTP 404 and exact restoration of
+the previously published set without changing drafts. It supersedes the former archive/410 and
+restore-to-draft rules in section 18. This is an approved implementation target, not a deployed API.
+
 ## 1. Objective
 
 Build one shared editorial mechanism for three content kinds:
@@ -902,23 +907,25 @@ Rules:
 - internal CMS user identity is never exposed;
 - the external source, not Actum, owns the original work for `external_reference`.
 
-## 18. Archive And Unpublish
+## 18. Unpublication And Restoration
 
-Archive/unpublish belongs to V1 but is a late independent delivery slice and must not block the first Blog
-end-to-end release.
+The [approved 2026-11-12 specification](editorial-unpublish-restore-specification-2026-11-12.md)
+is authoritative for this delivery slice. Only an active admin may remove or restore one Blog, Media
+or Case detail material across its entire locale family. Collection and other page types are excluded.
 
-Target rules:
+- Removal is atomic across all published locales, retains routes, snapshots and authoring, and returns 404.
+- Restoration returns the exact saved published set only for previously published locales; it neither
+  returns the material to draft nor publishes newer drafts or never-published translations.
+- Restore conflicts block the entire family. Ordinary publication, rollback and workers cannot bypass removal.
+- Consumer refresh starts immediately without the normal queue delay, including targeted updates
+  on paused consumers without changing pauses or applying unrelated pending changes.
+- Manual selections retain their references without replacement; automatic lists use their ordinary
+  published-candidate selection. Cache/effect failure is separate from the committed lifecycle state.
+- CMS keeps withdrawn materials in the usual lists and filter, without a separate archive or action-history UI.
+- Service audit is retained. Media and manually inserted text links are not removed or rewritten.
 
-- a never-published draft may be hard-deleted after confirmation and permission check;
-- a previously published page cannot be hard-deleted through the normal editor;
-- archive/unpublish removes the public snapshot pointer and projection row;
-- related published collection is refreshed automatically;
-- published Blog recommendation consumers are discovered and refreshed through the narrow
-  `related_content` contract above, including priority removal of unavailable cards;
-- the old public URL returns 410 while archived;
-- history is retained;
-- restore returns the page to draft for normal validation and publication;
-- permissions and audit events are explicit.
+Physical deletion, including deletion of never-published drafts, is not introduced by this slice.
+Permanent retirement/410 remains a separate explicit address-management decision.
 
 ## 19. Responsibility Boundary
 

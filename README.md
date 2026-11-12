@@ -46,6 +46,9 @@ repositories.
 - Blog, media and cases: [editorial content requirements](docs/editorial-content-specification-2026-08-23.md),
   [editorial architecture](docs/editorial-content-architecture-2026-06-19.md),
   [CMS publication search and filters](docs/cms-publication-search-and-filter-specification-2026-10-19.md),
+  [unpublication and restoration](docs/editorial-unpublish-restore-specification-2026-11-12.md)
+  ([backend task](docs/cms-back-editorial-unpublish-restore-task-2026-11-12.md),
+  [Yuriy's CMS-front and site-front task](docs/cms-front-editorial-unpublish-restore-task-2026-11-12.md)),
   [article import](docs/article-import-specification-2026-10-16.md),
   [media import](docs/media-import-specification-2026-11-06.md).
 - Routing, SEO and locales: [redirects](docs/redirects-specification-2026-09-13.md),
