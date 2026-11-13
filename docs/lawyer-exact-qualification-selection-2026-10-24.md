@@ -1,5 +1,14 @@
 # Exact Lawyer Qualification Selection - Agreed 2026-10-24
 
+## Directory Amendment 2026-11-13
+
+For the public lawyers directory only, the later
+[practice/service selection and frontend random-order specification](lawyers-directory-service-selection-specification-2026-11-13.md)
+supersedes the subtree-based directory membership exception below. It requires direct practice/service
+scores >= 2 and defines the separate CMS-back and site-front work. All other consumers and the
+thematic-page rules in this document remain unchanged. This amendment is a target specification,
+not a claim that existing published snapshots or running services have changed.
+
 ## Product Decision
 
 The lawyer selection on a thematic page uses only the qualification of that exact topic and level.

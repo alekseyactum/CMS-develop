@@ -41,6 +41,7 @@ repositories.
   [intent page families](docs/intent-page-family-requirements-2026-07-30.md).
 - Lawyers, offices and reviews: [lawyer profile pages](docs/lawyer-page-structure-2026-06-18.md),
   [exact lawyer qualification selection](docs/lawyer-exact-qualification-selection-2026-10-24.md),
+  [lawyer directory practice/service selection and frontend shuffle](docs/lawyers-directory-service-selection-specification-2026-11-13.md),
   [office map placeholders and Google launch limits](docs/office-map-placeholders-and-google-budget-specification-2026-11-11.md),
   [reference data and public read models](docs/reference-data-and-runtime-model.md).
 - Blog, media and cases: [editorial content requirements](docs/editorial-content-specification-2026-08-23.md),
@@ -67,7 +68,9 @@ repositories.
 - Forms: [global forms and integration testing](https://github.com/re-actum/site-front/blob/develop/specs/FEAT-global-site-forms.md),
   [working form delivery](https://github.com/re-actum/site-front/blob/develop/specs/FEAT-site-form-delivery.md)
   ([acceptance criteria, including AC-7: delivery without a trusted client key](https://github.com/re-actum/site-front/blob/develop/specs/FEAT-site-form-delivery.md#acceptance-criteria)).
-- Directory: [lawyer filters](https://github.com/re-actum/site-front/blob/develop/specs/FEAT-lawyers-directory-filters.md) (draft).
+- Directory: [agreed practice/service filters and frontend random order](docs/lawyers-directory-service-selection-specification-2026-11-13.md)
+  (separate CMS-back and site-front tasks),
+  [earlier lawyer filter specification](https://github.com/re-actum/site-front/blob/develop/specs/FEAT-lawyers-directory-filters.md).
 - Rendering and UI: [schema-based page builders](https://github.com/re-actum/site-front/blob/develop/specs/FEAT-page-builder-sets.md),
   [removing MUI/Emotion](https://github.com/re-actum/site-front/blob/develop/specs/FEAT-remove-mui.md),
   [design tokens](https://github.com/re-actum/site-front/blob/develop/docs/design-tokens.md),
