@@ -228,6 +228,20 @@ Missing optional parts are omitted without empty placeholders. Editors reorder b
 
 SEO is a separate standard page section and is not duplicated in `publication_meta`.
 
+### Case article title length (14 November 2026 amendment)
+
+For Cases (`case_page`), the recommendation for `publication_meta.title` is up to 100
+characters inclusive in all three languages (UK/RU/EN), using the existing content-length
+calculation. More than 100 characters produces the field warning `PAGE_SECTION_TITLE_LONG`;
+100 does not, while 101 does. The warning alone does not block draft Save or publication.
+The same rule applies to saved-version, editor and publication validation.
+
+This replaces the previous 90-character warning boundary only for the Case article name.
+Blog and Media metadata title recommendations remain at 90. SEO title, slug, excerpt,
+required-field and structural rules do not change. No frontend change, migration, historical
+version rewrite or automatic republication is part of this amendment. Previously stored
+diagnostics adopt the new boundary through their normal validation refresh.
+
 ### Blog contributors
 
 - zero to five ordered public lawyer authors;
