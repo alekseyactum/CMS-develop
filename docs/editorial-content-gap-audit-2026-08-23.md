@@ -4,6 +4,11 @@ Normative product contract:
 
 - [`editorial-content-specification-2026-08-23.md`](editorial-content-specification-2026-08-23.md)
 
+The approved 2026-11-15 role/source/validation/JSON-LD amendment in that specification supersedes
+conflicting author limits, fallback authors, Case reviewers, Media modes and author/participant
+interpretations below. This remains a dated audit of the old implementation, not evidence that the
+new contract has been implemented or a reason to rewrite historical/public data.
+
 Delivery order:
 
 - [`editorial-content-implementation-plan-2026-08-23.md`](editorial-content-implementation-plan-2026-08-23.md)

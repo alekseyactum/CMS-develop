@@ -16,6 +16,13 @@ readiness. Search-intent and editorial details also require:
 
 No public frontend or admin frontend may independently reconstruct graph semantics.
 
+2026-11-15 editorial amendment: the
+[canonical publication role/source/validation/JSON-LD specification](editorial-content-specification-2026-08-23.md#17-json-ld)
+supersedes conflicting earlier author fallback, reviewer, participant and Media-mode requirements.
+The [compatibility/acceptance boundary](editorial-content-specification-2026-08-23.md#21-2026-11-15-compatibility-scope-and-acceptance)
+requires unchanged historical versions and published snapshots. This is a target change only; the
+older implementation-state and rollout records below do not authorize its implementation or backfill.
+
 ## Implementation State
 
 As of 2026-08-06, the first `cms-back` implementation is deployed to both `develop` and `release`:
@@ -154,11 +161,10 @@ order to make snapshots and diffs reviewable.
 | `lawyers_page` | `CollectionPage` | `mainEntity` is a page-owned `ItemList`; every item references a visible published lawyer `Person @id` and localized profile URL | partial item name/image may mirror the visible card; it does not own full lawyer profiles |
 | `lawyer_page` | `ProfilePage` | localized complete-enough shared `Person` description | certification, education credentials, expertise, visible cases, publications and reviews |
 | `blog_page` | `WebPage` | page-owned `BlogPosting` at `{canonicalUrl}#article` | reviewer, image, optional Blog FAQ fragment under the 2026-10-16 target, primary/additional service `about`, translation relation |
-| `media_page` / `actum_article` | `WebPage` | page-owned `Article` at `{canonicalUrl}#article` | external work through `about`, reviewer, services, dates and image |
-| `media_page` / `external_reference` | `WebPage` | external `CreativeWork` identified by required source URL | local `WebPage.about` service refs; no local Article and no invented external author |
-| `case_page` | `WebPage` | page-owned `Article` at `{canonicalUrl}#article`; shared real-matter `Thing` | lawyers, services, reviews, translation relation, image and dates |
+| `media_page` | `WebPage` | external `CreativeWork` identified by real source URL or local `#external-work` for explicit no-link state | local participant `mentions`, optional explicit review, local service `about`; no local Article or invented external author |
+| `case_page` | `WebPage` | page-owned `Article` at `{canonicalUrl}#article`; shared real-matter `Thing`; primary plus up to two coauthors in `author` | services, reviews, translation relation, image and dates; no Case reviewer |
 | `blog_collection_page` | `CollectionPage` | page-owned `ItemList` of published blog works | visible filters do not create entities |
-| `media_collection_page` | `CollectionPage` | page-owned `ItemList` of published media target works/pages | mode-specific target ids |
+| `media_collection_page` | `CollectionPage` | page-owned `ItemList` of localized Actum Media pages | external work remains the detail page's main entity |
 | `case_collection_page` | `CollectionPage` | page-owned `ItemList` of published case-study articles | no draft entries |
 
 The 2026-10-16 [editorial amendment](editorial-content-specification-2026-08-23.md) requires the Blog FAQ
@@ -184,8 +190,7 @@ Collection targets are exact:
 
 - blog cards target the localized page-owned `BlogPosting @id`;
 - case cards target the localized page-owned case-study `Article @id`;
-- `actum_article` media cards target the localized page-owned `Article @id`;
-- `external_reference` media cards target the localized Actum `WebPage @id`, because that is the real
+- media cards target the localized Actum `WebPage @id`, because that is the real
   navigable collection item; the external work remains that page's `mainEntity`;
 - lawyer cards target the shared `Person @id`, while `ListItem.url` uses the current locale's published
   lawyer-profile URL.
@@ -413,7 +418,7 @@ Required unit tests:
 - price modes and explicit service binding;
 - primary/additional service endpoints;
 - review primary itemReviewed versus topical about relations;
-- media representation modes;
+- editorial role/source choices and JSON-LD cases from the 2026-11-15 canonical validation matrix;
 - lawyer license/education/work/expertise relations;
 - validation severity and partial-preview behavior;
 - visible-content digest and `contentModifiedAt` behavior.
@@ -428,7 +433,7 @@ Required integration tests:
 - primary-UA gate blocks dependent locale/region publication;
 - intent binding and regional provider resolution;
 - review/aggregate changes and collection/list membership;
-- media mode migration/readiness;
+- legacy Media-mode preservation without inferred new authors/participants/review/no-link choices;
 - education-id locale consistency;
 - public graph never contains admin, localhost, develop, release, or Cloud Run hostnames.
 
@@ -456,11 +461,12 @@ Before lawyer-page JSON-LD is enabled:
 - require manual resolution where locale arrays are ambiguous rather than matching localized text;
 - preserve empty education lists as valid.
 
-Before media-page JSON-LD is enabled:
+For a later rollout of the 2026-11-15 editorial contract:
 
-- add required `representationMode` to the authoring/API contract;
-- do not infer values for existing pages;
-- require explicit classification before a new JSON-LD snapshot is published.
+- align authoring/DTO/consumer fixtures with the canonical role/source rules, not the removed Media modes;
+- do not infer new explicit choices from empty fields or rewrite old participant/author roles;
+- preserve old snapshots/history; a later normal publication uses the new saved selections and readiness;
+- follow the canonical compatibility boundary; this edit authorizes no data migration or graph backfill.
 
 Before any page-type rollout is enabled:
 

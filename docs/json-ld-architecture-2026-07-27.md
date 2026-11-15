@@ -7,6 +7,13 @@ normative for the first implementation. The exact implementation contract is com
 `docs/json-ld-implementation-requirements-2026-08-03.md`, including the accepted backfill and staged-rollout
 strategy.
 
+Editorial exception approved 2026-11-15: the
+[canonical Blog/Case/Media specification](editorial-content-specification-2026-08-23.md#17-json-ld)
+governs role attribution, source links, validation and compatibility. It supersedes conflicting older
+editorial rules here, including automatic corporate authors, Case coauthors as `contributor`, Case
+reviewers and two Media representation modes. Shared identity, snapshot and graph-ownership rules
+remain unchanged. This target amendment does not claim implementation or authorize graph backfill.
+
 JSON-LD is not yet implemented as a complete CMS/public-site contract.
 
 ## Decision 1: Graph ownership
@@ -397,8 +404,9 @@ Provider and geography follow the page variant:
   URL. The `Article` uses `genre: "Case study"`.
 - Every localized case `Article.about` points to the shared real-matter `Thing` and to the explicitly linked
   primary/additional legal `Service` entities.
-- The primary lawyer is `Article.author`; co-author lawyers are `Article.contributor` values; all use stable
-  `Person @id` references.
+- Under the 2026-11-15 editorial amendment, `Article.author` is an ordered array: the required primary
+  lawyer followed by up to two coauthors, all using stable `Person @id` references. Coauthors are not
+  `Article.contributor` values. Case has no new reviewer attribution or corporate-author fallback.
 - `Article.publisher` points to the global Actum organization.
 - Published Russian and English case articles use `translationOfWork` to reference the published primary
   Ukrainian case article while retaining independent localized page/article identifiers and content.
@@ -619,52 +627,37 @@ Provider and geography follow the page variant:
   automatically into a public `Person` node.
 - Internal CMS-user identifiers, names, email addresses, permissions, roles, and other account fields must
   not be exposed in public page payloads or JSON-LD.
-- When a blog or media publication has a selected public lawyer author, `Article.author` references that
-  lawyer's stable `Person @id`.
-- When no lawyer author is selected, including when an internal CMS user is recorded for workflow
-  attribution, `Article.author` references the global Actum `Organization`.
-- `Article.publisher` always references the global Actum organization, regardless of whether the public
-  author is a lawyer or Actum itself.
-- An internal CMS-user attribution must not create a personal public byline. Public UI and JSON-LD must
-  agree on corporate authorship in this case.
-- The existing no-author diagnostic may remain an editorial-quality warning meaning that no named lawyer
-  author was selected; it does not remove the corporate Actum author from the public graph.
+- Kind-specific attribution follows the [2026-11-15 role mapping](editorial-content-specification-2026-08-23.md#role-mapping-by-kind):
+  Blog has 1-3 lawyer authors OR an explicit Actum author choice; Case requires a primary lawyer and
+  allows up to two coauthors; Media has participants/review attribution, not local author roles.
+- A missing Blog author choice produces a warning and no invented `author`. It is not implicit Actum.
+  Internal workflow attribution cannot complete a missing public choice.
+- Actum remains the local publication publisher, independently of author/reviewer selection. External
+  Media works retain their external publisher; Actum does not become their author or publisher.
 - Public non-lawyer author profiles and identities are outside V1. They require a separate explicitly
   public data model and opt-in rather than reuse of authentication accounts.
-- A resolved and visibly rendered `legalReviewerLawyerRef` is emitted as `WebPage.reviewedBy`, referencing
-  the lawyer's stable public `Person @id`.
+- A resolved and visibly rendered Blog/Media reviewer is emitted as local `WebPage.reviewedBy` using
+  the existing stable Person identity; Media additionally allows explicit editorial Actum review through
+  the same global Organization identity. Case does not emit new reviewer attribution.
+- Blog reviewer must be outside the selected Blog authors. Media reviewer may also be a participant.
+  Empty review fields never imply Actum; missing Blog reviewer does not warn, missing both explicit
+  Media review choices does warn. These are product rules, not required Google Article properties.
 - A legal reviewer is not added to `Article.author`, `Article.contributor`, or `CreativeWork.editor` merely
   because they checked legal accuracy or completeness.
 - An unresolved or non-visible legal reviewer is omitted with an advisory diagnostic under Decision 23.
 
-## Decision 28: Explicit Media-Page Representation Modes
+## Decision 28: External Media Work (2026-11-15 Replacement)
 
-- Every `media_page` has an explicit required `representationMode` with exactly two V1 values:
-  `actum_article` and `external_reference`.
-- The backend must not infer the mode from `sourceUrl`, body length, populated sections, or other content.
-- In `actum_article` mode:
-  - the local `WebPage.mainEntity` references a page-owned `Article` identified as
-    `{canonicalUrl}#article`;
-  - the local article uses the authorship and publisher rules in Decision 27;
-  - when an external `sourceUrl` is present, an external `CreativeWork` uses that absolute URL as its
-    `@id` and is referenced from the local article through `about`;
-  - `isBasedOn` is not inferred merely because the local article discusses the external work;
-  - missing `sourceUrl` is an advisory warning and no anonymous external work is invented.
-- In `external_reference` mode:
-  - no page-owned local `Article` entity is created;
-  - `WebPage.mainEntity` is the external `CreativeWork` whose `@id` and `url` are the required absolute
-    `sourceUrl`;
-  - the external work's publisher is an inline `Organization` named from `sourceName`; Actum must not be
-    asserted as publisher or author of the external work;
-  - the local `WebPage.publisher` continues to reference the global Actum organization;
-  - a selected lawyer or internal CMS user must not be asserted as author of the external work.
-- V1 uses the generic `CreativeWork` type for an external media item. A more specific external type may be
-  introduced later only through an explicit sourced content-type field, not URL or title heuristics.
-- Missing or invalid `sourceUrl` blocks publication in `external_reference` mode. It remains a warning in
-  `actum_article` mode.
-- Existing published snapshots are preserved. Existing drafts may remain temporarily unclassified, but
-  their next publication is blocked until an editor explicitly selects a representation mode; migration
-  must not guess it.
+The older required `actum_article | external_reference` distinction is replaced by the single external
+Media model. The authoritative, nonduplicated requirements are:
+
+- [Media source, participants and review choices](editorial-content-specification-2026-08-23.md#media-fields);
+- [validation matrix](editorial-content-specification-2026-08-23.md#publication-role-validation-matrix-2026-11-15);
+- [external graph identity with a real URL or explicit no-link choice](editorial-content-specification-2026-08-23.md#media-original-work-and-source-link);
+- [compatibility and unchanged history/snapshots](editorial-content-specification-2026-08-23.md#compatibility-and-preservation).
+
+Media does not fabricate a locally authored Article. Participant mentions and review attribution belong
+to the local WebPage. There is no automatic role migration, new source URL or authorized graph rebuild.
 
 ## Decision 29: Multiple Editorial Service-Tree Relations
 
@@ -681,9 +674,9 @@ Provider and geography follow the page variant:
 - The endpoint of the primary line and every valid additional line are resolved to their stable published
   `Service @id`, deduplicated by identifier, and emitted in deterministic order with the primary endpoint
   first and additional endpoints following saved order.
-- For `BlogPosting`, local media `Article`, and case-study `Article`, all resolved endpoints are emitted
+- For `BlogPosting` and case-study `Article`, all resolved endpoints are emitted
   through `Article.about`.
-- For an external-reference media page, the local `WebPage.about` carries the resolved service endpoints;
+- For a Media page, the local `WebPage.about` carries the resolved service endpoints;
   the external `CreativeWork` must not be made about Actum services without source evidence.
 - For `Review`, the primary endpoint remains the sole `itemReviewed`. The primary and additional service
   endpoints may also be listed in `Review.about` together with the already accepted case and lawyer

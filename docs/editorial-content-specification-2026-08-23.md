@@ -20,6 +20,15 @@ defines independent Search and Selection modes, Enter-only search, explicitly ap
 newest-created-first ordering. It supersedes conflicting administrative list requirements below;
 public collections and public search remain outside this amendment.
 
+2026-11-15 amendment: the owner approved the publication-role, external-source, validation and JSON-LD
+rules in sections 7, 16, 17 and 21. They replace conflicting earlier five-author limits, automatic Actum
+fallbacks, organization-authored Cases, Case reviewers and the two Media representation modes,
+including those in the JSON-LD architecture/implementation documents and older import specifications.
+This is an approved target specification, not an implemented or deployed API change. No implementation,
+data migration, retranslation, publication, queue action or snapshot rewrite is authorized by this edit.
+Existing profile associations, search/filter semantics, selection, ordering and pagination are outside
+this amendment and must not be redesigned as a consequence of the new role names.
+
 ## 1. Objective
 
 Build one shared editorial mechanism for three content kinds:
@@ -49,7 +58,7 @@ Included:
 - structured publication metadata;
 - a typed ordered content builder;
 - optional Blog FAQ and automatic/manual Blog-only recommendations outside the builder;
-- authors and legal reviewer relations;
+- kind-specific lawyer authors, Media participants and explicit legal-review attribution;
 - multiple service-tree relations;
 - three independent public collections;
 - server-rendered pagination;
@@ -116,8 +125,9 @@ Rules:
 - Russian and English may be edited before Ukrainian publication, but cannot be published until the
   Ukrainian variant is published;
 - publishing or rolling back one locale never modifies another locale;
-- locale creation copies only structural relations: authors, reviewer, service-tree relations, cover,
-  external media relation, and ERP case reference;
+- locale creation copies the applicable structural relations and explicit choices: Blog author mode
+  and authors/reviewer, Case primary/coauthors, Media participants/review mode/source-link mode,
+  service-tree relations, cover, external media relation, and ERP case reference;
 - localized title, excerpt, SEO, body, case summary, and editorial dates are not copied as translations;
 - Blog FAQ text and recommendation settings are authored independently per locale; a new locale starts
   with FAQ disabled and automatic recommendations, without copying the source FAQ or manual selection;
@@ -245,60 +255,81 @@ diagnostics adopt the new boundary through their normal validation refresh.
 
 ### Blog contributors
 
-- zero to five ordered public lawyer authors;
-- the first selected author is primary for compact UI presentation;
-- no public lawyer authors means Actum Organization is the public author;
-- one optional lawyer legal reviewer;
-- no reviewer means `reviewedBy` is omitted and produces a warning;
-- CMS actor/editor identity remains private workflow data and never becomes public authorship.
+- Choose one to three ordered lawyer authors OR explicitly choose "Автор — Актум". Every personal
+  author is a lawyer selected from the existing CMS lawyer reference model. Non-lawyer personal author
+  profiles are not introduced.
+- The first selected lawyer remains primary for compact presentation; the other selected lawyers are
+  also authors, not reviewers. Duplicate author references or more than three authors are errors.
+- The Actum choice means corporate authorship, not unknown authorship. Show a visible Actum byline
+  linked to the localized About page through the existing route contract. It is mutually exclusive
+  with selected lawyer authors; a conflicting selection is an error, not a reason to discard lawyers.
+- If neither lawyer authors nor the explicit Actum choice is present, report a missing-authorship
+  warning. A selected reviewer does not remove that warning. An empty field is not an implicit Actum
+  choice, and JSON-LD must not manufacture an author in that state.
+- One optional lawyer legal reviewer may be selected. The reviewer must not be any of this Blog
+  publication's authors; an overlapping reference is an error. This is an Actum editorial rule, not
+  a Google requirement for two different people.
+- Missing Blog reviewer is valid and never produces a missing-reviewer warning, including when the
+  explicit author is Actum. Do not create a new warning for corporate authorship without a reviewer.
+- CMS actor/editor identity remains private workflow data and never becomes public authorship or
+  public review attribution.
 
 ### Media fields
 
-- `representationMode`: required enum `actum_article | external_reference`;
-- `sourceName`: required;
-- `sourceUrl`: required absolute URL for `external_reference`, recommended with warning for
-  `actum_article`;
-- `mediaPublishedAt`: the original external publication date.
+- Media describes material from an external source: an interview, comment, broadcast or other external
+  publication. Independent Actum articles belong in Blog. Media has no public author selector and no
+  "our article / external material" distinction. `representationMode` is not a new-authoring requirement
+  or a condition for role validation/JSON-LD; its old values remain historical data only.
+- `sourceName` is required in all cases. Missing/blank source name is a publication-blocking error.
+  A reviewer or participant does not replace the source.
+- The editor must explicitly provide one of: a valid absolute HTTP(S) `sourceUrl`, OR the mode
+  "Без посилання". Missing URL without the explicit no-link choice is an error, not a warning.
+  A malformed/unsafe populated URL is an error. The two choices are mutually exclusive; conflicting
+  populated URL/no-link state is an error, not silently normalized by deleting one choice.
+- Explicit "Без посилання" is a complete valid decision and produces no missing-link warning.
+  In this mode omit the original-material link/action; do not use `#`, the Actum detail URL, the source
+  homepage or another fabricated URL as a substitute.
+- `mediaPublishedAt` remains required for the described external work, preserving the existing
+  external-reference date requirement; it never replaces the local Actum page's `publishedAt`.
+  No new date policy, body rewrite, TOC-setting change or video-contract change is introduced here.
+- No public authors are assigned from Media participants, reviewers, CMS users or an empty author list.
+  The external source is not automatically asserted to be the personal author of the original work.
 
-For `actum_article`:
+#### Media participants
 
-- zero to five ordered public lawyer authors;
-- Actum is the fallback author;
-- one optional lawyer reviewer;
-- the local page contains an Actum-authored article about the media publication;
-- table of contents is optional and off by default.
+- A dedicated participants field contains zero to seven ordered lawyer references explicitly selected
+  by the editor. The editor's saved selection is authoritative; do not infer participants from text,
+  bylines, specialization, ERP associations or review attribution.
+- Empty participants are valid without a warning. More than seven or duplicate references are errors.
+- Label selected people as participants, not authors of the external work. Selection alone does not
+  assert that they wrote the text or qualify them as `Article.author` / `CreativeWork.contributor`.
+- A participant may also be the selected reviewer. The reviewer may instead be a lawyer outside the
+  participants list; that does not add them to the list or consume one of its seven places.
 
-For `external_reference`:
+#### Media review attribution
 
-- mode is selected explicitly and never inferred;
-- the external source is the author/publisher of the original work;
-- Actum and Actum lawyers are not represented as authors of that external work;
-- `sourceName`, an absolute `sourceUrl`, and `mediaPublishedAt` are required;
-- the public intro exposes a primary action to open the original material;
-- `content_builder` may be empty without warning;
-- table of contents is forced off.
+- Select one lawyer reviewer OR explicitly select "Перевірено редакцією Актум".
+- The organization option attests actual editorial checking of our local page's description,
+  quotations and presentation of the external material. It is not a claim to have checked the entire
+  external website, and is not merely publisher/responsible-party metadata.
+- Missing both choices produces one missing-review-attribution warning, which does not block
+  publication. An empty field never automatically means Actum reviewed the page.
+- Selecting both choices or multiple lawyer reviewers is an error. Public UI and JSON-LD use the
+  selected choice consistently; the organization option uses the existing global Actum identity.
 
 ### Case contributors and external relation
 
-- empty primary and coauthor selections use Actum Organization as the author;
-- selecting any coauthors requires exactly one explicit primary lawyer; no coauthor is silently promoted;
-- up to four ordered co-authors are allowed;
-- total lawyer count cannot exceed five;
-- duplicate lawyers are invalid;
-- one optional lawyer legal reviewer through `publication_meta.legalReviewerLawyerRef`, independent
-  of the primary/coauthors and not counted in the five-author limit (18 October 2026 amendment);
-- leaving the Case reviewer empty is valid and does not introduce a new missing-reviewer warning;
-  no primary lawyer, coauthor or CMS editor is automatically assigned to this role;
-- `erpCaseExternalId` is optional; missing value produces a warning.
-
-The CMS backend stores the selected reviewer reference in section/version JSON during creation or
-metadata Save. Case translations copy the structural reference. Public preview/publication uses the
-shared resolved `legalReviewer`/`WebPage.reviewedBy` contract below, without rewriting existing public
-snapshots. The ERP reference migrator does not own this CMS editorial selection; an import client may
-provide an explicit reviewer ID through the same CMS contract. The separate default-reviewer rule
-approved for article import is not automatically applied to Cases. No database schema migration or
-backfill is needed. CMS Front must offer the existing lawyer-reference picker for Case creation and
-metadata, and must not send the generated display object back as authored content.
+- Exactly one explicitly selected primary lawyer is required. No primary lawyer is a publication error,
+  including when the coauthor list is empty. Neither a coauthor nor Actum is silently promoted.
+- Zero to two ordered lawyer coauthors are allowed: at most three lawyers including the primary.
+  More than two coauthors, duplicate references or repeating the primary in coauthors are errors.
+- All personal authors/coauthors are lawyers. Organization-authored Cases are no longer a target
+  authoring option; the older corporate fallback does not satisfy the required primary lawyer.
+- Case has no reviewer role, selector, missing-reviewer diagnostic or new `WebPage.reviewedBy` relation.
+  Historical reviewer values remain in historical data; do not erase them from saved versions.
+- ERP source linkage remains a separate page-level system concern, not an authored-public-byline field.
+  Do not restore the obsolete missing-`erpCaseExternalId` section warning or expose a technical source ID
+  in public payloads/JSON-LD. The read-only ERP deal number and confirmed linkage rules are unchanged.
 
 ### Administrative ERP deal number (20 October 2026 clarification)
 
@@ -330,19 +361,27 @@ Preview and newly assembled snapshots for `blog_page`, `media_page` and `case_pa
 to the normalized `publication_meta` payload without changing its stored IDs:
 
 - `coverMediaUrl: string | null` and `cover: { mediaId, url, alt } | null`;
-- `authors: Array<{ id, fullName, roleLabel, publicPath, photoUrl }>`;
+- kind-appropriate public authors, participants and reviewer display objects, resolved from the saved
+  role selections; retain names, available photos and existing public-profile links;
 - `primaryLawyer`: the same person shape for the explicitly selected case primary author, otherwise `null`;
-- `legalReviewer: { id, fullName, credentials } | null`.
+- Blog reviewer: selected lawyer display data or `null`;
+- Media reviewer: selected lawyer display data, the explicitly selected Actum organization, or `null`;
+- Case reviewer: absent from new presentation semantics; historical raw content remains readable.
 
 The optional person fields are nullable. Names use the requested locale's public name with ERP source
 name fallback. Only publicly visible lawyers are resolved; links require a current published profile
 in that exact locale, and photos require available uploaded media. Missing selected references are
-omitted without substituting another lawyer or the organization. Actum fallback applies only when no
-lawyer was selected for Blog, Case or Actum-authored Media. Company-authored Cases support creation,
-saves, publication and translation; public presentation keeps `primaryLawyer: null`.
-External-reference Media exposes its source
-fields instead, with no Actum lawyer authors; its optional reviewer describes the local WebPage,
-not authorship of the external work. CMS editor identity remains private.
+omitted without substituting another lawyer or the organization. Reference errors retain their ordinary
+diagnostics; this amendment does not weaken reference checks. Actum authorship is used only for the
+explicit Blog organization choice. Media exposes its external-source data and editor-selected
+participants, not lawyer authors; review attribution describes the local WebPage, not authorship of the
+external work. CMS editor identity remains private.
+
+The public roles must be visible and distinguishable: author/coauthors for Blog/Case, participants for
+Media, and the chosen review attribution where applicable. Do not render an unresolved identity as an
+invented named expert, invent credentials, or treat an unavailable profile link as a new identity.
+Exact new DTO field names, schema revisions and compatibility fixtures must be agreed before a later
+implementation rollout; this specification does not claim the deployed API already returns them.
 
 Each content-builder image additionally receives `content.imageUrl: string | null`; its original
 `mediaId`, alt text, caption, source and link remain unchanged. Frontend renders this URL, not the ID.
@@ -424,8 +463,9 @@ Rules:
 - every block type has a typed content schema;
 - arbitrary fields, raw HTML, custom CSS, nested builders, and unknown block types are rejected;
 - an empty builder never blocks publication;
-- an empty builder produces a warning for blog, `media/actum_article`, and case;
-- an empty builder does not warn for `media/external_reference`.
+- an empty builder produces a warning for Blog and Case;
+- Media can describe an external work without a copied full body; an empty Media builder does not
+  produce a missing-body warning and does not select an authorship/representation mode.
 
 ### V1 block registry
 
@@ -599,8 +639,9 @@ Rules:
 - a missing logical parent is a warning, not a publication error;
 - backend owns stable anchors;
 - Blog TOC is always enabled; no resulting entries, including FAQ, produces a warning;
-- Media `actum_article` and Case TOC are optional and off by default;
-- Media `external_reference` TOC is always off;
+- Case TOC is optional and off by default;
+- existing Media TOC settings are preserved; this role/source amendment does not add a mode selector,
+  change TOC behavior or reset a saved TOC setting;
 - enabled TOC with no resulting entries produces a warning.
 
 ## 12. `editorial_cta`
@@ -781,11 +822,15 @@ type EditorialCardRelation = {
 
 Attribution by kind:
 
-- Blog: public authors or Actum fallback;
-- Media `actum_article`: public authors plus source name;
-- Media `external_reference`: external source and original URL;
-- Case: primary lawyer when selected and optional `resultLabel`. Organization-authored cases retain
-  nullable lawyer card fields; the Actum author object belongs to the detail payload, not a lawyer reference.
+- Blog: selected lawyer authors or explicitly selected Actum author; unresolved authorship is not a
+  corporate fallback;
+- Media: external source, a real original URL only when supplied, and selected participants rather
+  than invented author attribution;
+- Case: the explicitly selected primary lawyer and optional `resultLabel`. Missing primary remains a
+  readiness error, not organization-authored card data.
+
+These attribution rules do not change existing profile associations, filtering, card selection,
+ordering, pagination or layout. Do not redesign those mechanisms as part of the 2026-11-15 amendment.
 
 Service-tree card clarification (2026-09-10): primary relation IDs remain compatible, and each resolvable
 practice/service/problem also has the optional summary shown above. `home_cases` uses its `displayTitle`
@@ -864,7 +909,13 @@ Publication-blocking errors:
 - unsupported block type or invalid block payload;
 - broken media or entity references;
 - invalid or duplicate service-tree chains;
-- more than five authors, duplicate contributor relations, or case coauthors without an explicit primary lawyer;
+- Blog: more than three lawyer authors, duplicates, conflicting lawyer/Actum authorship, or reviewer
+  equal to any selected author;
+- Case: no explicit primary lawyer, more than two coauthors, duplicate lawyers or the primary repeated
+  in coauthors; the absence of coauthors does not waive the primary requirement;
+- Media: more than seven participants, duplicate participants, multiple/conflicting review choices,
+  missing source name, missing both a valid source URL and explicit no-link choice, invalid populated
+  source URL, or a conflicting URL/no-link choice;
 - missing type-required media or case fields;
 - enabled but incomplete CTA;
 - enabled but incomplete Blog FAQ or invalid Blog recommendation configuration;
@@ -875,12 +926,11 @@ Warnings:
 - missing cover;
 - empty builder where a warning is required;
 - no service-tree relations;
-- no named Blog, Case or local Media author when Actum fallback is used;
-- no reviewer for Blog/Media (Case reviewer remains optional without a new missing-reviewer warning);
+- Blog: neither lawyer authors nor an explicit Actum author choice, even when a reviewer is selected;
+- Media: neither a lawyer reviewer nor explicit "Перевірено редакцією Актум";
 - suspicious H2/H3/H4 hierarchy;
 - enabled TOC with no resulting entries, including the Blog FAQ entry;
 - optional weak/missing case-summary values;
-- missing recommended local-media source URL;
 - empty published collection.
 
 Missing or disabled optional Blog FAQ and an empty recommendation result do not themselves produce
@@ -890,32 +940,193 @@ the editor's selection.
 Warnings never block publication. Frontend displays diagnostics returned by backend and must not recreate
 the rules.
 
+### Publication-role validation matrix (2026-11-15)
+
+| Kind / saved state | Result for these role/source rules |
+|---|---|
+| Blog, 1-3 distinct lawyer authors, no reviewer | Valid; no missing-reviewer warning |
+| Blog, explicit Actum author, no reviewer | Valid; no missing-author or missing-reviewer warning |
+| Blog, no author choice, with or without reviewer | Missing-authorship warning; never implicit Actum |
+| Blog, reviewer is any author | Error |
+| Blog, more than 3 authors / duplicates / lawyers plus Actum choice | Error |
+| Case, 1 primary and 0-2 distinct other coauthors | Valid; no reviewer required |
+| Case, no primary, with or without coauthors / historical Actum choice | Error |
+| Case, more than 2 coauthors / duplicates / primary also coauthor | Error |
+| Media, 0-7 distinct participants | Valid participant count; empty list has no warning |
+| Media, reviewer is a participant or a different lawyer | Both valid |
+| Media, explicit editorial Actum review | Valid review choice; no missing-review warning |
+| Media, no reviewer and no explicit editorial Actum review | Warning; do not insert Actum |
+| Media, multiple reviewers or lawyer plus organization review | Error |
+| Media, more than 7 participants / duplicate participants | Error |
+| Media, source name missing/blank, in either link mode | Error |
+| Media, source name plus valid HTTP(S) URL, no no-link choice | Valid source choice |
+| Media, source name plus explicit no-link choice, no URL | Valid; no missing-link warning |
+| Media, neither URL nor explicit no-link choice | Error, not warning |
+| Media, populated invalid URL / conflicting URL and no-link choice | Error |
+
+"Valid" above concerns these rules only; ordinary SEO, permissions, reference integrity and all other
+applicable readiness checks still apply. Required fields/limits are our editorial policy, not a claim
+that Google requires these exact people, counts or source choices.
+
+Incomplete authorized drafts remain saveable and re-openable with their diagnostics. Content-readiness
+errors block publication, not draft persistence; warnings block neither. This does not relax request
+schema/type/security checks, safe-save concurrency tokens, immutable history, permissions, ERP workflow,
+SEO approvals or exact prepare/confirm/commit checks. Section, page, matrix, list and menu diagnostics
+must reuse the same saved diagnostic facts and existing aggregation rules, not invent parallel rules.
+
+Do not emit a warning solely because a valid Blog lacks a reviewer, Blog explicitly uses Actum,
+Media participants are empty, Media explicitly has no source link, or a Case has no reviewer.
+
 ## 17. JSON-LD
 
-Backend builds JSON-LD from the published snapshot. Frontend inserts the ready graph and does not infer
-semantics.
+Backend builds preview JSON-LD from the corresponding resolved preview and captures publication JSON-LD
+from the exact selected publication inputs. The ready graph is stored in the immutable published
+snapshot. Frontend inserts it and does not infer semantics or rebuild roles from live reference data.
 
 Types:
 
 - Blog detail: `BlogPosting`;
-- Media `actum_article`: `Article`;
-- Media `external_reference`: local `WebPage` whose `mainEntity` references the original external work by
-  stable external `@id`;
+- Media: local `WebPage` describing an external `CreativeWork`; no locally owned `Article` is fabricated
+  from the former `actum_article` value;
 - Case: `Article` whose `about` includes a stable case-matter `Thing`;
 - Collections: `CollectionPage` plus `ItemList`.
 
-Rules:
+### Identity and truthful visible attribution
 
 - Actum is referenced through one global Organization `@id`, not duplicated as a new organization on every
-  page;
-- lawyers use stable public `Person @id` values;
-- up to five authors are emitted as an ordered `author` array;
-- a selected reviewer is emitted through `reviewedBy` and is not silently converted to an author;
+  page or replaced with the localized About page's `WebPage @id`. The About link identifies the company
+  to readers; it is not a different author/reviewer organization.
+- Lawyers use the existing stable public `Person @id` contract, not a new identity per role, locale or
+  appearance. Include supported name/profile information matching visible resolved attribution; do not
+  invent profile URLs or qualifications. Existing profile publication/access rules are unchanged.
+- For Media participant/reviewer overlap, both relations reference the same Person. Actum may be the
+  local publisher and the explicitly selected reviewer through the same global Organization identity.
+- `reviewedBy` belongs on the local `WebPage` (the wrapper for Blog as well as Media), not on the
+  `Article`/`BlogPosting` or the external work. Case does not gain this relation.
+- Review attribution describes an actual accuracy/completeness check of the local material. Mere
+  publisher responsibility, an empty field or a CMS operation is not evidence of a review.
+- Roles represented in JSON-LD must match visible attribution on that page. A reviewer is never
+  silently converted to an author, contributor or external publisher; a participant is not an author.
+- Internal CMS user identities are never exposed. Optional unknown facts are omitted, not fabricated.
+
+### Role mapping by kind
+
+| Kind / explicit role | JSON-LD relation |
+|---|---|
+| Blog, 1-3 lawyer authors | Ordered `BlogPosting.author` Person references |
+| Blog, explicit Actum author | `BlogPosting.author` references global Actum Organization |
+| Blog, no author choice | Omit `author`; retain the editorial warning; do not invent a blocking Google-required-author error |
+| Blog, selected distinct lawyer reviewer | Local `WebPage.reviewedBy` references that Person |
+| Blog, no reviewer | Omit `reviewedBy` without a missing-reviewer warning |
+| Case | Ordered `Article.author`: primary first, then 0-2 coauthors; no `reviewedBy` |
+| Media participants | Local `WebPage.mentions` references selected, visibly represented Persons |
+| Media lawyer reviewer | Local `WebPage.reviewedBy` references the selected Person |
+| Media explicit editorial Actum review | Local `WebPage.reviewedBy` references global Actum Organization |
+| Media no review choice | Omit `reviewedBy` and retain the nonblocking editorial warning |
+
+The dedicated Media selection is the participant source of truth. `mentions` represents their visible
+presence without asserting authorship of the external text. Do not emit Schema.org `participant` on
+Article/WebPage or infer `contributor`, `author`, `speaker` or an external review from this selection.
+No new finer-grained interview/guest/speaker taxonomy or automatic text analysis is introduced.
+Case coauthors are authors in `Article.author`, not a downgraded `contributor` list.
+
+### Media original work and source link
+
+- The local `WebPage.publisher` references Actum. Its `mainEntity` references the described external
+  `CreativeWork`. The external work's publisher is the named source, not Actum or the selected lawyers.
+  Do not guess the external personal author from source name, participants or review attribution.
+- With a real source URL, use that validated absolute URL for the external work's `url` and stable
+  external `@id`. The local canonical and `WebPage @id` remain the Actum detail page.
+- With explicit "Без посилання", omit external `url` and identify the described work structurally as
+  `{localCanonicalUrl}#external-work`. This fragment is a local graph identifier, not a claimed
+  original-source URL. Do not turn it into a visible "open original" link or an external canonical.
+- The source's name remains available in both modes. Optional original-work title/date/type may only
+  come from known source facts; do not manufacture them or infer NewsArticle/VideoObject from a URL.
+- Local public dates and external-work dates keep their distinct existing meanings.
+
+Other preserved rules:
+
 - all primary and additional service-tree endpoints become deduplicated `about` references;
+- for Media, Actum service relations belong to the local WebPage, not invented external-work topics;
 - canonical URL, public dates, cover, and `BreadcrumbList` are included when applicable;
 - absent optional properties are omitted;
-- internal CMS user identity is never exposed;
-- the external source, not Actum, owns the original work for `external_reference`.
+- public graph assembly does not alter profile associations, filters or collection selection/order;
+- an editorial warning cannot become a publication-blocking graph error merely because Google lists
+  a property as recommended; actual reference, safety and graph-integrity errors remain enforced.
+
+### Illustrative JSON-LD fragments
+
+These fictional URLs illustrate graph relations, not deployed payloads or real people. Complete graphs
+retain the existing website, organization, person, breadcrumb and page metadata contracts.
+
+Blog with explicit corporate author and no reviewer (no role warning):
+
+```json
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    { "@type": "Organization", "@id": "https://example.org/#organization", "name": "Актум" },
+    { "@type": "WebPage", "@id": "https://example.org/blog/example#webpage", "mainEntity": { "@id": "https://example.org/blog/example#article" } },
+    { "@type": "BlogPosting", "@id": "https://example.org/blog/example#article", "author": { "@id": "https://example.org/#organization" } }
+  ]
+}
+```
+
+Case with primary and one coauthor (no reviewer):
+
+```json
+{
+  "@type": "Article",
+  "@id": "https://example.org/cases/example#article",
+  "author": [
+    { "@id": "https://example.org/lawyers/lawyer-a#person" },
+    { "@id": "https://example.org/lawyers/lawyer-b#person" }
+  ]
+}
+```
+
+Media with explicit no-link choice and one person in both participant and reviewer roles:
+
+```json
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebPage",
+      "@id": "https://example.org/media/example#webpage",
+      "publisher": { "@id": "https://example.org/#organization" },
+      "mainEntity": { "@id": "https://example.org/media/example#external-work" },
+      "mentions": [{ "@id": "https://example.org/lawyers/lawyer-a#person" }],
+      "reviewedBy": { "@id": "https://example.org/lawyers/lawyer-a#person" }
+    },
+    {
+      "@type": "CreativeWork",
+      "@id": "https://example.org/media/example#external-work",
+      "publisher": { "@type": "Organization", "name": "Example external source" }
+    }
+  ]
+}
+```
+
+For editorial Actum review, change only `reviewedBy` to the existing Actum Organization reference. For a
+real source URL, the external work identity/URL uses that source URL instead of the local fragment.
+Neither variant introduces Media authors or changes the selected participants.
+
+### Google / Schema.org interpretation
+
+These roles are truthful editorial attribution, not an E-E-A-T certificate or a promised ranking boost.
+Google's Article documentation allows Person or Organization authors and does not require a separate
+reviewer; our limits, warnings and Blog author/reviewer separation are product rules. Structured data
+must represent visible content accurately. `reviewedBy` accepts Person/Organization on WebPage; the
+general participant reference above uses `mentions`, not an unsupported Article participant field.
+
+Primary references, checked 2026-11-15:
+
+- [Google: Article structured data](https://developers.google.com/search/docs/appearance/structured-data/article).
+- [Google: helpful, reliable content](https://developers.google.com/search/docs/fundamentals/creating-helpful-content).
+- [Google: structured-data policies](https://developers.google.com/search/docs/appearance/structured-data/sd-policies).
+- [Schema.org: reviewedBy](https://schema.org/reviewedBy), [mentions](https://schema.org/mentions),
+  [contributor](https://schema.org/contributor), [participant](https://schema.org/participant).
 
 ## 18. Archive And Unpublish
 
@@ -968,10 +1179,81 @@ Site frontend owns:
 1. Align documentation and contracts.
 2. Complete the common backend foundation.
 3. Deliver Blog detail end-to-end through backend, CMS, and site frontend.
-4. Extend the proven contour to both Media modes.
+4. Extend the proven contour to the external-source Media contract.
 5. Extend it to Cases and `case_summary`.
 6. Complete all three collection pages and automatic refresh behavior.
 7. Deliver archive/unpublish as a bounded late slice.
 8. Run contract, integration, end-to-end, accessibility, and manual acceptance checks.
 
 This sequence intentionally proves the shared mechanism on one kind before multiplying it across all three.
+
+## 21. 2026-11-15 Compatibility, Scope And Acceptance
+
+This amendment changes the target role/source/readiness/graph contract only. Do not implement it as a
+display-label-only change over old author arrays or as frontend-only validation.
+
+### Compatibility and preservation
+
+- Keep existing saved versions, audit history, original import evidence and immutable published
+  snapshots intact. Do not clear historical Case reviewers, corporate Case authors, Media authors or
+  `representationMode` values merely because new authoring no longer uses those roles.
+- Do not truncate older author/participant arrays to meet the new limits. Expose the current draft's
+  readiness problem and require an explicit editorial choice for a later normal publication.
+- Do not automatically turn historical Media authors into participants, no-author into explicit Actum,
+  no-reviewer into editorial Actum review, or a missing URL into "Без посилання". Existing data is not
+  evidence of a new explicit choice. Any demonstrably valid compatibility mapping needs documented
+  provenance and fixtures; ambiguous data remains unresolved rather than guessed.
+- Reading/opening history and saving unrelated draft text must not rewrite or silently repair these
+  choices. Current working-copy readiness is reported under the new rules after their later rollout;
+  incomplete drafts remain saveable. Historical results are not rewritten as if the new policy had
+  existed when those versions were saved.
+- Existing published pages keep serving their old snapshots until a separately authorized normal
+  lifecycle action. No mass republication, graph backfill, body transfer from Media to Blog, translation,
+  import rerun or queue restart is part of this documentation change.
+- Before implementation, freeze updated DTO/schema/examples and backward-compatibility behavior for
+  affected CMS/site/import/ERP clients. Existing ERP article commands, ownership, idempotency receipts,
+  recovery and authorization must not be silently changed by this role amendment. No ERP change or
+  migration is implemented/authorized here.
+- Profile associations, list filters/search, public selection algorithms, card counts/order/pagination,
+  body/video/TOC editing, dates and publication/SEO confirmation protocol remain outside scope except
+  for replacing the explicitly superseded role/source requirements above. No new editorial approval
+  workflow, Google quota or runtime flag is introduced by this specification.
+
+### Responsibilities for a later implementation
+
+- CMS-back: enforce the common role/source policy, return saved diagnostics on all existing aggregation
+  levels, resolve distinct display roles, capture truthful JSON-LD in preview/publication and provide
+  compatibility fixtures without rewriting old data.
+- CMS-front: provide the explicit choices and correct per-kind limits/labels, show backend errors and
+  warnings, preserve incomplete drafts/history and do not infer Actum or participants from blank data.
+- Site-front: render authors/participants/review attribution and source/no-link state as supplied; use
+  ready links and the backend graph, without inventing a source URL, expert identity or semantic role.
+- Integration work is a later separately scoped delivery. This commit is documentation only.
+
+### Required acceptance coverage
+
+1. Cover every row of the section 16 role/source matrix, including Blog limits 3/4, Case coauthors 2/3,
+   Media participants 0/7/8, duplicates, absent primary and both explicit organization choices.
+2. Blog reviewer overlapping either first or later author is an error; a different reviewer is valid.
+   Corporate Blog without reviewer has neither missing-author nor missing-reviewer warning.
+3. Media reviewer may be inside/outside participants. Missing review choice warns; explicit editorial
+   Actum review does not. Empty participants do not warn and do not trigger an author fallback.
+4. Source name is required with a URL and in no-link mode. Test valid URL, malformed URL, neither
+   decision, both conflicting decisions and explicit no-link without URL. No missing-link warning or
+   fake original-material action appears for the last valid state.
+5. Save/reopen an incomplete draft with readiness errors; publication remains blocked by errors and
+   allowed past these checks for warnings. Permissions, unsafe/malformed request checks and exact
+   prepare/confirm/commit protections still pass their regression tests unchanged.
+6. Validate preview and newly captured graph parity with visible attribution: ordered Blog authors,
+   explicit corporate author, Case primary/coauthors, participant mentions and all review choices.
+   Check no Case reviewer, no fake Media author, no arbitrary participant/contributor mapping, one
+   Person identity for overlapping Media roles and one global Actum identity across roles/locales.
+7. Test Media external identity with and without a real URL. The no-link local graph fragment is never
+   used as an external link/canonical. External publisher and local publisher are not confused.
+8. Test legacy five-author data, organization-authored Cases, saved Case reviewers and both old Media
+   modes. Reads/history remain intact, unrelated draft saves do not silently drop values, no new
+   explicit choice is inferred, and publication readiness explains the actual missing/conflicting data.
+9. Confirm UA/RU/EN labels/identities, shared saved-diagnostic aggregation and no changes to existing
+   profile bindings, filter/search behavior, selection, order, pagination, body or dates.
+10. Prove that documentation/rollout itself performs no data write, publication or backfill. A later
+    implementation must separately report schema/client readiness and its authorized rollout checks.

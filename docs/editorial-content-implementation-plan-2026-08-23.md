@@ -1,5 +1,16 @@
 # Editorial Content Implementation Plan - 2026-08-23
 
+## Approved Publication Roles Follow Up 2026-11-15
+
+The [canonical editorial specification](editorial-content-specification-2026-08-23.md#7-publication_meta)
+now replaces this plan's older five-author limits, automatic Actum fallback, organization-authored
+Cases, Case reviewer and two Media modes. Its [validation](editorial-content-specification-2026-08-23.md#16-validation-boundary),
+[JSON-LD](editorial-content-specification-2026-08-23.md#17-json-ld) and
+[compatibility/acceptance](editorial-content-specification-2026-08-23.md#21-2026-11-15-compatibility-scope-and-acceptance)
+rules govern a future implementation. The older dated delivery details below remain historical.
+This documentation update starts no implementation, migration, import rerun or publication, and does
+not change existing profile associations, filters or ordering.
+
 ## Approved CMS Search And Selection Follow Up 2026-10-19
 
 The owner approved the

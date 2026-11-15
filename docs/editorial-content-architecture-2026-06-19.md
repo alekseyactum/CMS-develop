@@ -3,6 +3,12 @@
 > Historical architecture baseline. The finalized normative product contract is
 > [`editorial-content-specification-2026-08-23.md`](editorial-content-specification-2026-08-23.md).
 > Where the documents conflict, the 2026-08-23 specification takes precedence.
+> Its approved 2026-11-15 amendment replaces the older author limits/fallbacks, Case reviewer,
+> Media modes, source-link and role-validation rules below. See its
+> [role contract](editorial-content-specification-2026-08-23.md#7-publication_meta),
+> [JSON-LD mapping](editorial-content-specification-2026-08-23.md#17-json-ld) and
+> [compatibility boundary](editorial-content-specification-2026-08-23.md#21-2026-11-15-compatibility-scope-and-acceptance).
+> This is a target specification update, not implementation or permission to rewrite historical data.
 
 This document fixes the target backend/content architecture for the editorial publication domain:
 

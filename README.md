@@ -45,6 +45,9 @@ repositories.
   [office map placeholders and Google launch limits](docs/office-map-placeholders-and-google-budget-specification-2026-11-11.md),
   [reference data and public read models](docs/reference-data-and-runtime-model.md).
 - Blog, media and cases: [editorial content requirements](docs/editorial-content-specification-2026-08-23.md),
+  including [the approved 2026-11-15 author/participant/reviewer, source, validation and JSON-LD rules](docs/editorial-content-specification-2026-08-23.md#7-publication_meta)
+  and [compatibility / acceptance scope](docs/editorial-content-specification-2026-08-23.md#21-2026-11-15-compatibility-scope-and-acceptance)
+  (specification only; implementation not started by this update),
   [editorial architecture](docs/editorial-content-architecture-2026-06-19.md),
   [CMS publication search and filters](docs/cms-publication-search-and-filter-specification-2026-10-19.md),
   [article import](docs/article-import-specification-2026-10-16.md),
