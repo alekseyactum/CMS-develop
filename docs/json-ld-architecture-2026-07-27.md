@@ -14,6 +14,12 @@ editorial rules here, including automatic corporate authors, Case coauthors as `
 reviewers and two Media representation modes. Shared identity, snapshot and graph-ownership rules
 remain unchanged. This target amendment does not claim implementation or authorize graph backfill.
 
+The [approved public-detail presentation](editorial-content-specification-2026-08-23.md#6a-public-detail-presentation-2026-11-15)
+overrides Decision 30's requirement to visibly render `contentModifiedAt`: Blog, Media and Cases show
+only the local `Опубліковано` date. Stored/snapshot modification dates, `dateModified` generation and
+the external work's `mediaPublishedAt` retain their meanings. Sidebar placement, portrait/link styles,
+and removal of new-authoring `confidentialityNote` do not change Person/Organization/graph identities.
+
 JSON-LD is not yet implemented as a complete CMS/public-site contract.
 
 ## Decision 1: Graph ownership
@@ -707,7 +713,9 @@ to the local WebPage. There is no automatic role migration, new source URL or au
 - Changing the visible editorial `publishedAt` value after first publication is a material change and
   advances `contentModifiedAt`.
 - Whenever `dateModified` is emitted in JSON-LD, the same `contentModifiedAt` value must be present in the
-  public snapshot and visibly rendered on the page. Editors cannot set it manually.
+  public snapshot. The 2026-11-15 public-presentation amendment supersedes the older requirement to
+  visibly render it: Blog, Media and Cases show only local `publishedAt`. Editors cannot set the
+  modification date manually; its persistence and graph-generation rules remain unchanged.
 - All emitted dates use ISO 8601 timestamps with an explicit timezone.
 
 ## Decision 31: Locale-Owned Editorial Dates

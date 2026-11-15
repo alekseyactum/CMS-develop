@@ -9,6 +9,11 @@ conflicting author limits, fallback authors, Case reviewers, Media modes and aut
 interpretations below. This remains a dated audit of the old implementation, not evidence that the
 new contract has been implemented or a reason to rewrite historical/public data.
 
+Its [public-detail presentation follow-up](editorial-content-specification-2026-08-23.md#6a-public-detail-presentation-2026-11-15)
+also governs the future sidebar, portrait/link styles, visible date, card-only covers and Case fields.
+The [designer task](editorial-publication-designer-task-2026-11-15.md) lists the required sketch states;
+the older rendering gaps below remain a historical audit, not acceptance of the new presentation.
+
 Delivery order:
 
 - [`editorial-content-implementation-plan-2026-08-23.md`](editorial-content-implementation-plan-2026-08-23.md)

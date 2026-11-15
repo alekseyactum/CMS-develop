@@ -23,6 +23,13 @@ The [compatibility/acceptance boundary](editorial-content-specification-2026-08-
 requires unchanged historical versions and published snapshots. This is a target change only; the
 older implementation-state and rollout records below do not authorize its implementation or backfill.
 
+The [public-detail presentation](editorial-content-specification-2026-08-23.md#6a-public-detail-presentation-2026-11-15)
+shows only local `publishedAt` on Blog/Media/Case pages. This overrides older visible-modification-date
+requirements, not stored/snapshot dates, `dateModified` generation or original-Media date semantics.
+Moving Case court/number visually left keeps `case_summary` as their source. Person/Organization
+identities and role relations remain unchanged; unlinked Media participant names do not erase their
+existing Person identity. No new confidentiality graph field or historical-data rewrite is introduced.
+
 ## Implementation State
 
 As of 2026-08-06, the first `cms-back` implementation is deployed to both `develop` and `release`:

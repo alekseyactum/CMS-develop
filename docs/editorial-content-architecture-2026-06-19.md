@@ -9,6 +9,10 @@
 > [JSON-LD mapping](editorial-content-specification-2026-08-23.md#17-json-ld) and
 > [compatibility boundary](editorial-content-specification-2026-08-23.md#21-2026-11-15-compatibility-scope-and-acceptance).
 > This is a target specification update, not implementation or permission to rewrite historical data.
+> The approved [public-detail presentation](editorial-content-specification-2026-08-23.md#6a-public-detail-presentation-2026-11-15)
+> also supersedes the older compact-author treatment, visible modification-date requirement and target
+> `confidentialityNote` below. Court/number retain `case_summary` ownership while rendering left;
+> result/term notes remain right. Stored dates, saved versions and immutable snapshots are preserved.
 
 This document fixes the target backend/content architecture for the editorial publication domain:
 

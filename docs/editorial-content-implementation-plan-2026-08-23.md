@@ -11,6 +11,15 @@ rules govern a future implementation. The older dated delivery details below rem
 This documentation update starts no implementation, migration, import rerun or publication, and does
 not change existing profile associations, filters or ordering.
 
+The same approval includes the
+[public-detail field and sidebar contract](editorial-content-specification-2026-08-23.md#6a-public-detail-presentation-2026-11-15)
+and [designer task](editorial-publication-designer-task-2026-11-15.md). Future implementation uses
+expanded authors, compact reviewers/unlinked participants, only the visible local publication date,
+source-name-only original links, terminal topical entries and left-rendered Case court/number still
+owned by `case_summary`. Remove `confidentialityNote` from new authoring/presentation while preserving
+legacy values/history. Older primary-action or date-display wording below is superseded, not a new
+permission to run imports, rewrite snapshots or deploy.
+
 ## Approved CMS Search And Selection Follow Up 2026-10-19
 
 The owner approved the

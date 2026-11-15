@@ -29,6 +29,14 @@ data migration, retranslation, publication, queue action or snapshot rewrite is 
 Existing profile associations, search/filter semantics, selection, ordering and pagination are outside
 this amendment and must not be redesigned as a consequence of the new role names.
 
+2026-11-15 public-presentation follow-up: section 6a fixes the visible detail-page fields and their
+per-kind states for the potential-client audience. It supersedes earlier compact-author presentation,
+visible modification dates and automatic detail-cover rendering. Court and judicial number stay owned
+by `case_summary` but render in the left metadata sidebar. `confidentialityNote` is removed from the
+target authoring/public model, not erased from history. The linked
+[designer task](editorial-publication-designer-task-2026-11-15.md) specifies the required sketch states.
+This follow-up authorizes documentation publication only, not application changes or deployment.
+
 ## 1. Objective
 
 Build one shared editorial mechanism for three content kinds:
@@ -206,15 +214,23 @@ Editing rules:
 `publication_meta` is the only source for the public intro and collection card. A separate editable intro
 section must not duplicate the same values.
 
-Public render order is fixed in V1:
+The main reading flow is fixed in V1; section ownership does not require all fields of a section to
+occupy one visual column:
 
-1. public intro from `publication_meta`;
-2. `case_summary` for a case;
+1. public title and excerpt from `publication_meta`;
+2. the right-column portion of `case_summary` for a case;
 3. generated table of contents when applicable;
 4. `content_builder`;
 5. enabled `blog_faq` for Blog, immediately after the builder;
 6. enabled `editorial_cta`;
-7. runtime service-hierarchy section.
+7. existing runtime service-hierarchy content, except a duplicate of the same selected topical
+   endpoint list already presented as sidebar metadata.
+
+The public date, attribution, Media source, selected service-hierarchy endpoints, and Case court/number
+are displayed in the separate metadata sidebar under section 6a. Do not introduce a second automatic
+copy of that same selected endpoint list after the body. Other existing runtime content and behavior
+are unchanged. This is presentation of the existing section data, not an extra editable metadata
+section or a change to section publication/history ownership.
 
 For Blog, the body and FAQ belong to the same HTML `article` on the same URL. Recommendations are
 complementary `aside` content, not an article-body block; responsive placement belongs to the frontend
@@ -222,6 +238,109 @@ template. Separate CMS sections do not imply separate public pages or separate H
 
 Missing optional parts are omitted without empty placeholders. Editors reorder blocks inside
 `content_builder`, not whole page sections.
+
+## 6a. Public Detail Presentation 2026-11-15
+
+### Audience and shared intro
+
+The primary reader is a potential client without legal training. Blog helps the reader understand a
+situation; Cases show actual work and its circumstances/results; Media identifies external material
+and Actum's participation. These are three detail templates, not three labels over an identical byline.
+
+Every detail page displays its publication title as H1 and its existing `publication_meta.excerpt`
+as the short announcement below the title. Do not introduce a second editable intro. One or two clear
+sentences are an editorial recommendation, not a new structural length/validation requirement. Do not
+automatically insert the excerpt again into the body.
+
+The publication cover is used for collection/recommendation cards, not automatically as a detail-page
+hero or first body image. Images inside the detail content come from authored builder image blocks.
+Keep the cover reference and existing card contract; Case covers are optional, and this decision does
+not make Blog/Media covers mandatory or redesign missing-cover card behavior.
+
+The only visible publication date is this Actum page's `publishedAt`, labelled `Опубліковано` in UA
+and equivalently localized in RU/EN. Show a localized calendar date without time. Do not show an
+`Оновлено` row or a separate original-Media publication date. Preserve stored modification/source dates
+and their existing snapshot/JSON-LD meanings; this is a display rule, not deletion or date substitution.
+
+### Left metadata sidebar by page type
+
+On desktop, the left metadata column is sticky; the main content remains on the right. Its fields are:
+
+| Page type | Sidebar fields and conditions |
+| --- | --- |
+| `blog_page` | `Опубліковано`; the selected lawyer authors OR explicit Actum author; selected reviewer if present; selected topical endpoints |
+| `media_page` | `Опубліковано`; source name; selected participants if any; selected lawyer review OR explicit Actum editorial review, if present; selected topical endpoints |
+| `case_page` | `Опубліковано`; primary lawyer author and selected coauthors; `Суд` if `case_summary.courtName` is filled; `Номер судової справи` if `case_summary.caseNumber` is filled; selected topical endpoints |
+
+Court and judicial number are independent optional text rows, not automatically generated court/registry
+links. They occur only on Cases. Read them from the exact effective `case_summary` version used by the
+preview/publication; do not copy them into `publication_meta`, a second editable section or live ERP
+lookups. Do not automatically repeat the same rows in the right summary. The internal ERP deal number
+and technical source IDs remain non-public and must never substitute for the judicial number.
+
+The right column retains the other Case-summary fields, including `resultLabel` and `timelineNote`,
+and the existing main-content sections. Those two fields are not sticky-sidebar metadata. The new
+target contains no `confidentialityNote`; preservation of historical values is defined in sections 9/21.
+
+### People and their links
+
+Use the resolved localized public display names and actual photos. The role limits/selections in
+section 7 are unchanged. Render all selected, resolved people in saved order, not only the first person
+with a `+N` replacement for the rest.
+
+| Role | Public treatment |
+| --- | --- |
+| Blog lawyer author or coauthor | Expanded treatment: large rectangular portrait, public name and mandatory `Адвокат` label. Use `Автор` / `Автори` as appropriate. All authors receive the expanded treatment, not just the first. |
+| Case primary author and coauthors | The same expanded portrait/name/`Адвокат` treatment. Primary is first, labelled `Автор матеріалу`; additional people are `Співавтори`. These lawyers actually handled the case, as defined in section 7. |
+| Lawyer reviewer on Blog or Media | Compact round photo and public name under `Перевірено`; no profession, qualifications, biography or large author portrait. |
+| Media participant | Compact round photo and public name under `Учасники матеріалу`; no profession/biography or profile link. These are not authors. |
+| Explicit Actum Blog author | Distinct corporate-author appearance to be designed separately; visible Actum authorship, not an invented lawyer portrait or `Адвокат` label. |
+| Explicit Actum Media review | `Перевірено редакцією Актум`, not an author or participant fallback. |
+
+Author/coauthor and reviewer names link to their current published profile in the exact page locale
+when available; otherwise show the name as text. Media participants remain unlinked even if a profile
+exists. Do not fabricate URLs, photos, credentials or identities. An absent optional photo needs a
+neutral design treatment without changing identity or creating a new publication requirement.
+
+Whenever Actum appears as author or editorial reviewer, Actum is a link to the localized About page
+through the existing resolved-route contract. The designer chooses its corporate-author style; the
+link/identity and explicit-choice semantics are fixed.
+
+A Media lawyer selected as both participant and reviewer retains both distinct role presentations:
+the participant entry is unlinked and the reviewer name links when a profile is available. Do not
+deduplicate away a role or turn every participant into a linked author. The underlying Person identity
+remains the same; public presentation does not change JSON-LD role mapping.
+
+### Media source and topical endpoints
+
+Only Media has the separate `Джерело` row. Display its supplied source name. With a real `sourceUrl`,
+the name itself links to that specific original material, not a guessed source homepage. Do not add
+a separate `Переглянути оригінал` button. With explicit `Без посилання`, show the name as plain text
+with no disabled action, `#`, local-page substitute or other fabricated URL. Source citations authored
+inside Blog/Case body blocks are not prohibited by the absence of this Media-specific row.
+
+All three kinds use the sidebar heading `За темою матеріалу`, equivalently localized. Each selected
+service-tree chain produces one entry for its terminal endpoint: practice, service or problem. Do not
+show the entire ancestry or automatically add parent entries. A parent explicitly selected as a separate
+chain remains a separate entry. This uses the existing relations, not a new tag system.
+
+Place the primary chain endpoint first, then all additional endpoints in saved order. Use readable
+localized public names, not administrative abbreviations, UUIDs or source codes. A target with a
+published page in the exact locale is a link via the resolved route; otherwise retain its name as
+plain text, without cross-locale fallback or a frontend-built URL. Display every valid selected entry;
+do not introduce a new product-level relation limit or alter matching/filter/selection algorithms.
+
+### Empty and responsive states
+
+Omit absent optional people groups, reviewer rows, court/number rows and an empty topical block without
+blank cards, dashes or public CMS warnings. No author/reviewer selection is an implicit Actum choice.
+Retain the existing backend diagnostics and reference checks, including warning-only states.
+
+Long names, three expanded authors, seven Media participants and long topical selections must remain
+readable and reachable. Sticky behavior must not clip a sidebar taller than the viewport or conceal
+people/fields. The designer specifies its responsive treatment; mobile keeps the same role/data/link
+rules without requiring a sticky two-column layout. This amendment does not impose new TOC collapsing,
+body, FAQ, CTA, video, collection-card ordering or pagination behavior.
 
 ## 7. `publication_meta`
 
@@ -258,8 +377,9 @@ diagnostics adopt the new boundary through their normal validation refresh.
 - Choose one to three ordered lawyer authors OR explicitly choose "Автор — Актум". Every personal
   author is a lawyer selected from the existing CMS lawyer reference model. Non-lawyer personal author
   profiles are not introduced.
-- The first selected lawyer remains primary for compact presentation; the other selected lawyers are
-  also authors, not reviewers. Duplicate author references or more than three authors are errors.
+- The first selected lawyer remains primary for deterministic ordering; the other selected lawyers are
+  also authors, not reviewers. All use the expanded public treatment in section 6a. Duplicate author
+  references or more than three authors are errors.
 - The Actum choice means corporate authorship, not unknown authorship. Show a visible Actum byline
   linked to the localized About page through the existing route contract. It is mutually exclusive
   with selected lawyer authors; a conflicting selection is an error, not a reason to discard lawyers.
@@ -323,6 +443,11 @@ diagnostics adopt the new boundary through their normal validation refresh.
   including when the coauthor list is empty. Neither a coauthor nor Actum is silently promoted.
 - Zero to two ordered lawyer coauthors are allowed: at most three lawyers including the primary.
   More than two coauthors, duplicate references or repeating the primary in coauthors are errors.
+- The primary author and coauthors are the lawyers who actually handled this case. Selecting them
+  asserts both case participation and authorship, not merely CMS editing or preparation of the text.
+  This is the editorial meaning of the existing selections, not a new confirmation field, automatic
+  ERP inference or change to ownership/authorization. Historical authorship alone does not prove that
+  participation or authorize automatic reassignment.
 - All personal authors/coauthors are lawyers. Organization-authored Cases are no longer a target
   authoring option; the older corporate fallback does not satisfy the required primary lawyer.
 - Case has no reviewer role, selector, missing-reviewer diagnostic or new `WebPage.reviewedBy` relation.
@@ -430,8 +555,16 @@ Fields:
 - `courtName`: optional;
 - `caseNumber`: optional;
 - `resultLabel`: optional;
-- `timelineNote`: optional;
-- `confidentialityNote`: optional.
+- `timelineNote`: optional.
+
+Court and judicial number remain owned and edited here, but are rendered only in the Case metadata
+sidebar under section 6a. `resultLabel` and `timelineNote` stay in the right summary, not in that sidebar.
+
+`confidentialityNote` is not part of the new target authoring schema, normalized public presentation or
+newly authored content. Remove its editor control and new-authoring contract in the later implementation;
+do not replace it with another automatic confidentiality field. Existing raw values in saved versions,
+import evidence and immutable snapshots must remain intact. History reads and unrelated draft saves must
+not silently delete or rewrite them; define explicit compatibility fixtures before removing write fields.
 
 The section provides a fast structured case page. The long-form builder is optional but its absence is a
 warning for a case.
@@ -889,6 +1022,8 @@ Public filters and search are deferred from V1.
 
 ## 15. Date Semantics
 
+- For the visible detail-page byline, section 6a exposes only local `publishedAt`. The following
+  persistence/JSON-LD semantics remain in force without a visible modification/original-source date row.
 - `publishedAt` is the editor-owned public date and maps to JSON-LD `datePublished`;
 - `modifiedAt` is backend-owned and maps to `dateModified` after a newly published version materially
   changes public content;
@@ -1189,8 +1324,10 @@ This sequence intentionally proves the shared mechanism on one kind before multi
 
 ## 21. 2026-11-15 Compatibility, Scope And Acceptance
 
-This amendment changes the target role/source/readiness/graph contract only. Do not implement it as a
-display-label-only change over old author arrays or as frontend-only validation.
+This amendment changes the target role/source/readiness/graph contract and section 6a's public-detail
+presentation. Do not implement role/source rules as a display-label-only change over old author arrays
+or as frontend-only validation. The approved visual task is
+[Publication detail design](editorial-publication-designer-task-2026-11-15.md).
 
 ### Compatibility and preservation
 
@@ -1199,6 +1336,9 @@ display-label-only change over old author arrays or as frontend-only validation.
   `representationMode` values merely because new authoring no longer uses those roles.
 - Do not truncate older author/participant arrays to meet the new limits. Expose the current draft's
   readiness problem and require an explicit editorial choice for a later normal publication.
+- Preserve historical `confidentialityNote` values even though new authoring/public presentation omits
+  the field. Moving court/number to the sidebar changes no field ownership, section history or ERP
+  number contract. Do not duplicate values between sections or mass-republish existing pages.
 - Do not automatically turn historical Media authors into participants, no-author into explicit Actum,
   no-reviewer into editorial Actum review, or a missing URL into "Без посилання". Existing data is not
   evidence of a new explicit choice. Any demonstrably valid compatibility mapping needs documented
@@ -1215,9 +1355,9 @@ display-label-only change over old author arrays or as frontend-only validation.
   recovery and authorization must not be silently changed by this role amendment. No ERP change or
   migration is implemented/authorized here.
 - Profile associations, list filters/search, public selection algorithms, card counts/order/pagination,
-  body/video/TOC editing, dates and publication/SEO confirmation protocol remain outside scope except
-  for replacing the explicitly superseded role/source requirements above. No new editorial approval
-  workflow, Google quota or runtime flag is introduced by this specification.
+  body/video/TOC editing, stored date semantics and publication/SEO confirmation protocol remain outside
+  scope except for the expressly stated role/source/presentation and removed-field requirements above.
+  No new editorial approval workflow, Google quota or runtime flag is introduced by this specification.
 
 ### Responsibilities for a later implementation
 
@@ -1227,7 +1367,8 @@ display-label-only change over old author arrays or as frontend-only validation.
 - CMS-front: provide the explicit choices and correct per-kind limits/labels, show backend errors and
   warnings, preserve incomplete drafts/history and do not infer Actum or participants from blank data.
 - Site-front: render authors/participants/review attribution and source/no-link state as supplied; use
-  ready links and the backend graph, without inventing a source URL, expert identity or semantic role.
+  ready links and the backend graph, without inventing a source URL, expert identity or semantic role;
+  implement section 6a's field/column/portrait/link rules without duplicating editable data.
 - Integration work is a later separately scoped delivery. This commit is documentation only.
 
 ### Required acceptance coverage
@@ -1257,3 +1398,16 @@ display-label-only change over old author arrays or as frontend-only validation.
    profile bindings, filter/search behavior, selection, order, pagination, body or dates.
 10. Prove that documentation/rollout itself performs no data write, publication or backfill. A later
     implementation must separately report schema/client readiness and its authorized rollout checks.
+11. Check all three detail templates against section 6a: H1/excerpt, only local `Опубліковано`, no
+    automatic cover in the detail, preserved builder images, correct author/reviewer/participant
+    treatment and links, explicit linked Actum choices, omitted empty groups and unchanged date data.
+12. Check Case court/number independently in all four filled/empty combinations. Both read only from
+    the exact selected `case_summary`, render left once, remain absent on other kinds, and never use
+    the administrative ERP number. Result/term notes remain right. New presentation omits
+    `confidentialityNote`; history and unrelated saves preserve legacy raw values.
+13. Check terminal-only topical entries with primary/additional ordering, an explicitly selected
+    ancestor, long selections, unavailable localized target pages and no cross-locale/fabricated links.
+14. Check a Media participant who is also reviewer: both roles survive, only the reviewer has the
+    available profile link, source-name link/no-link variants have no separate original-material button.
+15. Check desktop/mobile reachability with maximum people counts and long names/sidebar content;
+    sticky positioning must not clip content or silently replace selected people with `+N`.
