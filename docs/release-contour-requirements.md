@@ -1405,6 +1405,11 @@ the complete release process.
 
 ## Decision 28: Frontend Cache And Revalidation
 
+The [2026-11-17 public site caching specification](public-site-cache-specification-2026-11-17.md)
+defines the agreed long-lived CDN policy, invalidation and failure handling, implementation tasks,
+and staged activation. It authorizes preparation only, not runtime enablement. Its readiness gates
+must be resolved before the applicable cache layer is enabled.
+
 The first production release must support explicit frontend cache revalidation after backend publish and
 rollback actions.
 

@@ -64,6 +64,8 @@ repositories.
   [roles and scoped publication](docs/cms-roles-and-scoped-publication-specification-2026-10-18.md),
   [stale-page refresh](docs/stale-page-refresh-contract-2026-10-12.md),
   [runtime and global section indicators](docs/runtime-global-section-indicators-2026-09-18.md).
+- Public site caching: [agreed Next.js/CDN policy, invalidation, rollout and implementation tasks](docs/public-site-cache-specification-2026-11-17.md)
+  (preparation only; cache activation requires a separate decision).
 - CMS-front tasks: [page and section authoring](docs/cms-front-page-authoring-task.md),
   [reference data](docs/cms-front-reference-data-task.md), [users](docs/cms-front-users-task.md),
   [source diagnostics and bulk page bootstrap](docs/source-diagnostics-and-bulk-bootstrap-task.md).
