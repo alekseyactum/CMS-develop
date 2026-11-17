@@ -253,6 +253,8 @@ now a standalone read-only runtime slot with a backend-owned localized title, as
 - 2026-11-05 amendment: review cards expose localized `officeCity` and `officeMapsUrl` for their original
   office on national and regional pages. City is the top-right map link, or plain text without a map.
   No "All reviews" CTA. Follow the [common public review contract](reference-data-and-runtime-model.md#review-office-city-in-public-cards).
+- 2026-11-17 clarification: the city is the card's only navigation link. The author's name and avatar
+  remain non-link content even when `authorUrl` is present; do not make the whole card a link.
 - Runtime order is not important for the current CMS decision.
 - Validation/diagnostics:
   - empty reviews list is a warning, not a blocker.

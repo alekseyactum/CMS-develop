@@ -700,6 +700,10 @@ Amended and approved on 2026-11-05. This replaces the 2026-10-15 restriction tha
 on regional pages and personal lawyer pages. Documentation publication alone does not deploy code or
 rewrite existing published snapshots.
 
+Clarified and approved on 2026-11-17: the city is the only navigation link inside a review card.
+The author's name and avatar are not links, even when the source provides `authorUrl`. This is a
+frontend presentation requirement, not removal of source/API data or a structured-data change.
+
 Every public review item exposes `officeCity: string | null` and `officeMapsUrl: string | null`.
 The city belongs to the original office linked to this review, not the author's residence, the
 viewed page's region or the lawyer's current office. This is presentation context, not a new review
@@ -732,6 +736,9 @@ Public frontend contract:
 
 - Show the city in the top-right corner of each review card. When both fields are nonempty, the city
   is a link to `officeMapsUrl`, opening in a new tab with appropriate external-link protection.
+- This city link is the card's only navigation target. Render the author's name and avatar as
+  non-link content even when `authorUrl` is present; do not wrap them or the whole card in a link,
+  attach navigation click handlers, or substitute a Google author-profile or specific-review link.
 - A known city without a map link remains plain text. Unknown city means no label, link or placeholder.
 - This placement also applies to regional pages and personal lawyer pages; do not hide the city by
   page type or infer it from the URL. Do not perform extra office/region lookups on the frontend.
@@ -741,8 +748,10 @@ Public frontend contract:
   everywhere; an internal all-reviews page is not part of this scope.
 - The office map is not an author profile or a specific review URL. Do not make the author's name a
   misleading office link, or put the office URL into `Review.url`, `author.url` or `author.sameAs`.
-- Do not collect individual review permalinks for this task. Preserve original `authorUrl` data and
-  existing Google attribution obligations; they are separate from the new city navigation.
+- Do not collect individual review permalinks for this task. Preserve original `authorUrl` as
+  source/API data where already supplied; its presence does not enable an author link in the card.
+  Existing Google attribution obligations remain separate from city navigation. This presentation
+  clarification does not add, remove or rewrite JSON-LD fields.
 
 The value is part of the page's review runtime payload and published snapshot. Preview and publication
 must apply the same rule. Existing snapshots are not rewritten merely by adding the contract or
@@ -766,6 +775,10 @@ Acceptance criteria for implementation:
    existing refresh mechanism. Unrelated drafts and the author's identity remain unchanged.
 7. No all-reviews CTA, specific-review URL collection or office URL substituted into author/Review
    JSON-LD. Preview and publication use the same card contract.
+8. With a valid `authorUrl`, the author's name and avatar still have no link or navigation handler.
+   The card has exactly one navigation link when city and map URL are both available, otherwise none;
+   pointer and keyboard interaction cannot navigate through the author or card container. Source/API
+   `authorUrl` and the existing structured-data contract remain unchanged.
 
 ### Lawyer Qualifications
 

@@ -205,6 +205,8 @@ At the time of this baseline, the backend exposed only a minimal `seo` + runtime
      `officeMapsUrl` for the review's original office, not the lawyer's current office. City is the
      top-right map link, or plain text without a map. No "All reviews" CTA. Follow the
      [common public review contract](reference-data-and-runtime-model.md#review-office-city-in-public-cards).
+   - 2026-11-17 clarification: the city is the card's only navigation link. The author's name and avatar
+     remain non-link content even when `authorUrl` is present; do not make the whole card a link.
    - Empty list is a warning, not a publish blocker; public frontend may hide the block when empty.
 
 6. `lead_form` + `lead_capture`

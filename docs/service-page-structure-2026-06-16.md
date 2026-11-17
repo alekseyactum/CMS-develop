@@ -90,6 +90,8 @@ Public visual rendering is still a frontend task.
     - 2026-11-05 amendment: review cards expose localized `officeCity` and `officeMapsUrl` for their
       original office on national and regional pages. City is the top-right map link, or plain text
       without a map. No "All reviews" CTA. Follow the [common public review contract](reference-data-and-runtime-model.md#review-office-city-in-public-cards).
+    - 2026-11-17 clarification: the city is the card's only navigation link. The author's name and avatar
+      remain non-link content even when `authorUrl` is present; do not make the whole card a link.
     - Historical snapshots may still expose `service_reviews_block`; consumers use it only as a fallback
       when the runtime payload has no `title`.
 
