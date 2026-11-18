@@ -1104,6 +1104,10 @@ for generated practice/service/problem pages and publish with affected page snap
 `global_price` remains the only one with price-specific append behavior. Its detailed editor/API contract
 is defined in `docs/global-price-section-workbench.md`.
 
+Amendment (2026-11-18, target only): the [independent public forms specification](independent-public-forms-2026-11-18.md)
+supersedes page snapshot propagation for the client, career and partnership forms and the header's
+form dependency. Other global sources, including prices and achievements, keep their own propagation rules.
+
 Implementation note, 2026-05-27: global-section editor DTOs expose `schema.fields`, and global-section
 publish responses document the lifecycle publish result instead of an opaque `unknown`: affected pages,
 affected bindings, and rebuilt snapshot statuses are part of the frontend contract.

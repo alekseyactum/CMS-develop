@@ -449,6 +449,11 @@ Search API/indexing is a separate future task.
 
 ### Contact Button
 
+Agreed target (2026-11-18): layout owns the button, not the form content. Its
+modal and the in-page client form use the same independently published form for
+the page language; enabling one placement does not enable the other. See the
+[three-form assembly and transition specification](independent-public-forms-2026-11-18.md).
+
 The header contact button opens a frontend callback/contact modal:
 
 ```ts

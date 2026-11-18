@@ -24,6 +24,7 @@ repositories.
 ### Shared product and CMS requirements
 
 - Site shell: [layout, header and contacts](docs/site-layout-and-header-requirements.md),
+  [independently published client, career and partnership forms: assembly, transition and team tasks](docs/independent-public-forms-2026-11-18.md),
   [footer and legal documents](docs/site-footer-section-workbench.md),
   [global price section](docs/global-price-section-workbench.md),
   [lead questionnaire](docs/lead-questionnaire-contract-2026-07-16.md).
@@ -91,7 +92,7 @@ repositories.
 
 ### CMS-back website and integration contracts
 
-- Forms: [global forms and snapshot bindings](https://github.com/re-actum/cms-back/blob/develop/docs/global-site-forms-implementation.md),
+- Forms: [existing global forms and frozen snapshot bindings (pre-transition)](https://github.com/re-actum/cms-back/blob/develop/docs/global-site-forms-implementation.md),
   [integration-test API](https://github.com/re-actum/cms-back/blob/develop/docs/site-form-integration-api.md),
   [working delivery and ERP transport](https://github.com/re-actum/cms-back/blob/develop/docs/site-form-delivery-2026-11-05.md),
   [legacy career application API](https://github.com/re-actum/cms-back/blob/develop/docs/career-applications.md).

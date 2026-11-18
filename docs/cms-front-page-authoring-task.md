@@ -1214,11 +1214,15 @@ The current compatibility publish response contains:
   for layout globals this may be empty;
 - `editor`: fresh global-section editor state after publish.
 
-For the UI this means: show publish success from `publishedVersionId`. Show rebuild impact from
+Under this compatibility contract, show publish success from `publishedVersionId`. Show rebuild impact from
 `rebuiltSnapshots` only when the section actually uses snapshot rebuild, currently `global_price`,
 `global_achievements`, and `global_lead_form`.
 For `site_header`/`site_footer`, the important follow-up is layout preview/public layout refresh, not page
 workbench rebuild. Runtime footer-practices refresh also uses layout read APIs, not a publication mutation.
+
+After the [independent forms cutover](independent-public-forms-2026-11-18.md), publication of any
+of the three forms or of the header no longer reports a need to republish consuming pages. Updating
+cached site output is not a page rebuild. This does not change the price/achievements workflow.
 
 For inherited global page slots, affected rebuilds apply to pages that directly depend on the global
 source, normally the base non-regional generated pages. Regional pages depend on the matching base page
