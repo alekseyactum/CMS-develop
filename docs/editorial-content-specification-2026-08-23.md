@@ -37,6 +37,11 @@ target authoring/public model, not erased from history. The linked
 [designer task](editorial-publication-designer-task-2026-11-15.md) specifies the required sketch states.
 This follow-up authorizes documentation publication only, not application changes or deployment.
 
+2026-11-20 amendment: [Shared role sets across languages](editorial-shared-role-sets-2026-11-20.md)
+is normative for ownership, version selection, publication and migration of the people and explicit
+organization choices in section 7. The role limits, diagnostics, localized display and JSON-LD
+mapping stay as specified below. This is a target, not a rollout.
+
 ## 1. Objective
 
 Build one shared editorial mechanism for three content kinds:
@@ -129,13 +134,16 @@ Rules:
 - the Ukrainian variant is created first;
 - Russian and English variants are created manually from locale tabs;
 - one locale group may contain at most one page per locale;
-- each locale owns its draft, content, dates, validation, history, preview, publication, and rollback;
+- each locale owns its local content, dates, draft and snapshot history, preview, publication and
+  rollback. Validation combines the applicable shared role revision with the local fields;
 - Russian and English may be edited before Ukrainian publication, but cannot be published until the
   Ukrainian variant is published;
-- publishing or rolling back one locale never modifies another locale;
-- locale creation copies the applicable structural relations and explicit choices: Blog author mode
-  and authors/reviewer, Case primary/coauthors, Media participants/review mode/source-link mode,
-  service-tree relations, cover, external media relation, and ERP case reference;
+- ordinary local publication and rollback do not modify another locale. A confirmed **group role
+  change** is a distinct scope; it may update attribution on already published translations without
+  publishing their drafts. See [the group publication rules](editorial-shared-role-sets-2026-11-20.md#публикация-состава);
+- locales read author, participant and review assignments from the material group. Creating a locale
+  does not copy those fields. Existing rules for Media source-link mode, service-tree relations,
+  cover, external media relation and ERP case reference are unchanged;
 - localized title, excerpt, SEO, body, case summary, and editorial dates are not copied as translations;
 - Blog FAQ text and recommendation settings are authored independently per locale; a new locale starts
   with FAQ disabled and automatic recommendations, without copying the source FAQ or manual selection;
@@ -343,6 +351,10 @@ rules without requiring a sticky two-column layout. This amendment does not impo
 body, FAQ, CTA, video, collection-card ordering or pagination behavior.
 
 ## 7. `publication_meta`
+
+The editor may present the contributor fields here, and public payloads may expose resolved roles
+here. Neither is a second editable store: under the [shared-role contract](editorial-shared-role-sets-2026-11-20.md)
+the group owns the assignments; historical local section versions remain readable as recorded.
 
 ### Common fields
 
@@ -1035,6 +1047,10 @@ Public filters and search are deferred from V1.
 - case event, court, and result dates belong to case content and never replace page publication dates.
 
 ## 16. Validation Boundary
+
+For role checks, “saved” means the role revision selected for that use: the common working revision
+in the current CMS, the revision in the confirmed publication plan or the historical snapshot under
+inspection. Do not validate a stale local copy of the assignments; do not discard local diagnostics.
 
 Publication-blocking errors:
 

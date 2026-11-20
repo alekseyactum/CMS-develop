@@ -47,6 +47,7 @@ repositories.
   [reference data and public read models](docs/reference-data-and-runtime-model.md).
 - Blog, media and cases: [editorial content requirements](docs/editorial-content-specification-2026-08-23.md),
   including [the approved 2026-11-15 author/participant/reviewer, source, validation and JSON-LD rules](docs/editorial-content-specification-2026-08-23.md#7-publication_meta),
+  [one role set per material across UA/RU/EN: storage, Save, publication and migration](docs/editorial-shared-role-sets-2026-11-20.md),
   [detail-page fields and left-sidebar presentation](docs/editorial-content-specification-2026-08-23.md#6a-public-detail-presentation-2026-11-15)
   and [compatibility / acceptance scope](docs/editorial-content-specification-2026-08-23.md#21-2026-11-15-compatibility-scope-and-acceptance)
   (specification only; implementation not started by this update),
