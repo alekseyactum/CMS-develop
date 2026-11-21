@@ -1,0 +1,54 @@
+{
+  "environment": "release",
+  "host": "actum.ua",
+  "mode": "off",
+  "cdnEnabled": false,
+  "originCacheMode": "no_store",
+  "routes": [
+    {
+      "locale": "uk",
+      "path": "/cases/zvilnennya-z-pid-varti-ta-zamina-sizo-na-domashnij-aresht",
+      "publishedTitleSha256": "24431aa29fcb734d9d8c9f9808ffa1fe4857d2e6f619286159651bb8f4bca66a"
+    },
+    {
+      "locale": "ru",
+      "path": "/ru/cases/yzmenenye-mery-presechenyya-po-soderzhanyyu-pod-strazhey-na-kruhlosutochnyy-domashnyy-arest-ch-2-st-332-uk",
+      "publishedTitleSha256": "ff6273a1d10f44cadcc86b999addede398e0f5d0f83ecb7a6ac074a2d2b269c4"
+    }
+  ],
+  "source": "Both routes returned 200 and reciprocal localeAlternates from the release CMS public API on 2026-11-20. This is not an edge test.",
+  "originEvidence": {
+    "date": "2026-11-21",
+    "service": "site-front-release",
+    "scope": "Both exact document GETs via Google: 200 text/html, html.lang matches the route locale, H1 matches publishedTitleSha256. Not an actum.ua load balancer check.",
+    "responseCacheControl": "private, no-cache, no-store, max-age=0, must-revalidate"
+  },
+  "authorizedSourceCidrs": [],
+  "provisioningReady": false,
+  "staging": {
+    "project": "composite-ally-360719",
+    "edgePolicy": "actum-ua-release-off-edge",
+    "articleBackend": "actum-ua-release-off-origin",
+    "emptyDefaultBackend": "actum-ua-release-off-deny",
+    "urlMap": "actum-ua-release-off-map",
+    "urlMapValidation": "7 configuration cases passed; not an HTTP smoke",
+    "certificate": "actum-ua-release-cert",
+    "certificateState": "ACTIVE",
+    "certificateExpiresUtc": "2027-02-18T20:20:49Z",
+    "certificateMap": "actum-ua-release-certs",
+    "certificateMapEntry": "actum-ua-release-apex",
+    "certificateMapEntryState": "ACTIVE",
+    "targetHttpsProxy": "actum-ua-release-off-https",
+    "forwardingRuleCount": 0,
+    "gateway": "not deployed",
+    "webDnsCutover": false,
+    "temporaryProbeCreated": false
+  },
+  "acceptance": {
+    "beforeDnsChange": "From an existing permitted client send two normal HTML GETs to the actual working LB IP, preserving actum.ua Host/SNI and normal TLS verification. Next and CDN OFF; no pilot gateway or temporary VM.",
+    "pass": "Both exact paths return 200 text/html with the expected lang, H1 and response no-store directive. Correlate both requests with the working LB/backend logs.",
+    "stop": "If either check fails, access is unavailable, or the actual working route is unconfirmed, do not switch DNS or weaken access. Keep caches OFF. Do not alter actum.com.ua, www, mail or the authorization CNAME.",
+    "afterDnsChange": "Only after separate approval: repeat both checks via ordinary public DNS. Cache activation and its HIT, freshness and rollback tests are separate."
+  },
+  "observedEdgeResults": null
+}
