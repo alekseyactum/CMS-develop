@@ -39,7 +39,8 @@ repositories.
   [problems](docs/problem-page-structure-2026-06-15.md),
   [hierarchy amendments](docs/service-hierarchy-page-amendments-2026-06-28.md),
   [optional problem pages](docs/problem-optional-pages-2026-09-17.md),
-  [intent page families](docs/intent-page-family-requirements-2026-07-30.md).
+  [intent page families](docs/intent-page-family-requirements-2026-07-30.md), and
+  [unified first-screen Intro for all four page types](docs/service-hierarchy-intro-specification-2026-11-24.md).
 - Lawyers, offices and reviews: [lawyer profile pages](docs/lawyer-page-structure-2026-06-18.md),
   [exact lawyer qualification selection](docs/lawyer-exact-qualification-selection-2026-10-24.md),
   [lawyer directory practice/service selection and frontend shuffle](docs/lawyers-directory-service-selection-specification-2026-11-13.md),

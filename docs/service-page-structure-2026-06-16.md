@@ -29,8 +29,8 @@ Public visual rendering is still a frontend task.
 
 2. `service_intro`
    - Required hero/content section.
-   - Fields: `title`, optional `accentTitle`, optional `lead`, optional `ctaLabel`, optional `ctaTarget`.
-   - `title` and `accentTitle` are locked on regional pages.
+   - Agreed fields, validation, migration and site rendering: [unified Intro contract](service-hierarchy-intro-specification-2026-11-24.md).
+   - Regional `title` and `accentTitle` are inherited and locked; `lead` and `bigtext` can be overridden separately.
 
 3. `achievements_strip`
    - Required global inherited achievements strip.

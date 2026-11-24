@@ -71,16 +71,12 @@ now a standalone read-only runtime slot with a backend-owned localized title, as
 - Required.
 - Fixed position.
 - Cannot be disabled.
-- Regional behavior: inherited from base by default; explicit override allowed except section title.
-- Fields:
-  - `title` required, default from practice name, section-heading locked for regional override.
-  - `lead` optional rich text.
-  - `ctaLabel` optional.
-  - `ctaTarget` optional controlled target, not a free external URL.
-- Validation:
-  - missing title is an error;
-  - `ctaLabel` and `ctaTarget` must be a valid pair;
-  - CTA target must be one of backend-supported choices.
+- Agreed amendment, 2026-11-24: see the [unified Intro contract](service-hierarchy-intro-specification-2026-11-24.md)
+  for fields, validation, migration and site rendering. The default title still comes from the practice name.
+- Regional `title` and `accentTitle` are inherited and locked; `lead` and `bigtext` can be overridden
+  separately.
+- Existing CTA requirements are outside the amendment: `ctaLabel` and `ctaTarget` are optional
+  as a pair, and the target is from backend-supported choices rather than a free external URL.
 
 ### 3. `achievements_strip`
 

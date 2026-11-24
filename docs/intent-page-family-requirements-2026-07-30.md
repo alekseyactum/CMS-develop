@@ -245,6 +245,10 @@ The initial structure is:
 7. `regional_links` regional alternatives on the national variant;
 8. `local_offices` physical offices on regional variants.
 
+The agreed [unified Intro contract](service-hierarchy-intro-specification-2026-11-24.md) specifies the
+four fields, validation, transition and site rendering for `intent_intro`. It remains page-owned
+for every variant. The separate `intent_intro_text` section is unchanged.
+
 The implementation should reuse established section contracts where their semantics are already correct.
 It must not duplicate lead-form or achievement schemas only because the page type is new.
 

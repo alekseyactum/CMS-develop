@@ -1981,6 +1981,9 @@ buttons still belong to the primary section/editor actions.
 - `practice_page`, `service_page`, and `problem_page` expose required inherited `achievements_strip` and
   `lead_form` slots. `practice_collection_page` does not.
 - `practice_intro` and other `*_intro` hero slots now include optional `ctaLabel` and `ctaTarget` fields.
+- For the agreed common first-screen fields, validation and regional editability of practice,
+  service, problem and intent Intro, follow the [unified Intro contract](service-hierarchy-intro-specification-2026-11-24.md).
+  The existing CTA contract and separate introductory text sections are unchanged.
 - `practice_page` additionally exposes optional page-owned `practice_intro_text`, `practice_actions`,
   `practice_team_cta`, `practice_optional_text`, optional `lead_questionnaire`, runtime `practice_cases`,
   runtime `practice_reviews`, and runtime `lead_capture`.

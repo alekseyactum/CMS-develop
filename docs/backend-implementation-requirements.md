@@ -905,6 +905,10 @@ regional overrides explicit: local content alone does not override inherited sou
 binding composition marks the section or field as `override`. Page publish remains the point where accepted
 stale inherited changes become fresh.
 
+The agreed [unified Intro contract](service-hierarchy-intro-specification-2026-11-24.md) is the
+source of truth for the first-screen Intro schema, validation and migration on practice, service,
+problem and intent pages. Other slots retain their existing contracts.
+
 `practice_page` now has the following backend scaffold:
 
 - `seo`;

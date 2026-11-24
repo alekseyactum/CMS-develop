@@ -1286,3 +1286,6 @@ make targeted API/docs changes without reopening page-structure design.
 - The new field is inherited from the base page and locked for regional override, matching the established
   accent-title inheritance rule.
 - No accent field was added to `practice_intro`; no existing accent field was removed or renamed.
+
+Later specification, 2026-11-24: the [unified Intro contract](service-hierarchy-intro-specification-2026-11-24.md)
+adds `accentTitle` to the first-screen practice Intro. The 2026-07-21 note above describes the earlier scope.
