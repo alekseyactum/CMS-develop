@@ -66,6 +66,7 @@ repositories.
   [section model](docs/section-model-foundation.md),
   [section authoring and versioning](docs/section-authoring-versioning-contract-2026-10-04.md),
   [roles and scoped publication](docs/cms-roles-and-scoped-publication-specification-2026-10-18.md),
+  [page editor scope by practice, service and page](docs/cms-page-editor-access-scope-2026-11-25.md),
   [stale-page refresh](docs/stale-page-refresh-contract-2026-10-12.md),
   [runtime and global section indicators](docs/runtime-global-section-indicators-2026-09-18.md).
 - Public site caching: [agreed Next.js/CDN policy, invalidation, rollout and implementation tasks](docs/public-site-cache-specification-2026-11-17.md)
