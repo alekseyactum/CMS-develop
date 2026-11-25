@@ -2,6 +2,10 @@
 
 This document fixes the agreed target structure for `practice_page`.
 
+2026-11-25 amendment: the [unified section header contract](hierarchy-section-headers-specification-2026-11-25.md)
+supersedes the header fields and validation below for `practice_services_block` and `practice_actions`.
+The lists and the first-screen Intro are unchanged.
+
 2026-10-24 amendment: lawyer lists and both team CTA slots use only direct qualifications for the exact
 practice with `score > 1`, without service/problem scores or fallback. This supersedes the 2026-10-22
 subtree threshold. See [exact qualification selection](lawyer-exact-qualification-selection-2026-10-24.md).

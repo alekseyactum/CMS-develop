@@ -2,6 +2,10 @@
 
 This document fixes the agreed first backend/editor structure for `service_page`.
 
+2026-11-25 amendment: the [unified section header contract](hierarchy-section-headers-specification-2026-11-25.md)
+supersedes the header fields and validation below for `service_problems_block`, `service_lawyer_actions`,
+`service_must_do` and `service_must_not_do`. The lists and the first-screen Intro are unchanged.
+
 2026-10-24 amendment: lawyer lists and both team CTA slots use only direct qualifications for the exact
 service with `score > 1`, excluding parent-practice and child-problem scores, without fallback.
 See [exact qualification selection](lawyer-exact-qualification-selection-2026-10-24.md).

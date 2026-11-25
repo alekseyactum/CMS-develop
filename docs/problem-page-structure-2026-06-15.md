@@ -2,6 +2,10 @@
 
 This document fixes the agreed first backend/editor structure for `problem_page`.
 
+2026-11-25 amendment: the [unified section header contract](hierarchy-section-headers-specification-2026-11-25.md)
+supersedes the header fields and validation below for `problem_lawyer_actions`, `problem_must_do` and
+`problem_must_not_do`. The lists and the first-screen Intro are unchanged.
+
 2026-10-24 amendment: lawyer lists and both team CTA slots use only qualifications for the exact
 problem with `score > 1`, without parent or sibling fallback. Service-wide lawyer selection is no
 longer used. See [exact qualification selection](lawyer-exact-qualification-selection-2026-10-24.md).
