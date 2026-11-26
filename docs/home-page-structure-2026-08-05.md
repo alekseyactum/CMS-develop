@@ -181,14 +181,22 @@ CTA behavior agreed on 2026-11-26; the CMS editor and site frontend changes are 
 
 `home_cases_intro`:
 
+CTA behavior agreed on 2026-11-26; the CMS editor and site frontend changes are pending.
+
 - Type: editable page-owned content and selection configuration.
 - Fields:
   - `title` required;
   - `lead` optional rich text;
-  - `ctaLabel` optional;
-  - `ctaTarget` optional controlled case-collection target;
+  - `ctaLabel` optional: the only CTA field exposed to editors;
   - `selectionMode` required, default `auto`;
   - `selectedIds` optional ordered locale-group IDs.
+- The CTA always links to the cases collection (`case_collection_page`) in the current page
+  language: `/cases` (UA), `/ru/cases` (RU), or `/en/cases` (EN).
+- Render the button only when the trimmed `ctaLabel` is non-empty and that language's cases
+  collection is published. No default label, language fallback, or alternate destination.
+- Editors do not set a URL. Ignore legacy `ctaTarget` in preview and published snapshots without
+  migrating or deleting it from saved versions or history. Only the Home Cases CTA changes;
+  case-card selection, order and links stay the same. No republication is required.
 
 `home_cases`:
 
@@ -273,14 +281,23 @@ Card relation labels (2026-09-10 clarification):
 
 `home_publications_intro`:
 
+CTA behavior agreed on 2026-11-26; the CMS editor and site frontend changes are pending.
+
 - Type: editable page-owned content and selection configuration.
 - Fields:
   - `title` required;
   - `lead` optional rich text;
-  - `ctaLabel` optional;
-  - `ctaTarget` optional controlled publications target;
+  - `ctaLabel` optional: the only CTA field exposed to editors;
   - `selectionMode` required, default `auto`;
   - `selectedIds` optional ordered editorial locale-group IDs.
+- The CTA always links to the blog collection (`blog_collection_page`) in the current page
+  language: `/blog` (UA), `/ru/blog` (RU), or `/en/blog` (EN).
+- Render the button only when the trimmed `ctaLabel` is non-empty and that language's blog
+  collection is published. No default label, language fallback, or alternate destination.
+- Editors do not set a URL. Ignore legacy `ctaTarget` in preview and published snapshots without
+  migrating or deleting it from saved versions or history. Only the Home Publications CTA
+  changes; the mixed Blog/Media selection, order and card links stay the same. No republication
+  is required.
 
 `home_publications`:
 
