@@ -81,17 +81,25 @@ locale. A locale group without a published member in that locale produces a warn
 
 ### 3. `home_intro`
 
+CTA behavior agreed on 2026-11-26; the CMS editor and site frontend changes are pending.
+
 - Type: editable hero section.
 - Required, fixed, and cannot be disabled.
 - Fields:
   - `title` required and usable as the accessible page H1;
   - `tagline` optional;
   - `lead` optional rich text;
-  - `ctaLabel` optional;
-  - `ctaTarget` optional controlled internal target.
+  - `ctaLabel` optional: the button label for this language version of the home page. It is the only
+    CTA field exposed to editors.
 - The Actum logo, brand typography, background composition, and decorative shapes are frontend-owned
   presentation. The page section must not duplicate the global brand logo as arbitrary editor content.
-- `ctaLabel` and `ctaTarget` must be supplied as a valid pair.
+- Render a button only when the trimmed `ctaLabel` is non-empty. Clicking it opens the existing
+  lead-request form in the current page language (UA, RU, or EN), without navigating to another URL.
+  Missing, empty, or whitespace-only labels render no button and have no fallback label.
+- Editors do not set a URL or choose an action. Ignore any legacy `ctaTarget`, including in previews
+  and previously published snapshots. Do not migrate or delete it from saved versions or history.
+  This applies only to `home_intro`; the site header and other CTAs are unchanged. Page republication
+  is not required to adopt this behavior.
 
 ### 4. `achievements_strip`
 
