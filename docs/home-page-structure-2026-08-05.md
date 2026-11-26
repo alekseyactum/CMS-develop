@@ -79,27 +79,19 @@ locale. A locale group without a published member in that locale produces a warn
 - Fields follow the existing contract: `name`, optional `alternateName`, optional `legalName`, optional
   `websiteName`, optional `websiteAlternateName`, and optional `logoUrl`.
 
-### 3. `home_intro`
+### 3. Fixed intro
 
-CTA behavior agreed on 2026-11-26; the CMS editor and site frontend changes are pending.
-
-- Type: editable hero section.
-- Required, fixed, and cannot be disabled.
-- Fields:
-  - `title` required and usable as the accessible page H1;
-  - `tagline` optional;
-  - `lead` optional rich text;
-  - `ctaLabel` optional: the button label for this language version of the home page. It is the only
-    CTA field exposed to editors.
-- The Actum logo, brand typography, background composition, and decorative shapes are frontend-owned
-  presentation. The page section must not duplicate the global brand logo as arbitrary editor content.
-- Render a button only when the trimmed `ctaLabel` is non-empty. Clicking it opens the existing
-  lead-request form in the current page language (UA, RU, or EN), without navigating to another URL.
-  Missing, empty, or whitespace-only labels render no button and have no fallback label.
-- Editors do not set a URL or choose an action. Ignore any legacy `ctaTarget`, including in previews
-  and previously published snapshots. Do not migrate or delete it from saved versions or history.
-  This applies only to `home_intro`; the site header and other CTAs are unchanged. Page republication
-  is not required to adopt this behavior.
+- The intro remains the first visual block, before achievements. It is always present and belongs to
+  `site-front`, not to an editable CMS slot. Layout, branding and UA/RU/EN copy live in the site
+  frontend. Render a semantic `H1` and no intro button, on the public page and in preview.
+- Retire the old `home_intro` slot from CMS schemas, authoring, validation and translation. It is
+  neither editable nor required to preview or publish a home page. Do not migrate or delete its old
+  bindings, versions, or snapshots.
+- Existing snapshots and updates that preserve their content may still carry `home_intro`. The site
+  frontend must ignore it entirely, including `title`, `tagline`, `lead`, `ctaLabel` and `ctaTarget`.
+  New full/content builds omit it. No page republication is needed; deploy the site frontend that
+  handles both snapshot shapes before or together with the backend change.
+- The site header, the lead form and CTAs in other sections are unchanged.
 
 ### 4. `achievements_strip`
 
