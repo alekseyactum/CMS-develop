@@ -116,12 +116,23 @@ CTA behavior agreed on 2026-11-26; the CMS editor and site frontend changes are 
 
 `home_practices_intro`:
 
+CTA behavior agreed on 2026-11-26; the CMS editor and site frontend changes are pending.
+
 - Type: editable page-owned content.
 - Fields:
   - `title` required;
   - `lead` optional rich text;
-  - `ctaLabel` optional;
-  - `ctaTarget` optional controlled internal target, normally the practice collection route.
+  - `ctaLabel` optional: the button label for this language version. It is the only CTA field
+    exposed to editors.
+- The destination is fixed by the current page language: the national `practice_collection_page`
+  at `/services` (UA), `/ru/services` (RU), or `/en/services` (EN). Never select a regional
+  catalog or fall back to another language or the lead-request form.
+- Show the button only when the trimmed `ctaLabel` is non-empty and the national catalog is
+  published in that language. Otherwise render no button and no fallback label.
+- Editors do not set a URL. Ignore legacy `ctaTarget` in preview and published snapshots without
+  migrating or deleting it from saved versions or history. This applies only to the CTA in
+  `home_practices_intro`; list composition and diagnostics are unchanged. No page republication
+  is required to adopt this behavior.
 
 `home_practices`:
 
